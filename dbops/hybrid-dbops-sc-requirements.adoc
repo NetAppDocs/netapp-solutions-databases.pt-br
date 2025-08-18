@@ -1,0 +1,78 @@
+---
+sidebar: sidebar 
+permalink: dbops/hybrid-dbops-sc-requirements.html 
+summary: Esta solução foi projetada em um ambiente de nuvem híbrida para oferecer suporte a bancos de dados de produção locais que podem ser expandidos para todas as nuvens públicas populares para operações de desenvolvimento/teste e recuperação de desastres. 
+keywords: requirements, virtualized, bare metal, versions, automation 
+---
+= Requisitos do SnapCenter
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Esta solução foi projetada em um ambiente de nuvem híbrida para oferecer suporte a bancos de dados de produção locais que podem ser expandidos para todas as nuvens públicas populares para operações de desenvolvimento/teste e recuperação de desastres.
+
+Esta solução oferece suporte a todos os bancos de dados atualmente suportados pelo SnapCenter, embora apenas bancos de dados Oracle e SQL Server sejam demonstrados aqui.  Esta solução é validada com cargas de trabalho de bancos de dados virtualizados, embora cargas de trabalho bare-metal também sejam suportadas.
+
+Presumimos que os servidores de banco de dados de produção sejam hospedados no local com volumes de banco de dados apresentados aos hosts de banco de dados de um cluster de armazenamento ONTAP .  O SnapCenter software é instalado no local para backup de banco de dados e replicação de dados para a nuvem.  Um controlador Ansible é recomendado, mas não obrigatório, para automação de implantação de banco de dados ou sincronização de kernel do sistema operacional e configuração de banco de dados com uma instância de DR em espera ou instâncias de desenvolvimento/teste na nuvem pública.
+
+
+
+== Requisitos
+
+[cols="3, 9"]
+|===
+| Ambiente | Requisitos 
+
+
+.7+| *No local* | Quaisquer bancos de dados e versões suportados pelo SnapCenter 
+
+
+| SnapCenter v4.4 ou superior 
+
+
+| Ansible v2.09 ou superior 
+
+
+| Cluster ONTAP 9.x 
+
+
+| LIFs intercluster configurados 
+
+
+| Conectividade do local para uma VPC na nuvem (VPN, interconexão e assim por diante) 
+
+
+| Portas de rede abertas - ssh 22 - tcp 8145, 8146, 10000, 11104, 11105 
+
+
+.3+| *Nuvem - AWS* | https://docs.netapp.com/us-en/occm/task_creating_connectors_aws.html["Conector do Gerenciador de Nuvem"^] 
+
+
+| https://docs.netapp.com/us-en/occm/task_getting_started_aws.html["Cloud Volumes ONTAP"^] 
+
+
+| Correspondência de instâncias do DB OS EC2 com o On-prem 
+
+
+.3+| *Nuvem - Azure* | https://docs.netapp.com/us-en/occm/task_creating_connectors_azure.html["Conector do Gerenciador de Nuvem"^] 
+
+
+| https://docs.netapp.com/us-en/occm/task_getting_started_azure.html["Cloud Volumes ONTAP"^] 
+
+
+| Correspondência de máquinas virtuais do Azure do DB OS com o local 
+
+
+.3+| *Nuvem - GCP* | https://docs.netapp.com/us-en/occm/task_creating_connectors_gcp.html["Conector do Gerenciador de Nuvem"^] 
+
+
+| https://docs.netapp.com/us-en/occm/task_getting_started_gcp.html["Cloud Volumes ONTAP"^] 
+
+
+| Correspondência de instâncias do Google Compute Engine do sistema operacional DB com instâncias locais 
+|===

@@ -1,0 +1,20 @@
+---
+sidebar: sidebar 
+permalink: videos/videos-sqlserver-videos.html 
+summary: Série de vídeos e demonstrações discutindo os recursos de muitas das soluções da NetApp 
+keywords: netapp, solutions, videos, demos 
+---
+= Assista a vídeos e demonstrações sobre soluções de banco de dados para SQL Server com NetApp
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Explore vídeos sobre soluções de banco de dados para SQL Server com NetApp.
+
+.Implantar o SQL Server no AWS EC2 usando o Amazon FSx ONTAP
+video::27f28284-433d-4273-8748-b01200fb3cd7[panopto,width=360]

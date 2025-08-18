@@ -1,0 +1,130 @@
+---
+sidebar: sidebar 
+permalink: oracle/azure-ora-nfile-factors.html 
+summary: Esta seção fornece detalhes sobre os fatores a serem considerados ao implantar o banco de dados Oracle na máquina virtual do Azure e no armazenamento do Azure NetApp Files . 
+keywords: database, Oracle, Azure, Azure NetApp Files 
+---
+= Fatores a serem considerados para implantação de banco de dados Oracle
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Uma nuvem pública oferece muitas opções de computação e armazenamento, e usar o tipo correto de instância de computação e mecanismo de armazenamento é um bom ponto de partida para a implantação de banco de dados.  Você também deve selecionar configurações de computação e armazenamento otimizadas para bancos de dados Oracle.
+
+As seções a seguir descrevem as principais considerações ao implantar um banco de dados Oracle na nuvem pública do Azure em uma instância de máquina virtual do Azure com armazenamento do Azure NetApp Files .
+
+
+
+== Tipo e dimensionamento de VM
+
+Selecionar o tipo e o tamanho corretos de VM é importante para o desempenho ideal de um banco de dados relacional em uma nuvem pública.  Uma máquina virtual do Azure fornece uma variedade de instâncias de computação que podem ser usadas para hospedar cargas de trabalho do banco de dados Oracle.  Veja a documentação da Microsoftlink:https://docs.microsoft.com/en-us/azure/virtual-machines/sizes["Tamanhos para máquinas virtuais no Azure"^] para diferentes tipos de máquinas virtuais do Azure e seus dimensionamentos.  Em geral, a NetApp recomenda o uso de uma máquina virtual do Azure de uso geral para a implantação de bancos de dados Oracle de pequeno e médio porte.  Para a implantação de bancos de dados Oracle maiores, uma VM do Azure otimizada para memória é apropriada.  Com mais RAM disponível, um Oracle SGA maior ou um cache flash inteligente podem ser configurados para reduzir a E/S física, o que por sua vez melhora o desempenho do banco de dados.
+
+O Azure NetApp Files funciona como uma montagem NFS anexada a uma máquina virtual do Azure, o que oferece maior taxa de transferência e supera o limite de taxa de transferência de VM otimizada para armazenamento com armazenamento local.  Portanto, executar o Oracle no Azure NetApp Files pode reduzir a contagem de núcleos de CPU Oracle licenciáveis e os custos de licenciamento.  Verlink:https://www.netapp.com/media/17105-tr4780.pdf["TR-4780: Bancos de dados Oracle no Microsoft Azure"^] , Seção 7 - Como funciona o licenciamento Oracle?
+
+Outros fatores a serem considerados incluem os seguintes:
+
+* Escolha a combinação correta de vCPU e RAM com base nas características da carga de trabalho.  À medida que o tamanho da RAM aumenta na VM, o número de núcleos de vCPU também aumenta.  Deve haver um equilíbrio em algum momento, pois as taxas de licença da Oracle são cobradas com base no número de núcleos de vCPU.
+* Adicione espaço de swap a uma VM.  A implantação padrão da VM do Azure não cria um espaço de troca, o que não é ideal para um banco de dados.
+
+
+
+
+== Desempenho do Azure NetApp Files
+
+Os volumes do Azure NetApp Files são alocados de um pool de capacidade que o cliente deve provisionar em sua conta de armazenamento do Azure NetApp Files .  Cada pool de capacidade é atribuído da seguinte forma:
+
+* Para um nível de serviço que define a capacidade geral de desempenho.
+* A capacidade de armazenamento provisionada inicialmente ou a divisão em camadas para esse pool de capacidade.  Um nível de qualidade de serviço (QoS) que define a taxa de transferência máxima geral por espaço provisionado.
+
+
+O nível de serviço e a capacidade de armazenamento provisionada inicialmente determinam o nível de desempenho de um volume específico do banco de dados Oracle.
+
+
+
+=== 1. Níveis de serviço para Azure NetApp Files
+
+O Azure NetApp Files oferece suporte a três níveis de serviço: Ultra, Premium e Standard.
+
+* *Ultra armazenamento.*  Esta camada fornece até 128 MiBps de taxa de transferência por 1 TiB de cota de volume atribuída.
+* *Armazenamento premium.*  Esta camada fornece até 64 MiBps de taxa de transferência por 1 TiB de cota de volume atribuída.
+* *Armazenamento padrão.*  Esta camada fornece até 16 MiBps de taxa de transferência por 1 TiB de cota de volume atribuída.
+
+
+
+
+=== 2. Capacidade do pool e qualidade do serviço
+
+Cada um dos níveis de serviço desejados tem um custo associado para capacidade provisionada e inclui um nível de qualidade de serviço (QoS) que define a taxa de transferência máxima geral para o espaço provisionado.
+
+Por exemplo, um pool de capacidade única provisionado de 10 TiB com o nível de serviço premium fornece uma taxa de transferência geral disponível para todos os volumes neste pool de capacidade de 10x 64 MBps, ou seja, 640 MBps com 40.000 (16 K) IOPs ou 80.000 (8 K) IOPs.
+
+O tamanho mínimo do pool de capacidade é 4 TiB.  Você pode alterar o tamanho de um pool de capacidade em incrementos de 1 TiB em resposta a alterações nos seus requisitos de carga de trabalho para gerenciar necessidades e custos de armazenamento.
+
+
+
+=== 3. Calcular o nível de serviço em um volume de banco de dados
+
+O limite de taxa de transferência para um volume de banco de dados Oracle é determinado por uma combinação dos seguintes fatores: O nível de serviço do pool de capacidade ao qual o volume pertence e A cota atribuída ao volume.
+
+O diagrama a seguir mostra como o limite de taxa de transferência para um volume de banco de dados Oracle é calculado.
+
+image:db-ora-azure-anf-factors-001.png["Esta imagem descreve a equação aplicada aos três níveis de capacidade para determinar o rendimento bruto."]
+
+No exemplo 1, um volume de um pool de capacidade com o nível de armazenamento Premium ao qual é atribuída uma cota de 2 TiB recebe um limite de taxa de transferência de 128 MiBps (2 TiB * 64 MiBps).  Este cenário se aplica independentemente do tamanho do pool de capacidade ou do consumo de volume real.
+
+No exemplo 2, um volume de um pool de capacidade com o nível de armazenamento Premium ao qual é atribuída uma cota de 100 GiB recebe um limite de taxa de transferência de 6,25 MiBps (0,09765625 TiB * 64 MiBps).  Este cenário se aplica independentemente do tamanho do pool de capacidade ou do consumo de volume real.
+
+Observe que o tamanho mínimo do volume é 100 GiB.
+
+
+
+== Layout e configurações de armazenamento
+
+A NetApp recomenda o seguinte layout de armazenamento:
+
+* Para bancos de dados pequenos, use layout de volume único para todos os arquivos Oracle.
++
+image:db-ora-azure-anf-factors-002.png["Esta imagem descreve três bancos de dados (DB1, DB2 e DB3), cada um contendo arquivos de dados, logs de refazer, logs de arquivamento e arquivos de controle, tudo dentro de um único pool de capacidade."]
+
+* Para bancos de dados grandes, o layout de volume recomendado é de vários volumes: um para dados Oracle e um arquivo de controle duplicado e um para o log ativo do Oracle, log arquivado e arquivo de controle.  A NetApp recomenda fortemente alocar um volume para o binário do Oracle em vez da unidade local para que o banco de dados possa ser realocado para um novo host e restaurado rapidamente.
++
+image:db-ora-azure-anf-factors-003.png["Esta imagem mostra dois bancos de dados com dois volumes cada.  O primeiro volume contém arquivos de dados, enquanto o segundo volume de cada banco de dados contém logs de refazer, logs de arquivamento e arquivos de controle.  Tudo dentro de um único pool de capacidade."]
+
+
+
+
+
+== Configuração NFS
+
+Linux, o sistema operacional mais comum, inclui recursos NFS nativos.  A Oracle oferece um cliente NFS direto (dNFS) nativamente integrado ao Oracle.  O Oracle dNFS ignora o cache do sistema operacional e permite o processamento paralelo para melhorar o desempenho do banco de dados.  A Oracle oferece suporte ao NFSv3 há mais de 20 anos, e o NFSv4 é compatível com o Oracle 12.1.0.2 e versões posteriores.
+
+Ao usar o dNFS (disponível desde o Oracle 11g), um banco de dados Oracle em execução em uma Máquina Virtual do Azure pode gerar significativamente mais E/S do que o cliente NFS nativo.  A implantação automatizada do Oracle usando o kit de ferramentas de automação da NetApp configura automaticamente o dNFS no NFSv3.
+
+O diagrama a seguir demonstra o benchmark SLOB no Azure NetApp Files com Oracle dNFS.
+
+image:db-ora-azure-anf-factors-004.png["Este gráfico demonstra dramaticamente que o dNFS melhora a latência do arquivo sequencial do BD (ms) em relação ao KNFS."]
+
+Outros fatores a considerar:
+
+* As tabelas de slots TCP são o equivalente NFS da profundidade da fila do adaptador de barramento de host (HBA).  Essas tabelas controlam o número de operações NFS que podem estar pendentes a qualquer momento.  O valor padrão geralmente é 16, o que é muito baixo para um desempenho ideal.  O problema oposto ocorre em kernels Linux mais recentes, que podem aumentar automaticamente o limite da tabela de slots TCP a um nível que satura o servidor NFS com solicitações.
++
+Para um desempenho ideal e para evitar problemas de desempenho, ajuste os parâmetros do kernel que controlam as tabelas de slots TCP para 128.
+
++
+[source, cli]
+----
+sysctl -a | grep tcp.*.slot_table
+----
+* A tabela a seguir fornece opções de montagem NFS recomendadas para uma única instância do Linux NFSv3.
++
+image:aws-ora-fsx-ec2-nfs-001.png["Esta tabela mostra as opções detalhadas de montagem NFS para os seguintes tipos de arquivo: arquivos de controle, arquivos de dados, logs de refazer, ORACLE_HOME e ORACLE_BASE."]
+
+
+
+
+NOTE: Antes de usar o dNFS, verifique se os patches descritos no Oracle Doc 1495104.1 estão instalados.  A matriz de suporte da NetApp para NFSv3 e NFSv4 não inclui sistemas operacionais específicos.  Todos os sistemas operacionais que obedecem ao RFC são suportados.  Ao pesquisar no IMT on-line por suporte a NFSv3 ou NFSv4, não selecione um sistema operacional específico, pois nenhuma correspondência será exibida.  Todos os sistemas operacionais são implicitamente suportados pela política geral.

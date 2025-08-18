@@ -1,0 +1,20 @@
+---
+sidebar: sidebar 
+permalink: videos/videos-open-source-videos.html 
+summary: Série de vídeos e demonstrações discutindo os recursos de muitas das soluções da NetApp 
+keywords: netapp, solutions, videos, demos 
+---
+= Assista a vídeos e demonstrações sobre soluções de banco de dados para bancos de dados de código aberto com a NetApp
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Explore soluções de banco de dados para bancos de dados de código aberto com a NetApp.
+
+.Implantação automatizada do PostgreSQL, configuração de replicação HA/DR, failover, ressincronização
+video::c381b887-8c8b-4d7d-8b0f-b0c0010c5c04[panopto,width=360]

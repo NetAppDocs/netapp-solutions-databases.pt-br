@@ -1,0 +1,93 @@
+---
+sidebar: sidebar 
+permalink: oracle/aws-ora-fsx-ec2-factors.html 
+summary: Esta seção fornece detalhes sobre os fatores a serem considerados ao implantar o banco de dados Oracle na instância AWS EC2 e no armazenamento FSx. 
+keywords: HA, DR, database, Oracle, RDS, AWS, SnapCenter 
+---
+= Fatores a serem considerados para implantação de banco de dados Oracle
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Uma nuvem pública oferece muitas opções de computação e armazenamento, e usar o tipo correto de instância de computação e mecanismo de armazenamento é um bom ponto de partida para a implantação de banco de dados.  Você também deve selecionar configurações de computação e armazenamento otimizadas para bancos de dados Oracle.
+
+As seções a seguir descrevem as principais considerações ao implantar o banco de dados Oracle em uma nuvem pública da AWS em uma instância EC2 com armazenamento FSx.
+
+
+
+== Desempenho da VM
+
+Selecionar o tamanho correto da VM é importante para o desempenho ideal de um banco de dados relacional em uma nuvem pública.  Para melhor desempenho, a NetApp recomenda usar uma instância EC2 M5 Series para implantação Oracle, que é otimizada para cargas de trabalho de banco de dados.  O mesmo tipo de instância também é usado para alimentar uma instância do RDS para Oracle pela AWS.
+
+* Escolha a combinação correta de vCPU e RAM com base nas características da carga de trabalho.
+* Adicione espaço de swap a uma VM.  A implantação da instância padrão do EC2 não cria um espaço de troca, o que não é ideal para um banco de dados.
+
+
+
+
+== Layout e configurações de armazenamento
+
+A NetApp recomenda o seguinte layout de armazenamento:
+
+* Para armazenamento NFS, o layout de volume recomendado é de três volumes: um para o binário Oracle; um para dados Oracle e um arquivo de controle duplicado; e um para o log ativo, log arquivado e arquivo de controle Oracle.
++
+image:aws-ora-fsx-ec2-stor-012.png["Figura mostrando diálogo de entrada/saída ou representando conteúdo escrito"]
+
+* Para armazenamento iSCSI, o layout de volume recomendado é de três volumes: um para o binário Oracle; um para dados Oracle e um arquivo de controle duplicado; e um para o log ativo, log arquivado e arquivo de controle Oracle.  No entanto, cada volume de dados e log idealmente deve conter quatro LUNs.  Os LUNs são balanceados idealmente nos nós do cluster HA.
++
+image:aws-ora-fsx-ec2-stor-013.png["Figura mostrando diálogo de entrada/saída ou representando conteúdo escrito"]
+
+* Para IOPS de armazenamento e taxa de transferência, você pode escolher o limite para IOPS provisionados e taxa de transferência para o cluster de armazenamento FSx, e esses parâmetros podem ser ajustados imediatamente sempre que a carga de trabalho mudar.
++
+** A configuração de IOPS automático é de três IOPS por GiB de capacidade de armazenamento alocada ou armazenamento definido pelo usuário até 80.000.
+** O nível de transferência é incrementado da seguinte forma: 128, 256, 512, 1024, 2045 MBps.
+
+
+
+
+Revise olink:https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/performance.html["Desempenho do Amazon FSx ONTAP"^] documentação ao dimensionar a taxa de transferência e IOPS.
+
+
+
+== Configuração NFS
+
+Linux, o sistema operacional mais comum, inclui recursos NFS nativos.  A Oracle oferece o cliente NFS direto (dNFS) nativamente integrado ao Oracle.  A Oracle oferece suporte ao NFSv3 há mais de 20 anos. O dNFS é compatível com NFSv3 em todas as versões do Oracle.  O NFSv4 é compatível com todos os sistemas operacionais que seguem o padrão NFSv4. O suporte ao dNFS para NFSv4 requer o Oracle 12.1.0.2 ou superior.  O NFSv4.1 requer suporte específico de sistema operacional.  Consulte a NetApp Interoperability Matrix Tool (IMT) para saber os sistemas operacionais suportados. O suporte ao dNFS para NFSv4.1 requer o Oracle versão 19.3.0.0 ou superior.
+
+A implantação automatizada do Oracle usando o kit de ferramentas de automação da NetApp configura automaticamente o dNFS no NFSv3.
+
+Outros fatores a considerar:
+
+* As tabelas de slots TCP são o equivalente NFS da profundidade da fila do adaptador de barramento de host (HBA).  Essas tabelas controlam o número de operações NFS que podem estar pendentes a qualquer momento.  O valor padrão geralmente é 16, o que é muito baixo para um desempenho ideal.  O problema oposto ocorre em kernels Linux mais recentes, que podem aumentar automaticamente o limite da tabela de slots TCP a um nível que satura o servidor NFS com solicitações.
++
+Para um desempenho ideal e para evitar problemas de desempenho, ajuste os parâmetros do kernel que controlam as tabelas de slots TCP para 128.
+
++
+[source, cli]
+----
+sysctl -a | grep tcp.*.slot_table
+----
+* A tabela a seguir fornece opções de montagem NFS recomendadas para Linux NFSv3 - instância única.
++
+image:aws-ora-fsx-ec2-nfs-001.png["Figura mostrando diálogo de entrada/saída ou representando conteúdo escrito"]
+
+
+
+
+NOTE: Antes de usar o dNFS, verifique se os patches descritos no Oracle Doc 1495104.1 estão instalados.  A matriz de suporte da NetApp para NFSv3 e NFSv4 não inclui sistemas operacionais específicos.  Todos os sistemas operacionais que obedecem ao RFC são suportados.  Ao pesquisar no IMT on-line por suporte a NFSv3 ou NFSv4, não selecione um sistema operacional específico, pois nenhuma correspondência será exibida.  Todos os sistemas operacionais são implicitamente suportados pela política geral.
+
+
+
+== Alta disponibilidade
+
+Conforme indicado na arquitetura da solução, o HA é criado com base na replicação em nível de armazenamento.  Portanto, a inicialização e a disponibilidade do Oracle dependem da rapidez com que a computação e o armazenamento podem ser ativados e recuperados.  Veja os seguintes fatores-chave:
+
+* Tenha uma instância de computação em espera pronta e sincronizada com a primária por meio de atualização paralela do Ansible para ambos os hosts.
+* Replique o volume binário do primário para fins de espera, para que você não precise instalar o Oracle no último minuto e descobrir o que precisa ser instalado e corrigido.
+* A frequência de replicação determina a rapidez com que o banco de dados Oracle pode ser recuperado para tornar o serviço disponível.  Há uma compensação entre a frequência de replicação e o consumo de armazenamento.
+* Aproveite a automação para tornar a recuperação e a transição para o modo de espera rápidas e livres de erros humanos.  A NetApp fornece um kit de ferramentas de automação para essa finalidade.
+

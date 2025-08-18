@@ -1,0 +1,31 @@
+= 
+:allow-uri-read: 
+
+
+[.underline]*Agendamento do Manual de Replicação Binária e de Banco de Dados*
+
+*Configure e inicie o modelo de trabalho.*
+
+. Copie o modelo de trabalho criado anteriormente.
++
+.. Navegue até Recursos → Modelos.
+.. Encontre o modelo de configuração ONTAP/CVO e, na extrema direita, clique em Copiar modelo
+.. Clique em Editar modelo no modelo copiado e altere o nome para Manual de replicação binária e de banco de dados.
+.. Mantenha o mesmo inventário, projeto e credenciais para o modelo.
+.. Selecione ora_replication_cg.yml como o manual a ser executado.
+.. As variáveis permanecerão as mesmas, mas o IP do cluster CVO precisará ser definido na variável dst_cluster_ip.
+.. Clique em Salvar.
+
+
+. Agende o modelo de trabalho.
++
+.. Navegue até Recursos → Modelos.
+.. Clique no modelo Manual de replicação binária e de banco de dados e, em seguida, clique em Agendamentos no conjunto superior de opções.
+.. Clique em Adicionar, adicione o Nome Agendado para Replicação Binária e de Banco de Dados, escolha a Data/hora de início no início da hora, escolha seu Fuso horário local e Frequência de execução.  A frequência de execução será sempre que a replicação do SnapMirror será atualizada.
++
+
+NOTE: Um cronograma separado será criado para a replicação do volume de log, para que ele possa ser replicado em uma cadência mais frequente.
+
+
+
+

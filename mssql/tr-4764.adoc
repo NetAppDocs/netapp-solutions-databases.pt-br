@@ -1,0 +1,21 @@
+---
+sidebar: sidebar 
+permalink: mssql/tr-4764.html 
+keywords:  
+summary:  
+---
+= TR-4764: Melhores práticas para Microsoft SQL Server com NetApp EF-Series
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Mitch Blackburn, Pat Sinthusan, NetApp
+
+[role="lead"]
+Este guia de práticas recomendadas tem como objetivo ajudar administradores de armazenamento e administradores de banco de dados a implantar com sucesso o Microsoft SQL Server no armazenamento NetApp EF-Series.
+
+link:https://www.netapp.com/pdf.html?item=/media/17086-tr4764pdf.pdf["TR-4764: Melhores práticas para Microsoft SQL Server com NetApp EF-Series"^]

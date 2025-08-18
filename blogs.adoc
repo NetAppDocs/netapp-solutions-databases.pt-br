@@ -1,0 +1,23 @@
+---
+sidebar: sidebar 
+permalink: blogs.html 
+summary: Leia os blogs que oferecem orientações práticas e práticas recomendadas para integrar o armazenamento ONTAP com soluções de banco de dados NetApp . 
+keywords: netapp, solutions, blogs 
+---
+= Leia blogs de soluções de banco de dados de especialistas da NetApp
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ./media/
+
+
+[role="lead"]
+Leia os blogs que oferecem orientações práticas e práticas recomendadas para integrar o armazenamento ONTAP com soluções de banco de dados NetApp .
+
+* link:https://aws.amazon.com/blogs/storage/using-netapp-snapcenter-with-amazon-fsx-for-netapp-ontap-to-protect-your-sql-server-workloads/["Proteja suas cargas de trabalho do SQL Server usando o NetApp SnapCenter com o Amazon FSx ONTAP"]
+* link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Modernize-your-Oracle-database-operation-in-hybrid-cloud-with-Amazon-FSx-storage/ba-p/437554["Modernize sua operação de banco de dados Oracle na nuvem híbrida com armazenamento Amazon FSx"]
+* link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Hybrid-cloud-database-solutions-with-SnapCenter/ba-p/171061#M5["Soluções de banco de dados em nuvem híbrida com SnapCenter"]
+* link:https://community.netapp.com/t5/Tech-ONTAP-Blogs/Automate-Your-Oracle-Database-Infrastructure-in-the-Hybrid-Cloud/ba-p/167046["Automatize sua infraestrutura de banco de dados Oracle na nuvem híbrida"]
+

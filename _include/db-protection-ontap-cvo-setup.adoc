@@ -1,0 +1,30 @@
+= 
+:allow-uri-read: 
+
+
+[.underline]* Configuração ONTAP e CVO*
+
+*Configure e inicie o modelo de trabalho.*
+
+. Crie o modelo de trabalho.
++
+.. Navegue até Recursos → Modelos → Adicionar e clique em Adicionar modelo de trabalho.
+.. Digite o nome ONTAP/CVO Setup
+.. Selecione o tipo de trabalho; Executar configura o sistema com base em um manual.
+.. Selecione o inventário, o projeto, o manual e as credenciais correspondentes para o manual.
+.. Selecione o playbook ontap_setup.yml para um ambiente local ou selecione o cvo_setup.yml para replicar para uma instância CVO.
+.. Cole as variáveis globais copiadas da etapa 4 no campo Variáveis de modelo na guia YAML.
+.. Clique em Salvar.
+
+
+. Inicie o modelo de trabalho.
++
+.. Navegue até Recursos → Modelos.
+.. Clique no modelo desejado e depois clique em Iniciar.
++
+
+NOTE: Usaremos esse modelo e o copiaremos para os outros manuais.
+
+
+
+

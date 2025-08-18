@@ -1,0 +1,21 @@
+---
+sidebar: sidebar 
+permalink: mysql/tr-4722.html 
+keywords:  
+summary:  
+---
+= TR-4722: Práticas recomendadas para banco de dados MySQL no NetApp ONTAP
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Anup Bharti, Manohar Kulkarni, Jeffrey Steiner NetApp
+
+[role="lead"]
+O MySQL e suas variantes, incluindo MariaDB e Percona, são amplamente utilizados em muitos aplicativos corporativos.  Essas aplicações variam de sites globais de redes sociais e grandes sistemas de comércio eletrônico a sistemas de hospedagem de PMEs contendo milhares de instâncias de bancos de dados.  Este documento descreve os requisitos de configuração e fornece orientação sobre ajuste e configuração de armazenamento para implantação do MySQL no software de gerenciamento de dados NetApp ONTAP .  Para determinar se o ambiente, as configurações e as versões especificadas neste relatório oferecem suporte ao seu ambiente, consulte a Ferramenta de Matriz de Interoperabilidade (IMT).
+
+link:https://www.netapp.com/pdf.html?item=/media/16423-tr-4722pdf.pdf["TR-4722: Práticas recomendadas para banco de dados MySQL no NetApp ONTAP"^]

@@ -1,0 +1,62 @@
+= 
+:allow-uri-read: 
+
+
+. Configure as credenciais.
+. Criar tipos de credenciais.  Para soluções envolvendo o ONTAP, você deve configurar o tipo de credencial para corresponder às entradas de nome de usuário e senha.
++
+.. Navegue até Administração → Tipos de credenciais e clique em Adicionar.
+.. Forneça o nome e a descrição.
+.. Cole o seguinte conteúdo em Configuração de entrada:
++
+[source, cli]
+----
+fields:
+  - id: dst_cluster_username
+    type: string
+    label: Destination Cluster Username
+  - id: dst_cluster_password
+    type: string
+    label: Destination Cluster Password
+    secret: true
+  - id: src_cluster_username
+    type: string
+    label: Source Cluster Username
+  - id: src_cluster_password
+    type: string
+    label: Source Cluster Password
+    secret: true
+----
+.. Cole o seguinte conteúdo na Configuração do Injetor e clique em Salvar:
++
+[source, cli]
+----
+extra_vars:
+  dst_cluster_username: '{{ dst_cluster_username }}'
+  dst_cluster_password: '{{ dst_cluster_password }}'
+  src_cluster_username: '{{ src_cluster_username }}'
+  src_cluster_password: '{{ src_cluster_password }}'
+----
+
+
+. Criar credencial para ONTAP
++
+.. Navegue até Recursos → Credenciais e clique em Adicionar.
+.. Insira o nome e os detalhes da organização para as credenciais do ONTAP
+.. Selecione o tipo de credencial que foi criado na etapa anterior.
+.. Em Detalhes do tipo, insira o nome de usuário e a senha para seus clusters de origem e destino.
+.. Clique em Salvar
+
+
+. Criar credencial para Oracle
++
+.. Navegue até Recursos → Credenciais e clique em Adicionar.
+.. Insira o nome e os detalhes da organização para Oracle
+.. Selecione o tipo de credencial Máquina.
+.. Em Detalhes do tipo, insira o nome de usuário e a senha para os hosts Oracle.
+.. Selecione o Método de Escalonamento de Privilégios correto e insira o nome de usuário e a senha.
+.. Clique em Salvar
+.. Repita o processo, se necessário, para uma credencial diferente para o host dr_oracle.
+
+
+

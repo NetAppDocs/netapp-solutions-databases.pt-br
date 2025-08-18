@@ -1,0 +1,24 @@
+= 
+:allow-uri-read: 
+
+
+[.underline]*Agendamento do Manual de Replicação de Log*
+
+*Configure e inicie o modelo de trabalho.*
+
+. Copie o modelo de trabalho criado anteriormente.
++
+.. Navegue até Recursos → Modelos.
+.. Encontre o modelo de configuração ONTAP/CVO e, na extrema direita, clique em Copiar modelo
+.. Clique em Editar modelo no modelo copiado e altere o nome para Manual de restauração e recuperação.
+.. Mantenha o mesmo inventário, projeto e credenciais para o modelo.
+.. Selecione ora_recovery.yml como o manual a ser executado.
+.. As variáveis permanecerão as mesmas, mas o IP do cluster CVO precisará ser definido na variável dst_cluster_ip.
+.. Clique em Salvar.
+
+
++
+
+NOTE: Este manual não será executado até que você esteja pronto para restaurar seu banco de dados no site remoto.
+
+

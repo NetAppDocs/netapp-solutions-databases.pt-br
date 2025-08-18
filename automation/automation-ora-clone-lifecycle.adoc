@@ -1,0 +1,218 @@
+---
+sidebar: sidebar 
+permalink: automation/automation-ora-clone-lifecycle.html 
+keywords: Database, Oracle, DataGuard, AWS, FSx ONTAP, Azure, ANF, 
+summary: A solução fornece um kit de ferramentas de automação baseado em Ansible para configurar, clonar e atualizar bancos de dados clones Oracle a partir de um banco de dados primário.  O banco de dados principal pode ser o banco de dados standby físico na configuração do Oracle Data Guard.  A solução pode ser aplicada em um data center privado ou na nuvem AWS com armazenamento FSx ONTAP em configuração NFS ou ASM, ou nuvem Azure com armazenamento Azure NetApp Files em configuração NFS. 
+---
+= Automação do ciclo de vida do SnapCenter Oracle Clone
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Allen Cao, Niyaz Mohamed, NetApp
+
+[role="lead"]
+A solução fornece um kit de ferramentas de automação baseado em Ansible para configurar, clonar e atualizar bancos de dados clones Oracle a partir de um banco de dados primário.  O banco de dados principal pode ser o banco de dados standby físico na configuração do Oracle Data Guard.  A solução pode ser aplicada em um data center privado ou na nuvem AWS com armazenamento FSx ONTAP em configuração NFS ou ASM, ou nuvem Azure com armazenamento Azure NetApp Files em configuração NFS.
+
+
+
+== Propósito
+
+Os clientes adoram a função FlexClone do armazenamento NetApp ONTAP para clones rápidos (em minutos) de grandes bancos de dados e economias adicionais de armazenamento se o recurso de clone fino estiver habilitado na oferta de armazenamento específica em um data center privado ou nuvem pública.  Este kit de ferramentas baseado em Ansible automatiza a configuração, clonagem e atualização de bancos de dados Oracle clonados conforme programado usando os utilitários de linha de comando do NetApp SnapCenter para gerenciamento simplificado do ciclo de vida.  O kit de ferramentas se aplica a bancos de dados Oracle implantados no armazenamento ONTAP no local ou na nuvem pública (AWS ou Azure) e gerenciados pela ferramenta NetApp SnapCenter UI.
+
+Esta solução aborda os seguintes casos de uso:
+
+* Configurar o arquivo de configuração de especificação de clone do banco de dados Oracle.
+* Crie e atualize o banco de dados Oracle clone de acordo com a programação definida pelo usuário.
+
+
+
+
+== Público
+
+Esta solução é destinada às seguintes pessoas:
+
+* Um DBA que gerencia bancos de dados Oracle com o SnapCenter.
+* Um administrador de armazenamento que gerencia o armazenamento ONTAP com o SnapCenter.
+* Um proprietário de aplicativo que tem acesso à interface do usuário do SnapCenter .
+
+
+
+
+== Licença
+
+Ao acessar, baixar, instalar ou usar o conteúdo deste repositório GitHub, você concorda com os termos da Licença estabelecida emlink:https://github.com/NetApp/na_ora_hadr_failover_resync/blob/master/LICENSE.TXT["Arquivo de licença"^] .
+
+
+NOTE: Há certas restrições quanto à produção e/ou compartilhamento de quaisquer trabalhos derivados do conteúdo deste repositório do GitHub.  Certifique-se de ler os termos da Licença antes de usar o conteúdo.  Se você não concordar com todos os termos, não acesse, baixe ou use o conteúdo deste repositório.
+
+
+
+== Implantação da solução
+
+
+
+=== Pré-requisitos para implantação
+
+[%collapsible%open]
+====
+A implantação requer os seguintes pré-requisitos.
+
+....
+Ansible controller:
+  Ansible v.2.10 and higher
+  ONTAP collection 21.19.1
+  Python 3
+  Python libraries:
+    netapp-lib
+    xmltodict
+    jmespath
+....
+....
+SnapCenter server:
+  version 5.0 and up, 6.1 for Azure NetApp Files
+  backup policy configured
+  Source database protected with a backup policy
+....
+....
+Oracle servers:
+  Source server managed by SnapCenter (In Data Guard, this would be the physical standby serer)
+  Target server managed by SnapCenter (clone DB host)
+....
+
+NOTE: Para simplificar, o servidor Oracle de destino clone deve ser configurado de forma idêntica ao servidor Oracle em espera, como a pilha de software Oracle, bem como o layout do diretório para o Oracle Home etc.
+
+====
+
+
+=== Baixe o kit de ferramentas
+
+[%collapsible%open]
+====
+[source, cli]
+----
+git clone https://bitbucket.ngage.netapp.com/scm/ns-bb/na_oracle_clone_lifecycle.git
+----
+
+NOTE: No momento, o kit de ferramentas só pode ser acessado por usuários internos da NetApp com acesso ao bitbucket.  Para usuários externos interessados, solicite acesso à sua equipe de conta ou entre em contato com a equipe de engenharia de soluções da NetApp .
+
+====
+
+
+=== Configuração do arquivo de hosts de destino do Ansible
+
+[%collapsible%open]
+====
+O kit de ferramentas inclui um arquivo hosts que define os alvos nos quais um playbook do Ansible está sendo executado.  Geralmente, são os hosts clones do Oracle de destino.  A seguir está um arquivo de exemplo.  Uma entrada de host inclui o endereço IP do host de destino, bem como a chave SSH para que um usuário administrador tenha acesso ao host para executar comandos de clonagem ou atualização.
+
+#Hosts clones Oracle
+
+....
+[clone_1]
+ora_04.cie.netapp.com ansible_host=10.61.180.29 ansible_ssh_private_key_file=ora_04.pem
+....
+ [clone_2]
+ [clone_3]
+====
+
+
+=== Configuração de variáveis globais
+
+[%collapsible%open]
+====
+Os playbooks do Ansible recebem entradas variáveis de vários arquivos de variáveis.  Abaixo está um exemplo de arquivo de variável global vars.yml.
+
+ # ONTAP specific config variables
+ # SnapCtr specific config variables
+....
+snapctr_usr: xxxxxxxx
+snapctr_pwd: 'xxxxxxxx'
+....
+ backup_policy: 'Oracle Full offline Backup'
+ # Linux specific config variables
+ # Oracle specific config variables
+====
+
+
+=== Configuração de variáveis de host
+
+[%collapsible%open]
+====
+Variáveis de host são definidas no diretório host_vars chamado {{ host_name }}.yml.  Abaixo está um exemplo de arquivo de variável de host Oracle de destino ora_04.cie.netapp.com.yml que mostra a configuração típica.
+
+ # User configurable Oracle clone db host specific parameters
+....
+# Source database to clone from
+source_db_sid: NTAP1
+source_db_host: ora_03.cie.netapp.com
+....
+....
+# Clone database
+clone_db_sid: NTAP1DEV
+....
+ snapctr_obj_id: '{{ source_db_host }}\{{ source_db_sid }}'
+====
+
+
+=== Configuração adicional do servidor Oracle de destino do clone
+
+[%collapsible%open]
+====
+O servidor Oracle de destino clone deve ter a mesma pilha de software Oracle que o servidor Oracle de origem instalado e corrigido.  O usuário Oracle .bash_profile tem $ORACLE_BASE e $ORACLE_HOME configurados.  Além disso, a variável $ORACLE_HOME deve corresponder à configuração do servidor Oracle de origem.  Segue um exemplo.
+
+ # .bash_profile
+....
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+....
+....
+# User specific environment and startup programs
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=/u01/app/oracle/product/19.0.0/NTAP1
+....
+====
+
+
+=== Execução do manual de instruções
+
+[%collapsible%open]
+====
+Há um total de três manuais para executar o ciclo de vida de clone do banco de dados Oracle com utilitários SnapCenter CLI.
+
+. Instalar pré-requisitos do controlador Ansible — apenas uma vez.
++
+[source, cli]
+----
+ansible-playbook -i hosts ansible_requirements.yml
+----
+. Configurar arquivo de especificação de clone - apenas uma vez.
++
+[source, cli]
+----
+ansible-playbook -i hosts clone_1_setup.yml -u admin -e @vars/vars.yml
+----
+. Crie e atualize o banco de dados clone regularmente no crontab com um script de shell para chamar um manual de atualização.
++
+[source, cli]
+----
+0 */4 * * * /home/admin/na_oracle_clone_lifecycle/clone_1_refresh.sh
+----
+
+
+
+NOTE: Altere o nome de usuário para seu usuário sudo para configuração do SnapCenter .
+
+Para um banco de dados clone adicional, crie um clone_n_setup.yml, um clone_n_refresh.yml e um clone_n_refresh.sh separados.  Configure os hosts de destino do Ansible e o arquivo hostname.yml no diretório host_vars adequadamente.
+
+====
+
+
+== Onde encontrar informações adicionais
+
+Para saber mais sobre a automação da solução NetApp , consulte o seguinte sitelink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html["Automação de soluções NetApp ^"^]

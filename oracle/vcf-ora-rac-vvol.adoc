@@ -1,0 +1,1209 @@
+---
+sidebar: sidebar 
+permalink: oracle/vcf-ora-rac-vvol.html 
+keywords: Database, Oracle, AWS, FSx ONTAP, VMC, VMware 
+summary: 'A solução fornece uma visão geral e detalhes para implantação e proteção do Oracle no VMware Cloud Foundation (VCF) com vSphere Virtual Volumes (vVols) como armazenamento de banco de dados primário e banco de dados Oracle na configuração Real Application Clusters (RAC).' 
+---
+= TR-4997: Implantação e proteção do Oracle RAC em VCF com vVols
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Allen Cao, Niyaz Mohamed, NetApp
+
+[role="lead"]
+A solução fornece uma visão geral e detalhes para implantação e proteção do Oracle no VMware Cloud Foundation (VCF) com vSphere Virtual Volumes (vVols) como armazenamento de banco de dados primário e banco de dados Oracle na configuração Real Application Clusters (RAC).
+
+
+
+== Propósito
+
+O VMware vSphere Virtual Volumes (vVols) é uma estrutura de gerenciamento e integração SAN/NAS que expõe discos virtuais como objetos de armazenamento nativos e permite operações baseadas em matriz no nível do disco virtual.  Em outras palavras, os vVols tornam os dispositivos SAN/NAS compatíveis com VM e desbloqueiam a capacidade de aproveitar serviços de dados baseados em array com uma abordagem centrada em VM na granularidade de um único disco virtual. Os vVols permitem que os clientes aproveitem os recursos exclusivos de seus investimentos atuais em armazenamento e façam a transição sem interrupções para um modelo operacional mais simples e eficiente, otimizado para ambientes virtuais que funcionam em todos os tipos de armazenamento.
+
+Emlink:vcf-ora-si-vvol.html["TR-4996"^] , demonstramos a implantação e proteção de banco de dados Oracle de instância única em VCF com vVols.  Esta documentação demonstra a implantação e a proteção de um banco de dados Oracle RAC em um ambiente VMware Cloud Foundation com vVols como armazenamento de banco de dados primário em um cluster de armazenamento NetApp ONTAP .  O banco de dados Oracle RAC é configurado como se estivesse implantado em sistemas de arquivos locais em um sistema de armazenamento local.  Este relatório técnico se concentra nas etapas de criação de vVols no VCF para implantação do Oracle RAC.  Também demonstramos a implantação do banco de dados Oracle RAC em VCF em vVols com o kit de ferramentas de automação NetApp e a proteção do banco de dados RAC com a ferramenta NetApp SnapCenter UI.
+
+Esta solução aborda os seguintes casos de uso:
+
+* Implantação de banco de dados Oracle RAC em VCF com armazenamento de dados vVols no NetApp ONTAP AFF como armazenamento de banco de dados primário
+* Backup e restauração de banco de dados Oracle em VCF com armazenamento de dados vVols usando a ferramenta NetApp SnapCenter UI
+
+
+
+
+== Público
+
+Esta solução é destinada às seguintes pessoas:
+
+* Um DBA que gostaria de implantar o Oracle RAC no VCF com armazenamento de dados vVols no NetApp ONTAP AFF como armazenamento de banco de dados primário
+* Um arquiteto de soluções de banco de dados que gostaria de testar cargas de trabalho do Oracle RAC em VCF com armazenamento de dados vVols no armazenamento NetApp ONTAP AFF
+* Um administrador de armazenamento que gostaria de implantar e gerenciar um banco de dados Oracle RAC implantado no VCF com armazenamento de dados vVols no armazenamento NetApp ONTAP AFF
+* Um proprietário de aplicativo que gostaria de configurar um banco de dados Oracle RAC em VCF com armazenamento de dados vVol
+
+
+
+
+== Ambiente de teste e validação de soluções
+
+O teste e a validação desta solução foram realizados em um ambiente de laboratório no VCF com armazenamento de dados vVols no armazenamento NetApp ONTAP AFF que pode não corresponder ao ambiente de implantação final. Para mais informações, consulte a seção <<Fatores-chave para consideração de implantação>> .
+
+
+
+=== Arquitetura
+
+image:vcf-orarac-vvol-architecture.png["Esta imagem fornece uma visão detalhada da configuração de implantação do Oracle na nuvem pública da AWS com iSCSI e ASM."]
+
+
+
+=== Componentes de hardware e software
+
+[cols="33%, 33%, 33%"]
+|===
+
+
+3+| *Hardware* 
+
+
+| NetApp ONTAP AFF A300 | Versão 9.14.1P4 | Prateleira DS224 com 24 discos NVMe, capacidade total de 35,2 TiB 
+
+
+| Cluster VMware VSphere | Versão 8.02 | 12 CPU(s) x Intel(R) Xeon(R) Gold 5218 CPU @ 2,30 GHz, 8 nós (4 domínios de gerenciamento e 4 domínios de carga de trabalho) 
+
+
+3+| *Software* 
+
+
+| RedHat Linux | Kernel RHEL-8.6, 4.18.0-372.9.1.el8.x86_64 | Hospedagem de servidores Oracle DB, implantação de assinatura RedHat para testes 
+
+
+| Servidor Windows | Padrão 2022, 10.0.20348 Build 20348 | Hospedagem do servidor SnapCenter 
+
+
+| Centos Linux | CentOS Linux versão 8.5.2111 | Hospedagem do controlador Ansible 
+
+
+| Infraestrutura de grade Oracle | Versão 19.18 | Patch RU aplicado p34762026_190000_Linux-x86-64.zip 
+
+
+| Banco de Dados Oracle | Versão 19.18 | Patch RU aplicado p34765931_190000_Linux-x86-64.zip 
+
+
+| Oracle OPatch | Versão 12.2.0.1.36 | Último patch p6880880_190000_Linux-x86-64.zip 
+
+
+| Servidor SnapCenter | Versão 6.0 | Implantação de grupo de trabalho 
+
+
+| SnapCenter Plug-in for VMware vSphere | Versão 6.0 | Implantado como uma VM ova no cluster vSphere 
+
+
+| Ferramenta ONTAP para VMware vSphere | Versão 9.13 | Implantado como uma VM ova no cluster vSphere 
+
+
+| Abra o JDK | Versão java-11-openjdk-11.0.23.0.9-3.el8.x86_64 | Requisito do plugin SnapCenter em VMs de banco de dados 
+|===
+
+
+=== Configuração do banco de dados Oracle RAC em VCF
+
+[cols="33%, 33%, 33%"]
+|===
+
+
+3+|  
+
+
+| *Nó RAC* | *Banco de dados* | *Armazenamento de banco de dados* 
+
+
+| ora01 | NTAP(NTAP_pdb1,NTAP_pdb2,NTAP_pdb3) | Armazenamentos de dados vVols (VCF_ORA_BINS, VCF_ORA_CRS, VCF_ORA_DAT1, VCF_ORA_DAT2, VCF_ORA_LOGS) no NetApp ONTAP AFF A300 
+
+
+| ora02 | NTAP(NTAP_pdb1,NTAP_pdb2,NTAP_pdb3) | Armazenamentos de dados vVols (VCF_ORA_BINS, VCF_ORA_CRS, VCF_ORA_DAT1, VCF_ORA_DAT2, VCF_ORA_LOGS) no NetApp ONTAP AFF A300 
+|===
+
+
+=== Fatores-chave para consideração de implantação
+
+* *Protocolo para conectividade de cluster vVols com ONTAP .*  NFS ou iSCSI são boas escolhas.  Os níveis de desempenho são equivalentes.  Nesta demonstração de solução, usamos iSCSI como um protocolo de armazenamento para conectividade vVols com o cluster de armazenamento ONTAP sublinhado.  Se a infraestrutura VCF for compatível, os protocolos FC/FCoE e NVMe/FC também serão suportados para armazenamentos de dados vVols no NetApp ONTAP.
+* *Layout de armazenamento Oracle em datastores vVols .*  Em nossos testes e validações, implantamos cinco armazenamentos de dados vVols para binários Oracle, registro/votação de cluster Oracle, dados Oracle e arquivos de log Oracle.  É uma boa prática separar diferentes tipos de arquivos Oracle em seus próprios armazenamentos de dados para que o backup, a recuperação ou a clonagem do banco de dados possam ser facilmente gerenciados e executados.  Crie vVols dedicados para bancos de dados grandes e compartilhe vVols para bancos de dados menores ou bancos de dados com perfil de QoS semelhante. 
+* *Redundância de armazenamento Oracle.*  Usar `Normal Redundancy` para arquivos críticos de registro/votação do cluster Oracle RAC, de modo que três arquivos de votação em três grupos de falhas de disco ASM forneçam proteção ideal do cluster e o registro do cluster seja espelhado entre os grupos de falhas de disco ASM.  Usar `External Redundancy` para arquivos binários, de dados e de log do Oracle para otimizar a utilização do armazenamento.  O ONTAP RAID-DP sublinhado fornece proteção de dados quando `External Redundancy` está empregado.
+* *Credencial para autenticação de armazenamento ONTAP .*  Use somente credenciais de nível de cluster ONTAP para autenticação do cluster de armazenamento ONTAP , incluindo conectividade do SnapCenter com o cluster de armazenamento ONTAP ou conectividade da ferramenta ONTAP com o cluster de armazenamento ONTAP .
+* *Provisionar armazenamento do repositório de dados vVols para a VM do banco de dados.*  Adicione apenas um disco por vez à VM do banco de dados a partir do armazenamento de dados vVols .  Adicionar vários discos de armazenamentos de dados vVols ao mesmo tempo não é suportado no momento.  
+* *Proteção de banco de dados.*  A NetApp fornece um pacote de SnapCenter software para backup e restauração de banco de dados com uma interface de usuário amigável.  A NetApp recomenda implementar essa ferramenta de gerenciamento para obter backup rápido do SnapShot, restauração rápida do banco de dados e recuperação.
+
+
+
+
+== Implantação da solução
+
+As seções a seguir fornecem procedimentos passo a passo para implantação do banco de dados Oracle 19c no VCF com datastores vVols no armazenamento NetApp ONTAP em uma configuração Oracle RAC.
+
+
+
+=== Pré-requisitos para implantação
+
+[%collapsible%open]
+====
+A implantação requer os seguintes pré-requisitos.
+
+. Um VMware VCF foi configurado.  Para obter informações ou instruções sobre como criar um VCF, consulte a documentação do VMwarelink:https://docs.vmware.com/en/VMware-Cloud-Foundation/index.html["Documentação do VMware Cloud Foundation"^] .
+. Provisione três VMs Linux, duas VMs para o cluster de banco de dados Oracle RAC e uma VM para o controlador Ansible dentro do domínio de carga de trabalho VCF.  Provisione uma VM de servidor Windows para executar o servidor NetApp SnapCenter .  Para obter informações sobre como configurar o controlador Ansible para implantação automatizada do banco de dados Oracle, consulte os seguintes recursoslink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/getting-started.html["Introdução à automação de soluções da NetApp ^"^] .
+. As VMs do banco de dados Oracle RAC devem ter provisionadas pelo menos duas interfaces de rede: uma para interconexão privada do Oracle RAC e outra para aplicativos ou tráfego de dados públicos.
+. O plugin SnapCenter versão 6.0 para VMware vSphere foi implantado no VCF.  Consulte os seguintes recursos para a implantação do plugin:link:https://docs.netapp.com/us-en/sc-plugin-vmware-vsphere/["Documentação do SnapCenter Plug-in for VMware vSphere"^] .
+. A ferramenta ONTAP para VMware vSphere foi implantada no VCF.  Consulte os seguintes recursos para a ferramenta ONTAP para implantação do VMware vSphere:link:https://docs.netapp.com/us-en/ontap-tools-vmware-vsphere/index.html["Documentação das ONTAP tools for VMware vSphere"^]
+
+
+
+NOTE: Certifique-se de ter alocado pelo menos 50 GB no volume raiz da VM Oracle para ter espaço suficiente para preparar os arquivos de instalação do Oracle.
+
+====
+
+
+=== Criar perfil de capacidade de armazenamento
+
+[%collapsible%open]
+====
+Primeiro, crie um perfil de capacidade de armazenamento personalizado para o armazenamento ONTAP sublinhado que hospeda o armazenamento de dados vVols .
+
+. Nos atalhos do cliente vSphere, abra a ferramenta NetApp ONTAP .  Certifique-se de que o cluster de armazenamento ONTAP foi adicionado a `Storage Systems` como parte da implantação da ferramenta ONTAP .
++
+image:vcf-ora-vvol-scp-001.png["Captura de tela mostrando uma configuração de perfil de capacidade de armazenamento personalizada."] image:vcf-ora-vvol-scp-008.png["Captura de tela mostrando uma configuração de perfil de capacidade de armazenamento personalizada."]
+
+. Clique em `Storage capability profile` para adicionar um perfil personalizado para o Oracle.  Dê um nome ao perfil e adicione uma breve descrição.
++
+image:vcf-ora-vvol-scp-002.png["Captura de tela mostrando uma configuração de perfil de capacidade de armazenamento personalizada."]
+
+. Escolha a categoria do controlador de armazenamento: desempenho, capacidade ou híbrido.
++
+image:vcf-ora-vvol-scp-003.png["Captura de tela mostrando uma configuração de perfil de capacidade de armazenamento personalizada."]
+
+. Selecione o protocolo.
++
+image:vcf-ora-vvol-scp-004.png["Captura de tela mostrando uma configuração de perfil de capacidade de armazenamento personalizada."]
+
+. Defina uma política de QoS, se desejar.
++
+image:vcf-ora-vvol-scp-005.png["Captura de tela mostrando uma configuração de perfil de capacidade de armazenamento personalizada."]
+
+. Atributos de armazenamento adicionais para o perfil.  Certifique-se de que a criptografia esteja habilitada no controlador NetApp se quiser ter o recurso de criptografia, ou isso poderá causar problemas ao aplicar o perfil.
++
+image:vcf-ora-vvol-scp-006.png["Captura de tela mostrando uma configuração de perfil de capacidade de armazenamento personalizada."]
+
+. Revise o resumo e conclua a criação do perfil de capacidade de armazenamento.
++
+image:vcf-ora-vvol-scp-007.png["Captura de tela mostrando uma configuração de perfil de capacidade de armazenamento personalizada."]
+
+
+
+====
+
+
+=== Criar e configurar o armazenamento de dados vVols
+
+[%collapsible%open]
+====
+Com os pré-requisitos concluídos, efetue login no VCF como usuário administrador por meio do cliente vSphere, navegando até o domínio da carga de trabalho.  Não use a opção de armazenamento integrada do VMware para criar vVols.  Em vez disso, use a ferramenta NetApp ONTAP para criar vVols.  A seguir são demonstrados os procedimentos para criar e configurar vVols.
+
+. O fluxo de trabalho de criação de vVols pode ser acionado pela interface da ferramenta ONTAP ou pelo cluster de domínio de carga de trabalho do VCF.
++
+image:vcf-ora-vvol-datastore-001.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
++
+image:vcf-ora-vvol-datastore-001-b.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
+. Preenchendo informações gerais do armazenamento de dados, incluindo destino de provisionamento, tipo, nome e protocolo.
++
+image:vcf-orarac-vvol-datastore-001.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
+. Selecione o perfil de capacidade de armazenamento personalizado criado na etapa anterior, o `Storage system` , e `Storage VM` , onde os vVols devem ser criados.
++
+image:vcf-orarac-vvol-datastore-002.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
+. Escolher `Create new volumes` , preencha o nome e o tamanho do volume e clique em `ADD` então `NEXT` para ir para a página de resumo.
++
+image:vcf-orarac-vvol-datastore-003.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."] image:vcf-orarac-vvol-datastore-004.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
+. Clique `Finish` para criar um armazenamento de dados vVols para o binário Oracle.
++
+image:vcf-orarac-vvol-datastore-005.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
+. Crie um armazenamento de dados para o registro de cluster Oracle ou CRS.
++
+image:vcf-orarac-vvol-datastore-006.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
++
+
+NOTE: Você pode adicionar mais de um volume a um armazenamento de dados vVols ou abranger volumes de um armazenamento de dados vVols em nós do controlador ONTAP para desempenho ou redundância.
+
+. Crie um armazenamento de dados para dados Oracle.  O ideal é criar armazenamentos de dados separados em cada nó do controlador ONTAP e empregar o Oracle ASM para distribuir dados entre os nós do controlador para maximizar a utilização da capacidade do cluster de armazenamento ONTAP .
++
+image:vcf-orarac-vvol-datastore-006-a.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."] image:vcf-orarac-vvol-datastore-006-b.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
+. Crie um armazenamento de dados para o log do Oracle.  Dada a natureza sequencial da gravação de log do Oracle, é melhor colocá-lo em um único nó controlador ONTAP .
++
+image:vcf-orarac-vvol-datastore-006-c.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
+. Valide os datastores Oracle após a implantação.
++
+image:vcf-orarac-vvol-datastore-007.png["Captura de tela mostrando a configuração do armazenamento de dados vVols ."]
+
+
+
+====
+
+
+=== Crie uma política de armazenamento de VM com base no perfil de capacidade de armazenamento
+
+[%collapsible%open]
+====
+Antes de provisionar o armazenamento do repositório de dados vVols para a VM do banco de dados, adicione uma política de armazenamento da VM com base no perfil de capacidade de armazenamento criado na etapa anterior.  A seguir estão os procedimentos.
+
+. Nos menus do cliente vSphere, abra `Policies and Profiles` e destacar `VM Storage Policies` .  Clique `Create` abrir `VM Storage Policies` fluxo de trabalho.
++
+image:vcf-ora-vvol-vm-policy-001.png["Captura de tela mostrando uma configuração de política de armazenamento de VM."]
+
+. Nomeie a política de armazenamento da VM.
++
+image:vcf-ora-vvol-vm-policy-002.png["Captura de tela mostrando uma configuração de política de armazenamento de VM."]
+
+. Em `Datastore specific rules` , verificar `Enable rules for "NetAPP.clustered.Data.ONTAP.VP.vvol" storage`
++
+image:vcf-ora-vvol-vm-policy-003.png["Captura de tela mostrando uma configuração de política de armazenamento de VM."]
+
+. Para regras NetApp.clustered.Data.ONTAP ONTAP `Placement` , selecione o perfil de capacidade de armazenamento personalizado criado na etapa anterior.
++
+image:vcf-ora-vvol-vm-policy-004.png["Captura de tela mostrando uma configuração de política de armazenamento de VM."]
+
+. Para regras NetApp.clustered.Data.ONTAP ONTAP `Replication` , escolher `Disabled` se vVols não forem replicados.
++
+image:vcf-ora-vvol-vm-policy-004-a.png["Captura de tela mostrando uma configuração de política de armazenamento de VM."]
+
+. A página de compatibilidade de armazenamento exibe os armazenamentos de dados vVols compatíveis no ambiente VCF.
++
+image:vcf-orarac-vvol-datastore-008.png["Captura de tela mostrando uma configuração de política de armazenamento de VM."]
+
+. Revise e conclua a criação da Política de Armazenamento da VM.
++
+image:vcf-ora-vvol-vm-policy-006.png["Captura de tela mostrando uma configuração de política de armazenamento de VM."]
+
+. Valide a política de armazenamento de VM recém-criada.
++
+image:vcf-ora-vvol-vm-policy-007.png["Captura de tela mostrando uma configuração de política de armazenamento de VM."]
+
+
+
+====
+
+
+=== Alocar discos para VMs RAC de datastores vVols e configurar armazenamento de BD
+
+[%collapsible%open]
+====
+No cliente vSphere, adicione os discos desejados dos armazenamentos de dados vVols à VM do banco de dados editando as configurações da VM.  Em seguida, faça login na VM para formatar e montar o disco binário nos pontos de montagem /u01.  A seguir são demonstradas as etapas e tarefas exatas.
+
+. Antes de alocar discos do armazenamento de dados para a VM do banco de dados, faça login nos hosts VMware ESXi para validar e garantir que a multigravação esteja habilitada (valor GBLAllowMW definido como 1) no nível do ESXi.
++
+....
+[root@vcf-wkld-esx01:~] which esxcli
+/bin/esxcli
+[root@vcf-wkld-esx01:~] esxcli system settings advanced list -o /VMFS3/GBLAllowMW
+   Path: /VMFS3/GBLAllowMW
+   Type: integer
+   Int Value: 1
+   Default Int Value: 1
+   Min Value: 0
+   Max Value: 1
+   String Value:
+   Default String Value:
+   Valid Characters:
+   Description: Allow multi-writer GBLs.
+   Host Specific: false
+   Impact: none
+[root@vcf-wkld-esx01:~]
+
+....
+. Adicione um novo controlador SCSI dedicado para uso com discos Oracle RAC.  Desabilite o compartilhamento de barramento SCSI.
++
+image:vcf-orarac-vvol-vm-001.png["Captura de tela mostrando uma configuração de armazenamento de VM."]
+
+. Do nó RAC 1 - ora01, adicione um disco à VM para armazenamento binário Oracle sem compartilhamento.
++
+image:vcf-orarac-vvol-vm-002.png["Captura de tela mostrando uma configuração de armazenamento de VM."]
+
+. No nó RAC 1, adicione três discos à VM para armazenamento Oracle RAC CRS e habilite o compartilhamento de vários gravadores.
++
+image:vcf-orarac-vvol-vm-003.png["Captura de tela mostrando uma configuração de armazenamento de VM."] image:vcf-orarac-vvol-vm-004.png["Captura de tela mostrando uma configuração de armazenamento de VM."] image:vcf-orarac-vvol-vm-005.png["Captura de tela mostrando uma configuração de armazenamento de VM."]
+
+. No nó RAC 1, adicione dois discos de cada armazenamento de dados para a VM para armazenamento de dados Oracle compartilhado.
++
+image:vcf-orarac-vvol-vm-006.png["Captura de tela mostrando uma configuração de armazenamento de VM."] image:vcf-orarac-vvol-vm-008.png["Captura de tela mostrando uma configuração de armazenamento de VM."] image:vcf-orarac-vvol-vm-009.png["Captura de tela mostrando uma configuração de armazenamento de VM."] image:vcf-orarac-vvol-vm-010.png["Captura de tela mostrando uma configuração de armazenamento de VM."]
+
+. No nó RAC 1, adicione dois discos à VM do repositório de dados de logs para armazenamento compartilhado de arquivos de log do Oracle.
++
+image:vcf-orarac-vvol-vm-011.png["Captura de tela mostrando uma configuração de armazenamento de VM."] image:vcf-orarac-vvol-vm-012.png["Captura de tela mostrando uma configuração de armazenamento de VM."]
+
+. Do nó RAC 2, adicione um disco à VM para armazenamento binário do Oracle sem compartilhamento.
++
+image:vcf-orarac-vvol-vm-013.png["Captura de tela mostrando uma configuração de armazenamento de VM."]
+
+. No nó RAC 2, adicione outros discos compartilhados selecionando `Existing Hard Disks` opção e habilitar o compartilhamento de vários gravadores para cada disco compartilhado.
++
+image:vcf-orarac-vvol-vm-014.png["Captura de tela mostrando uma configuração de armazenamento de VM."] image:vcf-orarac-vvol-vm-015.png["Captura de tela mostrando uma configuração de armazenamento de VM."]
+
+. Da VM `Edit Settings` , `Advanced Parameters` , adicione Atributo `disk.enableuuid` com valor `TRUE` .  A VM precisa estar inativa para adicionar o parâmetro avançado.  Definir esta opção permite que o SnapCenter identifique com precisão o vVol no seu ambiente.  Isso deve ser feito em todos os nós RAC.
++
+image:vcf-ora-vvol-vm-uuid.png["Captura de tela mostrando uma configuração de armazenamento de VM."]
+
+. Agora, reinicie a VM.  Efetue login na VM como usuário administrador via ssh para revisar as unidades de disco recém-adicionadas.
++
+....
+[admin@ora01 ~]$ sudo lsblk
+NAME          MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda             8:0    0   50G  0 disk
+├─sda1          8:1    0  600M  0 part /boot/efi
+├─sda2          8:2    0    1G  0 part /boot
+└─sda3          8:3    0 48.4G  0 part
+  ├─rhel-root 253:0    0 43.4G  0 lvm  /
+  └─rhel-swap 253:1    0    5G  0 lvm  [SWAP]
+sdb             8:16   0   50G  0 disk
+sdc             8:32   0   10G  0 disk
+sdd             8:48   0   10G  0 disk
+sde             8:64   0   10G  0 disk
+sdf             8:80   0   40G  0 disk
+sdg             8:96   0   40G  0 disk
+sdh             8:112  0   40G  0 disk
+sdi             8:128  0   40G  0 disk
+sdj             8:144  0   80G  0 disk
+sdk             8:160  0   80G  0 disk
+sr0            11:0    1 1024M  0 rom
+[admin@ora01 ~]$
+
+[admin@ora02 ~]$ sudo lsblk
+NAME          MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda             8:0    0   50G  0 disk
+├─sda1          8:1    0  600M  0 part /boot/efi
+├─sda2          8:2    0    1G  0 part /boot
+└─sda3          8:3    0 48.4G  0 part
+  ├─rhel-root 253:0    0 43.4G  0 lvm  /
+  └─rhel-swap 253:1    0    5G  0 lvm  [SWAP]
+sdb             8:16   0   50G  0 disk
+sdc             8:32   0   10G  0 disk
+sdd             8:48   0   10G  0 disk
+sde             8:64   0   10G  0 disk
+sdf             8:80   0   40G  0 disk
+sdg             8:96   0   40G  0 disk
+sdh             8:112  0   40G  0 disk
+sdi             8:128  0   40G  0 disk
+sdj             8:144  0   80G  0 disk
+sdk             8:160  0   80G  0 disk
+sr0            11:0    1 1024M  0 rom
+[admin@ora02 ~]$
+
+
+....
+. De cada nó RAC, particione o disco binário do Oracle (/dev/sdb) como uma partição primária e única simplesmente aceitando as opções padrões.
++
+[source, cli]
+----
+sudo fdisk /dev/sdb
+----
+. Formate os discos particionados como sistemas de arquivos xfs.
++
+[source, cli]
+----
+sudo mkfs.xfs /dev/sdb1
+----
+. Monte o disco no ponto de montagem /u01.
++
+....
+[admin@ora01 ~]$ df -h
+Filesystem             Size  Used Avail Use% Mounted on
+devtmpfs               7.7G   36K  7.7G   1% /dev
+tmpfs                  7.8G  1.4G  6.4G  18% /dev/shm
+tmpfs                  7.8G   34M  7.7G   1% /run
+tmpfs                  7.8G     0  7.8G   0% /sys/fs/cgroup
+/dev/mapper/rhel-root   44G   29G   16G  66% /
+/dev/sda2             1014M  249M  766M  25% /boot
+/dev/sda1              599M  5.9M  593M   1% /boot/efi
+/dev/sdb1               50G   24G   27G  47% /u01
+tmpfs                  1.6G   12K  1.6G   1% /run/user/42
+tmpfs                  1.6G     0  1.6G   0% /run/user/54331
+tmpfs                  1.6G  4.0K  1.6G   1% /run/user/1000
+
+
+....
+. Adicione pontos de montagem em /etc/fstab para que as unidades de disco sejam montadas quando a VM for reinicializada.
++
+[source, cli]
+----
+sudo vi /etc/fstab
+----
++
+....
+[oracle@ora_01 ~]$ cat /etc/fstab
+
+#
+# /etc/fstab
+# Created by anaconda on Wed Oct 18 19:43:31 2023
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk/'.
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info.
+#
+# After editing this file, run 'systemctl daemon-reload' to update systemd
+# units generated from this file.
+#
+/dev/mapper/rhel-root   /                       xfs     defaults        0 0
+UUID=aff942c4-b224-4b62-807d-6a5c22f7b623 /boot                   xfs     defaults        0 0
+/dev/mapper/rhel-swap   none                    swap    defaults        0 0
+/root/swapfile swap swap defaults 0 0
+/dev/sdb1               /u01                    xfs     defaults        0 0
+....
+
+
+====
+
+
+=== Implantação do Oracle RAC em VCF
+
+[%collapsible%open]
+====
+É recomendável aproveitar o kit de ferramentas de automação da NetApp para implantar o Oracle RAC no VCF com vVols.  Leia atentamente as instruções incluídas (READme) e configure os arquivos de parâmetros de implantação, como o arquivo de destino de implantação - hosts, o arquivo de variáveis globais - vars/vars.yml e o arquivo de variáveis da VM do banco de dados local - host_vars/host_name.yml, seguindo as instruções no kit de ferramentas.  A seguir estão os procedimentos passo a passo.
+
+. Efetue login na VM do controlador Ansible como usuário administrador via ssh e clone uma cópia do kit de ferramentas de automação para implantação do Oracle RAC no VCF com vVols.
++
+[source, cli]
+----
+git clone https://bitbucket.ngage.netapp.com/scm/ns-bb/na_oracle_deploy_rac.git
+----
+. Coloque os seguintes arquivos de instalação do Oracle na pasta /tmp/archive na VM do banco de dados do nó 1 do RAC.  A pasta deve permitir acesso a todos os usuários com permissão 777.
++
+....
+LINUX.X64_193000_grid_home.zip
+p34762026_190000_Linux-x86-64.zip
+LINUX.X64_193000_db_home.zip
+p34765931_190000_Linux-x86-64.zip
+p6880880_190000_Linux-x86-64.zip
+....
+. Configure a autenticação sem chave SSH entre o controlador Ansible e as VMs do banco de dados, o que requer a geração de um par de chaves SSH e a cópia da chave pública para o diretório raiz do usuário administrador das VMs do banco de dados, pasta .ssh, arquivo authorized_keys.
++
+[source, cli]
+----
+ssh-keygen
+----
+. Configure os arquivos de parâmetros do host de destino definidos pelo usuário.  A seguir está um exemplo de configuração típica para o arquivo de hosts de destino - hosts.
++
+....
+#Oracle hosts
+[oracle]
+ora01 ansible_host=10.61.180.21 ansible_ssh_private_key_file=ora01.pem
+ora02 ansible_host=10.61.180.22 ansible_ssh_private_key_file=ora02.pem
+
+....
+. Configure os arquivos de parâmetros específicos do host local definidos pelo usuário.  A seguir está um exemplo de configuração típica para o arquivo host_name.yml local - ora01.yml.
++
+....
+
+# Binary lun
+ora_bin: /dev/sdb
+
+# Host DB configuration
+ins_sid: "{{ oracle_sid }}1"
+asm_sid: +ASM1
+
+....
+. Configure o arquivo de parâmetros globais definidos pelo usuário.  A seguir está um exemplo de configuração típica para arquivo de parâmetros globais - vars.yml
++
+....
+
+#######################################################################
+### ONTAP env specific config variables                             ###
+#######################################################################
+
+# ONTAP storage platform: on-prem, vmware-vvols
+ontap_platform: vmware-vvols
+
+# Prerequisite to create five vVolss in VMware vCenter
+# VCF_ORA_BINS - Oracle binary
+# VCF_ORA_CRS  - Oracle cluster registry and vote
+# VCF_ORA_DAT1 - Oracle data on node1
+# VCF_ORA_DAT2 - Oracle data on node2
+# VCF_ORA_LOGS - Oracle logs on node1 or node2
+
+# Oracle disks are added to VM from vVols: 1 binary disk, 3 CRS disks, 4 data disks, and 2 log disks.
+
+
+######################################################################
+### Linux env specific config variables                            ###
+######################################################################
+
+redhat_sub_username: XXXXXXXX
+redhat_sub_password: "XXXXXXXX"
+
+# Networking configuration
+cluster_pub_ip:
+  - {ip: 10.61.180.21, hostname: ora01}
+  - {ip: 10.61.180.22, hostname: ora02}
+
+cluster_pri_ip:
+  - {ip: 172.21.166.22, hostname: ora01-pri}
+  - {ip: 172.21.166.24, hostname: ora02-pri}
+
+cluster_vip_ip:
+  - {ip: 10.61.180.93, hostname: ora01-vip}
+  - {ip: 10.61.180.94, hostname: ora02-vip}
+
+cluster_scan_name: ntap-scan
+cluster_scan_ip:
+  - {ip: 10.61.180.90, hostname: ntap-scan}
+  - {ip: 10.61.180.91, hostname: ntap-scan}
+  - {ip: 10.61.180.92, hostname: ntap-scan}
+
+
+#####################################################################
+### DB env specific install and config variables                  ###
+#####################################################################
+
+# Shared Oracle RAC storage
+ora_crs:
+  - { device: /dev/sdc, name: ora_crs_01 }
+  - { device: /dev/sdd, name: ora_crs_02 }
+  - { device: /dev/sde, name: ora_crs_03 }
+
+ora_data:
+  - { device: /dev/sdf, name: ora_data_01 }
+  - { device: /dev/sdg, name: ora_data_02 }
+  - { device: /dev/sdh, name: ora_data_03 }
+  - { device: /dev/sdi, name: ora_data_04 }
+
+ora_logs:
+  - { device: /dev/sdj, name: ora_logs_01 }
+  - { device: /dev/sdk, name: ora_logs_02 }
+
+# Oracle RAC configuration
+
+oracle_sid: NTAP
+cluster_name: ntap-rac
+cluster_nodes: ora01,ora02
+cluster_domain: solutions.netapp.com
+grid_cluster_nodes: ora01:ora01-vip:HUB,ora02:ora02-vip:HUB
+network_interface_list: ens33:10.61.180.0:1,ens34:172.21.166.0:5
+memory_limit: 10240
+
+# Set initial password for all required Oracle passwords. Change them after installation.
+initial_pwd_all: "XXXXXXXX"
+
+....
+. No controlador Ansible, no diretório inicial do kit de ferramentas de automação clonado /home/admin/na_oracle_deploy_rac, execute o playbook de pré-requisitos para configurar os pré-requisitos do Ansible.
++
+[source, cli]
+----
+ansible-playbook -i hosts 1-ansible_requirements.yml
+----
+. Execute o manual de configuração do Linux.
++
+[source, cli]
+----
+ansible-playbook -i hosts 2-linux_config.yml -u admin -e @vars/vars.yml
+----
+. Execute o manual de implantação do Oracle.
++
+[source, cli]
+----
+ansible-playbook -i hosts 4-oracle_config.yml -u admin -e @vars/vars.yml
+----
+. Opcionalmente, todos os playbooks acima também podem ser executados a partir de uma única execução de playbook.
++
+[source, cli]
+----
+ansible-playbook -i hosts 0-all_playbook.yml -u admin -e @vars/vars.yml
+----
+
+
+====
+
+
+=== Validação de implantação do Oracle RAC em VCF
+
+[%collapsible%open]
+====
+Esta seção fornece detalhes sobre a validação da implantação do Oracle RAC no VCF para garantir que todos os recursos do Oracle RAC sejam totalmente implantados, configurados e funcionando conforme o esperado.
+
+. Efetue login no RAC VM como usuário administrador para validar a infraestrutura de grade do Oracle.
++
+....
+[admin@ora01 ~]$ sudo su
+[root@ora01 admin]# su - grid
+[grid@ora01 ~]$ crsctl stat res -t
+--------------------------------------------------------------------------------
+Name           Target  State        Server                   State details
+--------------------------------------------------------------------------------
+Local Resources
+--------------------------------------------------------------------------------
+ora.LISTENER.lsnr
+               ONLINE  ONLINE       ora01                    STABLE
+               ONLINE  ONLINE       ora02                    STABLE
+ora.chad
+               ONLINE  ONLINE       ora01                    STABLE
+               ONLINE  ONLINE       ora02                    STABLE
+ora.net1.network
+               ONLINE  ONLINE       ora01                    STABLE
+               ONLINE  ONLINE       ora02                    STABLE
+ora.ons
+               ONLINE  ONLINE       ora01                    STABLE
+               ONLINE  ONLINE       ora02                    STABLE
+ora.proxy_advm
+               OFFLINE OFFLINE      ora01                    STABLE
+               OFFLINE OFFLINE      ora02                    STABLE
+--------------------------------------------------------------------------------
+Cluster Resources
+--------------------------------------------------------------------------------
+ora.ASMNET1LSNR_ASM.lsnr(ora.asmgroup)
+      1        ONLINE  ONLINE       ora01                    STABLE
+      2        ONLINE  ONLINE       ora02                    STABLE
+ora.DATA.dg(ora.asmgroup)
+      1        ONLINE  ONLINE       ora01                    STABLE
+      2        ONLINE  ONLINE       ora02                    STABLE
+ora.LISTENER_SCAN1.lsnr
+      1        ONLINE  ONLINE       ora01                    STABLE
+ora.LISTENER_SCAN2.lsnr
+      1        ONLINE  ONLINE       ora02                    STABLE
+ora.LISTENER_SCAN3.lsnr
+      1        ONLINE  ONLINE       ora02                    STABLE
+ora.RECO.dg(ora.asmgroup)
+      1        ONLINE  ONLINE       ora01                    STABLE
+      2        ONLINE  ONLINE       ora02                    STABLE
+ora.VOTE.dg(ora.asmgroup)
+      1        ONLINE  ONLINE       ora01                    STABLE
+      2        ONLINE  ONLINE       ora02                    STABLE
+ora.asm(ora.asmgroup)
+      1        ONLINE  ONLINE       ora01                    Started,STABLE
+      2        ONLINE  ONLINE       ora02                    Started,STABLE
+ora.asmnet1.asmnetwork(ora.asmgroup)
+      1        ONLINE  ONLINE       ora01                    STABLE
+      2        ONLINE  ONLINE       ora02                    STABLE
+ora.cvu
+      1        ONLINE  ONLINE       ora02                    STABLE
+ora.ntap.db
+      1        ONLINE  ONLINE       ora01                    Open,HOME=/u01/app/o
+                                                             racle2/product/19.0.
+                                                             0/NTAP,STABLE
+      2        ONLINE  ONLINE       ora02                    Open,HOME=/u01/app/o
+                                                             racle2/product/19.0.
+                                                             0/NTAP,STABLE
+ora.ora01.vip
+      1        ONLINE  ONLINE       ora01                    STABLE
+ora.ora02.vip
+      1        ONLINE  ONLINE       ora02                    STABLE
+ora.qosmserver
+      1        ONLINE  ONLINE       ora02                    STABLE
+ora.scan1.vip
+      1        ONLINE  ONLINE       ora01                    STABLE
+ora.scan2.vip
+      1        ONLINE  ONLINE       ora02                    STABLE
+ora.scan3.vip
+      1        ONLINE  ONLINE       ora02                    STABLE
+--------------------------------------------------------------------------------
+[grid@ora01 ~]$
+
+....
+. Validar o Oracle ASM.
++
+....
+[grid@ora01 ~]$ asmcmd
+ASMCMD> lsdg
+State    Type    Rebal  Sector  Logical_Sector  Block       AU  Total_MB  Free_MB  Req_mir_free_MB  Usable_file_MB  Offline_disks  Voting_files  Name
+MOUNTED  EXTERN  N         512             512   4096  1048576    163840   163723                0          163723              0             N  DATA/
+MOUNTED  EXTERN  N         512             512   4096  1048576    163840   163729                0          163729              0             N  RECO/
+MOUNTED  NORMAL  N         512             512   4096  4194304     30720    29732            10240            9746              0             Y  VOTE/
+ASMCMD> lsdsk
+Path
+AFD:ORA_CRS_01
+AFD:ORA_CRS_02
+AFD:ORA_CRS_03
+AFD:ORA_DATA_01
+AFD:ORA_DATA_02
+AFD:ORA_DATA_03
+AFD:ORA_DATA_04
+AFD:ORA_LOGS_01
+AFD:ORA_LOGS_02
+ASMCMD> afd_state
+ASMCMD-9526: The AFD state is 'LOADED' and filtering is 'ENABLED' on host 'ora01'
+ASMCMD>
+
+....
+. Listar nós do cluster.
++
+....
+
+[grid@ora01 ~]$ olsnodes
+ora01
+ora02
+
+....
+. Validar OCR/VOTE.
++
+....
+[grid@ora01 ~]$ ocrcheck
+Status of Oracle Cluster Registry is as follows :
+         Version                  :          4
+         Total space (kbytes)     :     901284
+         Used space (kbytes)      :      84536
+         Available space (kbytes) :     816748
+         ID                       :  118267044
+         Device/File Name         :      +VOTE
+                                    Device/File integrity check succeeded
+
+                                    Device/File not configured
+
+                                    Device/File not configured
+
+                                    Device/File not configured
+
+                                    Device/File not configured
+
+         Cluster registry integrity check succeeded
+
+         Logical corruption check bypassed due to non-privileged user
+
+[grid@ora01 ~]$ crsctl query css votedisk
+##  STATE    File Universal Id                File Name Disk group
+--  -----    -----------------                --------- ---------
+ 1. ONLINE   1ca3fcb0bd354f8ebf00ac97d70e0824 (AFD:ORA_CRS_01) [VOTE]
+ 2. ONLINE   708f84d505a54f58bf41124e09a5115a (AFD:ORA_CRS_02) [VOTE]
+ 3. ONLINE   133ecfcedb684fe6bfdc1899b90f91c7 (AFD:ORA_CRS_03) [VOTE]
+Located 3 voting disk(s).
+[grid@ora01 ~]$
+
+
+....
+. Validar ouvinte Oracle.
++
+....
+[grid@ora01 ~]$ lsnrctl status listener
+
+LSNRCTL for Linux: Version 19.0.0.0.0 - Production on 16-AUG-2024 10:21:38
+
+Copyright (c) 1991, 2022, Oracle.  All rights reserved.
+
+Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=LISTENER)))
+STATUS of the LISTENER
+------------------------
+Alias                     LISTENER
+Version                   TNSLSNR for Linux: Version 19.0.0.0.0 - Production
+Start Date                14-AUG-2024 16:24:48
+Uptime                    1 days 17 hr. 56 min. 49 sec
+Trace Level               off
+Security                  ON: Local OS Authentication
+SNMP                      OFF
+Listener Parameter File   /u01/app/grid/19.0.0/network/admin/listener.ora
+Listener Log File         /u01/app/oracle/diag/tnslsnr/ora01/listener/alert/log.xml
+Listening Endpoints Summary...
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=LISTENER)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=10.61.180.21)(PORT=1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=10.61.180.93)(PORT=1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcps)(HOST=ora01.solutions.netapp.com)(PORT=5500))(Security=(my_wallet_directory=/u01/app/oracle2/product/19.0.0/NTAP/admin/NTAP/xdb_wallet))(Presentation=HTTP)(Session=RAW))
+Services Summary...
+Service "+ASM" has 1 instance(s).
+  Instance "+ASM1", status READY, has 1 handler(s) for this service...
+Service "+ASM_DATA" has 1 instance(s).
+  Instance "+ASM1", status READY, has 1 handler(s) for this service...
+Service "+ASM_RECO" has 1 instance(s).
+  Instance "+ASM1", status READY, has 1 handler(s) for this service...
+Service "+ASM_VOTE" has 1 instance(s).
+  Instance "+ASM1", status READY, has 1 handler(s) for this service...
+Service "1fbf0aaa1d13cb5ae06315b43d0ab734.solutions.netapp.com" has 1 instance(s).
+  Instance "NTAP1", status READY, has 1 handler(s) for this service...
+Service "1fbf142e7db2d090e06315b43d0a6894.solutions.netapp.com" has 1 instance(s).
+  Instance "NTAP1", status READY, has 1 handler(s) for this service...
+Service "1fbf203c3a46d7bae06315b43d0ae055.solutions.netapp.com" has 1 instance(s).
+  Instance "NTAP1", status READY, has 1 handler(s) for this service...
+Service "NTAP.solutions.netapp.com" has 1 instance(s).
+  Instance "NTAP1", status READY, has 1 handler(s) for this service...
+Service "NTAPXDB.solutions.netapp.com" has 1 instance(s).
+  Instance "NTAP1", status READY, has 1 handler(s) for this service...
+Service "ntap_pdb1.solutions.netapp.com" has 1 instance(s).
+  Instance "NTAP1", status READY, has 1 handler(s) for this service...
+Service "ntap_pdb2.solutions.netapp.com" has 1 instance(s).
+  Instance "NTAP1", status READY, has 1 handler(s) for this service...
+Service "ntap_pdb3.solutions.netapp.com" has 1 instance(s).
+  Instance "NTAP1", status READY, has 1 handler(s) for this service...
+The command completed successfully
+[grid@ora01 ~]$
+
+[grid@ora01 ~]$ tnsping ntap-scan
+
+TNS Ping Utility for Linux: Version 19.0.0.0.0 - Production on 16-AUG-2024 12:07:58
+
+Copyright (c) 1997, 2022, Oracle.  All rights reserved.
+
+Used parameter files:
+/u01/app/grid/19.0.0/network/admin/sqlnet.ora
+
+Used EZCONNECT adapter to resolve the alias
+Attempting to contact (DESCRIPTION=(CONNECT_DATA=(SERVICE_NAME=))(ADDRESS=(PROTOCOL=tcp)(HOST=10.61.180.90)(PORT=1521))(ADDRESS=(PROTOCOL=tcp)(HOST=10.61.180.91)(PORT=1521))(ADDRESS=(PROTOCOL=tcp)(HOST=10.61.180.92)(PORT=1521)))
+OK (10 msec)
+
+
+....
+. Mude para o usuário Oracle para validar o banco de dados clusterizado.
++
+....
+[oracle@ora02 ~]$ sqlplus / as sysdba
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Fri Aug 16 11:32:23 2024
+Version 19.18.0.0.0
+
+Copyright (c) 1982, 2022, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.18.0.0.0
+
+SQL> select name, open_mode, log_mode from v$database;
+
+NAME      OPEN_MODE            LOG_MODE
+--------- -------------------- ------------
+NTAP      READ WRITE           ARCHIVELOG
+
+SQL> show pdbs
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 NTAP_PDB1                      READ WRITE NO
+         4 NTAP_PDB2                      READ WRITE NO
+         5 NTAP_PDB3                      READ WRITE NO
+SQL> select name from v$datafile
+  2  union
+  3  select name from v$controlfile
+  4  union
+  5  select member from v$logfile;
+
+NAME
+--------------------------------------------------------------------------------
++DATA/NTAP/1FBF0AAA1D13CB5AE06315B43D0AB734/DATAFILE/sysaux.275.1177083797
++DATA/NTAP/1FBF0AAA1D13CB5AE06315B43D0AB734/DATAFILE/system.274.1177083797
++DATA/NTAP/1FBF0AAA1D13CB5AE06315B43D0AB734/DATAFILE/undo_2.277.1177083853
++DATA/NTAP/1FBF0AAA1D13CB5AE06315B43D0AB734/DATAFILE/undotbs1.273.1177083797
++DATA/NTAP/1FBF0AAA1D13CB5AE06315B43D0AB734/DATAFILE/users.278.1177083901
++DATA/NTAP/1FBF142E7DB2D090E06315B43D0A6894/DATAFILE/sysaux.281.1177083903
++DATA/NTAP/1FBF142E7DB2D090E06315B43D0A6894/DATAFILE/system.280.1177083903
++DATA/NTAP/1FBF142E7DB2D090E06315B43D0A6894/DATAFILE/undo_2.283.1177084061
++DATA/NTAP/1FBF142E7DB2D090E06315B43D0A6894/DATAFILE/undotbs1.279.1177083903
++DATA/NTAP/1FBF142E7DB2D090E06315B43D0A6894/DATAFILE/users.284.1177084103
++DATA/NTAP/1FBF203C3A46D7BAE06315B43D0AE055/DATAFILE/sysaux.287.1177084105
+
+NAME
+--------------------------------------------------------------------------------
++DATA/NTAP/1FBF203C3A46D7BAE06315B43D0AE055/DATAFILE/system.286.1177084105
++DATA/NTAP/1FBF203C3A46D7BAE06315B43D0AE055/DATAFILE/undo_2.289.1177084123
++DATA/NTAP/1FBF203C3A46D7BAE06315B43D0AE055/DATAFILE/undotbs1.285.1177084105
++DATA/NTAP/1FBF203C3A46D7BAE06315B43D0AE055/DATAFILE/users.290.1177084125
++DATA/NTAP/86B637B62FE07A65E053F706E80A27CA/DATAFILE/sysaux.266.1177081837
++DATA/NTAP/86B637B62FE07A65E053F706E80A27CA/DATAFILE/system.265.1177081837
++DATA/NTAP/86B637B62FE07A65E053F706E80A27CA/DATAFILE/undotbs1.267.1177081837
++DATA/NTAP/CONTROLFILE/current.261.1177080403
++DATA/NTAP/DATAFILE/sysaux.258.1177080245
++DATA/NTAP/DATAFILE/system.257.1177080129
++DATA/NTAP/DATAFILE/undotbs1.259.1177080311
+
+NAME
+--------------------------------------------------------------------------------
++DATA/NTAP/DATAFILE/undotbs2.269.1177082203
++DATA/NTAP/DATAFILE/users.260.1177080311
++DATA/NTAP/ONLINELOG/group_1.262.1177080427
++DATA/NTAP/ONLINELOG/group_2.263.1177080427
++DATA/NTAP/ONLINELOG/group_3.270.1177083297
++DATA/NTAP/ONLINELOG/group_4.271.1177083313
++RECO/NTAP/CONTROLFILE/current.256.1177080403
++RECO/NTAP/ONLINELOG/group_1.257.1177080427
++RECO/NTAP/ONLINELOG/group_2.258.1177080427
++RECO/NTAP/ONLINELOG/group_3.259.1177083313
++RECO/NTAP/ONLINELOG/group_4.260.1177083315
+
+33 rows selected.
+
+
+....
+. Ou faça login no EM Express para validar o banco de dados RAC após a execução bem-sucedida do playbook.
++
+image:vcf-orarac-vvol-em-001.png["Captura de tela mostrando a configuração do Oracle EM Express."] image:vcf-orarac-vvol-em-002.png["Captura de tela mostrando a configuração do Oracle EM Express."]
+
+
+
+====
+
+
+=== Backup e recuperação de banco de dados Oracle RAC em VCF com SnapCenter
+
+
+
+==== Configuração do SnapCenter
+
+[%collapsible%open]
+====
+A versão 6 do SnapCenter tem muitos aprimoramentos de recursos em relação à versão 5, incluindo suporte ao armazenamento de dados VMware vVols .  O SnapCenter depende de um plug-in do lado do host em uma VM de banco de dados para executar atividades de gerenciamento de proteção de dados com reconhecimento de aplicativo.  Para obter informações detalhadas sobre o plug-in NetApp SnapCenter para Oracle, consulte esta documentaçãolink:https://docs.netapp.com/us-en/snapcenter/protect-sco/concept_what_you_can_do_with_the_snapcenter_plug_in_for_oracle_database.html["O que você pode fazer com o Plug-in para Oracle Database"^] .  A seguir, são fornecidas etapas de alto nível para configurar o SnapCenter versão 6 para backup e recuperação de banco de dados Oracle RAC no VCF.
+
+. Baixe a versão 6 do SnapCenter software no site de suporte da NetApp :link:https://mysupport.netapp.com/site/downloads["Downloads de suporte da NetApp"^] .
+. Efetue login na VM Windows que hospeda o SnapCenter como administrador.  Instale os pré-requisitos para o SnapCenter 6.0.
++
+image:vcf-ora-vvol-snapctr-prerequisites.png["Captura de tela mostrando os pré-requisitos do SnapCenter 6.0."]
+
+. Como administrador, instale o Java JDK mais recente delink:https://www.java.com/en/["Obtenha Java para aplicativos de desktop"^] .
++
+
+NOTE: Se o servidor Windows estiver implantado em um ambiente de domínio, adicione um usuário de domínio ao grupo de administradores locais do servidor SnapCenter e execute a instalação do SnapCenter com o usuário de domínio.
+
+. Efetue login na interface do usuário do SnapCenter via porta HTTPS 8846 como usuário de instalação para configurar o SnapCenter para Oracle.
++
+image:vcf-ora-vvol-snapctr-deploy-001.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Análise `Get Started` menu para se atualizar no SnapCenter se você for um novo usuário.
++
+image:vcf-ora-vvol-snapctr-deploy-002.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Atualizar `Hypervisor Settings` em cenários globais.
++
+image:aws-ora-fsx-vmc-snapctr-001.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Adicionar cluster de armazenamento ONTAP a `Storage Systems` com IP de gerenciamento de cluster e autenticado via ID de usuário administrador de cluster.
++
+image:vcf-ora-vvol-snapctr-deploy-006.png["Captura de tela mostrando a configuração do SnapCenter ."] image:vcf-ora-vvol-snapctr-deploy-007.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Adicionar VMs de banco de dados Oracle RAC e VM de plug-in vSphere `Credential` para acesso do SnapCenter à VM do DB e à VM do plugin vSphere.  A credencial deve ter privilégio sudo nas VMs Linux.  Você pode criar credenciais diferentes para diferentes IDs de usuário de gerenciamento para as VMs. O ID de usuário de gerenciamento da VM do plugin vShpere é definido quando a VM do plugin é implantada no vCenter.
++
+image:aws-ora-fsx-vmc-snapctr-003.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Adicionar VM do banco de dados Oracle RAC no VCF para `Hosts` com a credencial DB VM criada na etapa anterior.
++
+image:vcf-orarac-vvol-snapctr-setup-001.png["Captura de tela mostrando a configuração do SnapCenter ."] image:vcf-orarac-vvol-snapctr-setup-002.png["Captura de tela mostrando a configuração do SnapCenter ."] image:vcf-orarac-vvol-snapctr-setup-003.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Da mesma forma, adicione a VM do plugin NetApp VMware a `Hosts` com a credencial de VM do plugin vSphere criada na etapa anterior.
++
+image:vcf-ora-vvol-snapctr-deploy-011.png["Captura de tela mostrando a configuração do SnapCenter ."] image:vcf-orarac-vvol-snapctr-setup-004.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Finalmente, depois que o banco de dados Oracle for descoberto na VM do DB, volte para `Settings`-`Policies` para criar políticas de backup do banco de dados Oracle.  O ideal é criar uma política de backup de log de arquivamento separada para permitir intervalos de backup mais frequentes para minimizar a perda de dados em caso de falha.
++
+image:aws-ora-fsx-vmc-snapctr-002.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+
+
+
+NOTE: Certifique-se de que o nome do servidor SnapCenter possa ser resolvido para o endereço IP da VM do DB e da VM do plugin vSphere.  Da mesma forma, o nome da VM do DB e o nome da VM do plugin vSphere podem ser resolvidos para o endereço IP do servidor SnapCenter .
+
+====
+
+
+==== Backup de banco de dados
+
+[%collapsible%open]
+====
+O SnapCenter utiliza o instantâneo de volume ONTAP para backup, restauração ou clonagem de banco de dados muito mais rápido em comparação com a metodologia tradicional baseada em RMAN.  Os snapshots são consistentes com o aplicativo, pois o banco de dados é colocado no modo de backup do Oracle antes de um snapshot.
+
+. Do `Resources` guia, todos os bancos de dados na VM são descobertos automaticamente depois que a VM é adicionada ao SnapCenter.  Inicialmente, o status do banco de dados é mostrado como `Not protected` .
++
+image:vcf-orarac-vvol-snapctr-bkup-001.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Clique no banco de dados para iniciar um fluxo de trabalho para habilitar a proteção do banco de dados.
++
+image:vcf-orarac-vvol-snapctr-bkup-002.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Aplique a política de backup e configure o agendamento, se necessário.
++
+image:vcf-orarac-vvol-snapctr-bkup-003.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Configure a notificação da tarefa de backup, se necessário.
++
+image:vcf-orarac-vvol-snapctr-bkup-005.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Revise o resumo e conclua para habilitar a proteção do banco de dados.
++
+image:vcf-orarac-vvol-snapctr-bkup-006.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. O trabalho de backup sob demanda pode ser acionado clicando em `Back up Now` .
++
+image:vcf-orarac-vvol-snapctr-bkup-007.png["Captura de tela mostrando a configuração do SnapCenter ."] image:vcf-orarac-vvol-snapctr-bkup-008.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. O trabalho de backup pode ser monitorado no `Monitor` guia clicando no trabalho em execução.
++
+image:vcf-orarac-vvol-snapctr-bkup-009.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Clique no banco de dados para revisar os conjuntos de backup concluídos para o banco de dados RAC.
++
+image:vcf-ora-vvol-snapctr-bkup-010.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+
+
+====
+
+
+==== Restauração/recuperação de banco de dados
+
+[%collapsible%open]
+====
+O SnapCenter fornece diversas opções de restauração e recuperação para o banco de dados Oracle RAC a partir de backup de instantâneo.  Neste exemplo, demonstramos como restaurar a partir de um backup de instantâneo mais antigo e, em seguida, avançar o banco de dados para o último log disponível.
+
+. Primeiro, execute um backup instantâneo.  Em seguida, crie uma tabela de teste e insira uma linha na tabela para validar o banco de dados recuperado da imagem de instantâneo antes que a criação da tabela de teste recupere a tabela de teste.
++
+....
+[oracle@ora01 ~]$ sqlplus / as sysdba
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Mon Aug 19 10:31:12 2024
+Version 19.18.0.0.0
+
+Copyright (c) 1982, 2022, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.18.0.0.0
+
+SQL> show pdbs
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 NTAP_PDB1                      READ WRITE NO
+         4 NTAP_PDB2                      READ WRITE NO
+         5 NTAP_PDB3                      READ WRITE NO
+SQL> alter session set container=ntap_pdb1;
+
+Session altered.
+
+
+SQL> create table test (id integer, dt timestamp, event varchar(100));
+
+Table created.
+
+SQL> insert into test values (1, sysdate, 'validate SnapCenter rac database restore on VMware vVols storage');
+
+1 row created.
+
+SQL> commit;
+
+Commit complete.
+
+SQL> select * from test;
+
+        ID
+----------
+DT
+---------------------------------------------------------------------------
+EVENT
+--------------------------------------------------------------------------------
+         1
+19-AUG-24 10.36.04.000000 AM
+validate SnapCenter rac database restore on VMware vVols storage
+
+
+SQL>
+
+....
+. Do SnapCenter `Resources` guia, abra a página de topologia de backup NTAP1 do banco de dados.  Realce o conjunto de backup de dados de instantâneo criado há 3 dias.  Clique em `Restore` para iniciar o fluxo de trabalho de restauração-recuperação.
++
+image:vcf-orarac-vvol-snapctr-restore-001.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Escolha o escopo de restauração.
++
+image:vcf-orarac-vvol-snapctr-restore-002.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Escolha o escopo de recuperação para `All Logs` .
++
+image:vcf-orarac-vvol-snapctr-restore-003.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Especifique quaisquer pré-scripts opcionais a serem executados.
++
+image:vcf-orarac-vvol-snapctr-restore-004.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Especifique qualquer script posterior opcional a ser executado.
++
+image:vcf-orarac-vvol-snapctr-restore-005.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Envie um relatório de trabalho, se desejar.
++
+image:vcf-orarac-vvol-snapctr-restore-006.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. Revise o resumo e clique em `Finish` para iniciar a restauração e recuperação.
++
+image:vcf-orarac-vvol-snapctr-restore-007.png["Captura de tela mostrando a configuração do SnapCenter ."]
+
+. No RAC DB VM ora01, valide se uma restauração/recuperação bem-sucedida do banco de dados foi revertida para seu estado mais recente e recuperou a tabela de teste criada 3 dias depois.
++
+....
+
+[root@ora01 ~]# su - oracle
+[oracle@ora01 ~]$ sqlplus / as sysdba
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Mon Aug 19 11:51:15 2024
+Version 19.18.0.0.0
+
+Copyright (c) 1982, 2022, Oracle.  All rights reserved.
+
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.18.0.0.0
+
+SQL> select name, open_mode from v$database;
+
+NAME      OPEN_MODE
+--------- --------------------
+NTAP      READ WRITE
+
+SQL> sho pdbs
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 NTAP_PDB1                      READ WRITE NO
+         4 NTAP_PDB2                      READ WRITE NO
+         5 NTAP_PDB3                      READ WRITE NO
+SQL> alter session set container=ntap_pdb1;
+
+Session altered.
+
+SQL> select * from test;
+
+        ID
+----------
+DT
+---------------------------------------------------------------------------
+EVENT
+--------------------------------------------------------------------------------
+         1
+19-AUG-24 10.36.04.000000 AM
+validate SnapCenter rac database restore on VMware vVols storage
+
+SQL> select current_timestamp from dual;
+
+CURRENT_TIMESTAMP
+---------------------------------------------------------------------------
+19-AUG-24 11.55.20.079686 AM -04:00
+
+
+
+SQL> exit
+Disconnected from Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.18.0.0.0
+
+....
+
+
+Isso conclui a demonstração de backup, restauração e recuperação do SnapCenter do banco de dados Oracle RAC em VCF com vVols.
+
+====
+
+
+== Onde encontrar informações adicionais
+
+Para saber mais sobre as informações descritas neste documento, revise os seguintes documentos e/ou sites:
+
+* link:https://www.vmware.com/products/cloud-infrastructure/vmware-cloud-foundation["Fundação VMware Cloud"^]
+* link:https://docs.netapp.com/us-en/snapcenter/["Documentação do SnapCenter software"^]
+* link:https://docs.netapp.com/us-en/ontap-tools-vmware-vsphere/index.html["Documentação das ONTAP tools for VMware vSphere"^]
+

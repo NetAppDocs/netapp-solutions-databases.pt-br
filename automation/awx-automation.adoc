@@ -1,0 +1,429 @@
+---
+sidebar: sidebar 
+permalink: automation/awx-automation.html 
+keywords: Linux, RHEL Oracle19c, NFS, ONTAP 
+summary: Esta página descreve o método automatizado para implantar o Oracle19c no armazenamento NetApp ONTAP . 
+---
+= Procedimento de implantação passo a passo
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Esta página descreve o método automatizado para implantar o Oracle19c no armazenamento NetApp ONTAP .
+
+
+
+== Implantação AWX/Tower Banco de Dados Oracle 19c
+
+
+
+=== 1. Crie o inventário, grupo, hosts e credenciais para seu ambiente
+
+Esta seção descreve a configuração de inventário, grupos, hosts e credenciais de acesso no AWX/Ansible Tower que preparam o ambiente para o consumo de soluções automatizadas da NetApp .
+
+. Configurar o inventário.
++
+.. Navegue até Recursos → Inventário → Adicionar e clique em Adicionar inventário.
+.. Forneça o nome e os detalhes da organização e clique em Salvar.
+.. Na página Inventários, clique no inventário criado.
+.. Se houver alguma variável de inventário, cole-a no campo de variáveis.
+.. Navegue até o submenu Grupos e clique em Adicionar.
+.. Forneça o nome do grupo para ONTAP, cole as variáveis do grupo (se houver) e clique em Salvar.
+.. Repita o processo para outro grupo do Oracle.
+.. Selecione o grupo ONTAP criado, vá para o submenu Hosts e clique em Adicionar novo host.
+.. Forneça o endereço IP do IP de gerenciamento do cluster ONTAP , cole as variáveis do host (se houver) e clique em Salvar.
+.. Este processo deve ser repetido para o IP/nome do host de gerenciamento do grupo Oracle e do(s) host(s) Oracle.
+
+
+. Crie tipos de credenciais. Para soluções envolvendo o ONTAP, você deve configurar o tipo de credencial para corresponder às entradas de nome de usuário e senha.
++
+.. Navegue até Administração → Tipos de credenciais e clique em Adicionar.
+.. Forneça o nome e a descrição.
+.. Cole o seguinte conteúdo em Configuração de entrada:
+
+
+
+
+[source, cli]
+----
+fields:
+  - id: username
+    type: string
+    label: Username
+  - id: password
+    type: string
+    label: Password
+    secret: true
+  - id: vsadmin_password
+    type: string
+    label: vsadmin_password
+    secret: true
+----
+. Cole o seguinte conteúdo na Configuração do Injetor:
+
+
+[source, cli]
+----
+extra_vars:
+  password: '{{ password }}'
+  username: '{{ username }}'
+  vsadmin_password: '{{ vsadmin_password }}'
+----
+. Configure as credenciais.
++
+.. Navegue até Recursos → Credenciais e clique em Adicionar.
+.. Insira o nome e os detalhes da organização para ONTAP.
+.. Selecione o Tipo de credencial personalizado que você criou para o ONTAP.
+.. Em Detalhes do tipo, insira o nome de usuário, a senha e vsadmin_password.
+.. Clique em Voltar para credencial e clique em Adicionar.
+.. Insira o nome e os detalhes da organização da Oracle.
+.. Selecione o tipo de credencial Máquina.
+.. Em Detalhes do tipo, insira o nome de usuário e a senha para os hosts Oracle.
+.. Selecione o Método de Escalonamento de Privilégios correto e insira o nome de usuário e a senha.
+
+
+
+
+
+
+=== 2. Criar um projeto
+
+. Vá para Recursos → Projetos e clique em Adicionar.
++
+.. Insira o nome e os detalhes da organização.
+.. Selecione Git no campo Tipo de credencial de controle de origem.
+.. digitar `\https://github.com/NetApp-Automation/na_oracle19c_deploy.git` como URL de controle de origem.
+.. Clique em Salvar.
+.. O projeto pode precisar ser sincronizado ocasionalmente quando o código-fonte muda.
+
+
+
+
+
+
+=== 3. Configurar Oracle host_vars
+
+As variáveis definidas nesta seção são aplicadas a cada servidor e banco de dados Oracle individual.
+
+. Insira os parâmetros específicos do ambiente nas seguintes variáveis de hosts Oracle incorporadas ou no formulário host_vars.
+
+
+
+NOTE: Os itens em azul devem ser alterados para combinar com seu ambiente.
+
+
+
+=== Configuração do VARS do host
+
+[source, shell]
+----
+######################################################################
+##############      Host Variables Configuration        ##############
+######################################################################
+
+# Add your Oracle Host
+ansible_host: "10.61.180.15"
+
+# Oracle db log archive mode: true - ARCHIVELOG or false - NOARCHIVELOG
+log_archive_mode: "true"
+
+# Number of pluggable databases per container instance identified by sid. Pdb_name specifies the prefix for container database naming in this case cdb2_pdb1, cdb2_pdb2, cdb2_pdb3
+oracle_sid: "cdb2"
+pdb_num: "3"
+pdb_name: "{{ oracle_sid }}_pdb"
+
+# CDB listener port, use different listener port for additional CDB on same host
+listener_port: "1523"
+
+# CDB is created with SGA at 75% of memory_limit, MB. Consider how many databases to be hosted on the node and how much ram to be allocated to each DB. The grand total SGA should not exceed 75% available RAM on node.
+memory_limit: "5464"
+
+# Set "em_configuration: DBEXPRESS" to install enterprise manager express and choose a unique port from 5500 to 5599 for each sid on the host.
+# Leave them black if em express is not installed.
+em_configuration: "DBEXPRESS"
+em_express_port: "5501"
+
+# {{groups.oracle[0]}} represents first Oracle DB server as defined in Oracle hosts group [oracle]. For concurrent multiple Oracle DB servers deployment, [0] will be incremented for each additional DB server. For example,  {{groups.oracle[1]}}" represents DB server 2, "{{groups.oracle[2]}}" represents DB server 3 ... As a good practice and the default, minimum three volumes is allocated to a DB server with corresponding /u01, /u02, /u03 mount points, which store oracle binary, oracle data, and oracle recovery files respectively. Additional volumes can be added by click on "More NFS volumes" but the number of volumes allocated to a DB server must match with what is defined in global vars file by volumes_nfs parameter, which dictates how many volumes are to be created for each DB server.
+host_datastores_nfs:
+  - {vol_name: "{{groups.oracle[0]}}_u01", aggr_name: "aggr01_node01", lif: "172.21.94.200", size: "25"}
+  - {vol_name: "{{groups.oracle[0]}}_u02", aggr_name: "aggr01_node01", lif: "172.21.94.200", size: "25"}
+  - {vol_name: "{{groups.oracle[0]}}_u03", aggr_name: "aggr01_node01", lif: "172.21.94.200", size: "25"}
+----
+. Preencha todas as variáveis nos campos azuis.
+. Após concluir a entrada das variáveis, clique no botão Copiar no formulário para copiar todas as variáveis a serem transferidas para o AWX ou Tower.
+. Volte para AWX ou Tower e vá para Recursos → Hosts e selecione e abra a página de configuração do servidor Oracle.
+. Na guia Detalhes, clique em editar e cole as variáveis copiadas da etapa 1 no campo Variáveis na guia YAML.
+. Clique em Salvar.
+. Repita esse processo para quaisquer servidores Oracle adicionais no sistema.
+
+
+
+
+=== 4. Configurar variáveis globais
+
+As variáveis definidas nesta seção se aplicam a todos os hosts Oracle, bancos de dados e ao cluster ONTAP .
+
+. Insira os parâmetros específicos do seu ambiente nas seguintes variáveis globais incorporadas ou no formato vars.
+
+
+
+NOTE: Os itens em azul devem ser alterados para combinar com seu ambiente.
+
+[source, shell]
+----
+#######################################################################
+###### Oracle 19c deployment global user configuration variables ######
+######  Consolidate all variables from ontap, linux and oracle   ######
+#######################################################################
+
+###########################################
+### Ontap env specific config variables ###
+###########################################
+
+#Inventory group name
+#Default inventory group name - 'ontap'
+#Change only if you are changing the group name either in inventory/hosts file or in inventory groups in case of AWX/Tower
+hosts_group: "ontap"
+
+#CA_signed_certificates (ONLY CHANGE to 'true' IF YOU ARE USING CA SIGNED CERTIFICATES)
+ca_signed_certs: "false"
+
+#Names of the Nodes in the ONTAP Cluster
+nodes:
+ - "AFF-01"
+ - "AFF-02"
+
+#Storage VLANs
+#Add additional rows for vlans as necessary
+storage_vlans:
+   - {vlan_id: "203", name: "infra_NFS", protocol: "NFS"}
+More Storage VLANsEnter Storage VLANs details
+
+#Details of the Data Aggregates that need to be created
+#If Aggregate creation takes longer, subsequent tasks of creating volumes may fail.
+#There should be enough disks already zeroed in the cluster, otherwise aggregate create will zero the disks and will take long time
+data_aggregates:
+  - {aggr_name: "aggr01_node01"}
+  - {aggr_name: "aggr01_node02"}
+
+#SVM name
+svm_name: "ora_svm"
+
+# SVM Management LIF Details
+svm_mgmt_details:
+  - {address: "172.21.91.100", netmask: "255.255.255.0", home_port: "e0M"}
+
+# NFS storage parameters when data_protocol set to NFS. Volume named after Oracle hosts name identified by mount point as follow for oracle DB server 1. Each mount point dedicates to a particular Oracle files: u01 - Oracle binary, u02 - Oracle data, u03 - Oracle redo. Add additional volumes by click on "More NFS volumes" and also add the volumes list to corresponding host_vars as host_datastores_nfs variable. For multiple DB server deployment, additional volumes sets needs to be added for additional DB server. Input variable "{{groups.oracle[1]}}_u01", "{{groups.oracle[1]}}_u02", and "{{groups.oracle[1]}}_u03" as vol_name for second DB server. Place volumes for multiple DB servers alternatingly between controllers for balanced IO performance, e.g. DB server 1 on controller node1, DB server 2 on controller node2 etc. Make sure match lif address with controller node.
+
+volumes_nfs:
+  - {vol_name: "{{groups.oracle[0]}}_u01", aggr_name: "aggr01_node01", lif: "172.21.94.200", size: "25"}
+  - {vol_name: "{{groups.oracle[0]}}_u02", aggr_name: "aggr01_node01", lif: "172.21.94.200", size: "25"}
+  - {vol_name: "{{groups.oracle[0]}}_u03", aggr_name: "aggr01_node01", lif: "172.21.94.200", size: "25"}
+
+#NFS LIFs IP address and netmask
+
+nfs_lifs_details:
+  - address: "172.21.94.200" #for node-1
+    netmask: "255.255.255.0"
+  - address: "172.21.94.201" #for node-2
+    netmask: "255.255.255.0"
+
+#NFS client match
+
+client_match: "172.21.94.0/24"
+
+###########################################
+### Linux env specific config variables ###
+###########################################
+
+#NFS Mount points for Oracle DB volumes
+
+mount_points:
+  - "/u01"
+  - "/u02"
+  - "/u03"
+
+# Up to 75% of node memory size divided by 2mb. Consider how many databases to be hosted on the node and how much ram to be allocated to each DB.
+# Leave it blank if hugepage is not configured on the host.
+
+hugepages_nr: "1234"
+
+# RedHat subscription username and password
+
+redhat_sub_username: "xxx"
+redhat_sub_password: "xxx"
+
+####################################################
+### DB env specific install and config variables ###
+####################################################
+
+db_domain: "your.domain.com"
+
+# Set initial password for all required Oracle passwords. Change them after installation.
+
+initial_pwd_all: "netapp123"
+----
+. Preencha todas as variáveis nos campos azuis.
+. Após concluir a entrada de variáveis, clique no botão Copiar no formulário para copiar todas as variáveis a serem transferidas para o AWX ou Tower para o seguinte modelo de trabalho.
+
+
+
+
+=== 5. Configure e inicie o modelo de trabalho.
+
+. Crie o modelo de trabalho.
++
+.. Navegue até Recursos → Modelos → Adicionar e clique em Adicionar modelo de trabalho.
+.. Digite o nome e a descrição
+.. Selecione o tipo de trabalho; Executar configura o sistema com base em um manual, e Verificar executa uma execução de teste de um manual sem realmente configurar o sistema.
+.. Selecione o inventário, o projeto, o manual e as credenciais correspondentes para o manual.
+.. Selecione all_playbook.yml como o playbook padrão a ser executado.
+.. Cole as variáveis globais copiadas da etapa 4 no campo Variáveis de modelo na guia YAML.
+.. Marque a caixa Avisar ao iniciar no campo Tags de trabalho.
+.. Clique em Salvar.
+
+
+. Inicie o modelo de trabalho.
++
+.. Navegue até Recursos → Modelos.
+.. Clique no modelo desejado e depois clique em Iniciar.
+.. Quando solicitado na inicialização para Job Tags, digite requirements_config.  Talvez seja necessário clicar na linha Criar Tag de Trabalho abaixo de requirements_config para inserir a tag de trabalho.
+
+
+
+
+
+NOTE: requirements_config garante que você tenha as bibliotecas corretas para executar as outras funções.
+
+. Clique em Avançar e depois em Iniciar para iniciar o trabalho.
+. Clique em Exibir → Trabalhos para monitorar a saída e o progresso do trabalho.
+. Quando solicitado na inicialização para Job Tags, digite ontap_config.  Talvez você precise clicar na linha Criar "Tag de trabalho" logo abaixo de ontap_config para inserir a tag de trabalho.
+. Clique em Avançar e depois em Iniciar para iniciar o trabalho.
+. Clique em Exibir → Trabalhos para monitorar a saída e o progresso do trabalho
+. Após a conclusão da função ontap_config, execute o processo novamente para linux_config.
+. Navegue até Recursos → Modelos.
+. Selecione o modelo desejado e clique em Iniciar.
+. Quando solicitado na inicialização o tipo de Job Tags no linux_config, talvez seja necessário selecionar a linha Criar "job tag" logo abaixo de linux_config para inserir o job tag.
+. Clique em Avançar e depois em Iniciar para iniciar o trabalho.
+. Selecione Exibir → Trabalhos para monitorar a saída e o progresso do trabalho.
+. Após a conclusão da função linux_config, execute o processo novamente para oracle_config.
+. Acesse Recursos → Modelos.
+. Selecione o modelo desejado e clique em Iniciar.
+. Quando solicitado na inicialização para Job Tags, digite oracle_config.  Talvez seja necessário selecionar a linha Criar "Tag de trabalho" logo abaixo de oracle_config para inserir a tag de trabalho.
+. Clique em Avançar e depois em Iniciar para iniciar o trabalho.
+. Selecione Exibir → Trabalhos para monitorar a saída e o progresso do trabalho.
+
+
+
+
+=== 6. Implantar banco de dados adicional no mesmo host Oracle
+
+A parte Oracle do manual cria um único banco de dados de contêiner Oracle em um servidor Oracle por execução.  Para criar bancos de dados de contêiner adicionais no mesmo servidor, conclua as seguintes etapas.
+
+. Revise as variáveis host_vars.
++
+.. Volte para a etapa 2 - Configurar Oracle host_vars.
+.. Altere o Oracle SID para uma sequência de nomenclatura diferente.
+.. Altere a porta do ouvinte para um número diferente.
+.. Altere a porta do EM Express para um número diferente se estiver instalando o EM Express.
+.. Copie e cole as variáveis de host revisadas no campo Variáveis de Host do Oracle na guia Detalhes da Configuração do Host.
+
+
+. Inicie o modelo de tarefa de implantação apenas com a tag oracle_config.
+. Efetue login no servidor Oracle como usuário oracle e execute os seguintes comandos:
++
+[source, cli]
+----
+ps -ef | grep ora
+----
++
+
+NOTE: Isso listará os processos do Oracle se a instalação for concluída conforme o esperado e o Oracle DB for iniciado
+
+. Efetue login no banco de dados para verificar as configurações do banco de dados e os PDBs criados com os seguintes conjuntos de comandos.
++
+[source, cli]
+----
+[oracle@localhost ~]$ sqlplus / as sysdba
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Thu May 6 12:52:51 2021
+Version 19.8.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.8.0.0.0
+
+SQL>
+
+SQL> select name, log_mode from v$database;
+NAME      LOG_MODE
+--------- ------------
+CDB2      ARCHIVELOG
+
+SQL> show pdbs
+
+    CON_ID CON_NAME                       OPEN MODE  RESTRICTED
+---------- ------------------------------ ---------- ----------
+         2 PDB$SEED                       READ ONLY  NO
+         3 CDB2_PDB1                      READ WRITE NO
+         4 CDB2_PDB2                      READ WRITE NO
+         5 CDB2_PDB3                      READ WRITE NO
+
+col svrname form a30
+col dirname form a30
+select svrname, dirname, nfsversion from v$dnfs_servers;
+
+SQL> col svrname form a30
+SQL> col dirname form a30
+SQL> select svrname, dirname, nfsversion from v$dnfs_servers;
+
+SVRNAME                        DIRNAME                        NFSVERSION
+------------------------------ ------------------------------ ----------------
+172.21.126.200                 /rhelora03_u02                 NFSv3.0
+172.21.126.200                 /rhelora03_u03                 NFSv3.0
+172.21.126.200                 /rhelora03_u01                 NFSv3.0
+----
++
+Isso confirma que o dNFS está funcionando corretamente.
+
+. Conecte-se ao banco de dados por meio do listener para verificar a configuração do listener Oracle com o seguinte comando.  Altere para a porta do listener e o nome do serviço de banco de dados apropriados.
++
+[source, cli]
+----
+[oracle@localhost ~]$ sqlplus system@//localhost:1523/cdb2_pdb1.cie.netapp.com
+
+SQL*Plus: Release 19.0.0.0.0 - Production on Thu May 6 13:19:57 2021
+Version 19.8.0.0.0
+
+Copyright (c) 1982, 2019, Oracle.  All rights reserved.
+
+Enter password:
+Last Successful login time: Wed May 05 2021 17:11:11 -04:00
+
+Connected to:
+Oracle Database 19c Enterprise Edition Release 19.0.0.0.0 - Production
+Version 19.8.0.0.0
+
+SQL> show user
+USER is "SYSTEM"
+SQL> show con_name
+CON_NAME
+CDB2_PDB1
+----
++
+Isso confirma que o ouvinte do Oracle está funcionando corretamente.
+
+
+
+
+
+=== Onde procurar ajuda?
+
+Se precisar de ajuda com o kit de ferramentas, junte-se a nóslink:https://netapppub.slack.com/archives/C021R4WC0LC["Canal do Slack de suporte da comunidade de automação de soluções da NetApp"] e procure o canal de automação de soluções para postar suas dúvidas ou perguntas.

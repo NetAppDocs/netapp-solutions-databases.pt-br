@@ -1,0 +1,25 @@
+---
+indexpage:
+  title: Vídeos de soluções de banco de dados NetApp
+  summary: Explore vídeos sobre soluções de banco de dados Oracle, SQL Server, código
+    aberto e híbrido com a NetApp.
+  lead: Descubra a abrangente biblioteca de vídeos da NetApp, apresentando soluções
+    de banco de dados Oracle, SQL Server e bancos de dados de código aberto. Cada
+    coleção se concentra em casos de uso e cenários de integração específicos.
+  tiles:
+  - title: Vídeos do banco de dados Oracle
+    links:
+    - title: Implantação e automação
+      url: videos-oracle-videos.html#deployment-and-automation
+    - title: Backup, recuperação e clonagem
+      url: videos-oracle-videos.html#backup-recovery-and-cloning
+    - title: Modernização e migração
+      url: videos-oracle-videos.html#modernization-and-migration
+    - title: Alta disponibilidade, recuperação de desastres e replicação
+      url: videos-oracle-videos.html#high-availability-disaster-recovery-and-replication
+  - title: Vídeos sobre SQL Server e banco de dados de código aberto
+    links:
+    - title: Vídeos do SQL Server
+      url: videos-sqlserver-videos.html
+    - title: Vídeos de banco de dados de código aberto
+      url: videos-open-source-videos.html

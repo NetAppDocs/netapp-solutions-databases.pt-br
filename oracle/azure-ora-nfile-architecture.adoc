@@ -1,0 +1,31 @@
+---
+sidebar: sidebar 
+permalink: oracle/azure-ora-nfile-architecture.html 
+summary: Esta seção descreve uma implantação de banco de dados Oracle e uma arquitetura de solução de proteção de dados com máquina virtual do Azure e armazenamento do Azure NetApp Files . 
+keywords: architecture, database, Oracle, Azure, Azure NetApp Files 
+---
+= Arquitetura da Solução
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+O diagrama de arquitetura a seguir ilustra uma implantação de banco de dados Oracle de alta disponibilidade em instâncias de VM do Azure e no armazenamento do Azure NetApp Files .
+
+No ambiente, a instância de computação do Oracle é implantada por meio de um console de VM de serviços do Azure.  Há vários tipos de instâncias do Azure disponíveis no console.  A NetApp recomenda implantar uma instância de VM do Azure orientada a banco de dados que atenda à sua carga de trabalho esperada.
+
+O armazenamento do banco de dados Oracle, por outro lado, é implantado com o serviço Azure NetApp Files disponível no console do Azure.  Os volumes binários, de dados ou de log do Oracle são posteriormente apresentados e montados em um host Linux de instância de VM do Azure.
+
+image:db-ora-azure-anf-architecture.png["Esta imagem descreve o relacionamento entre o Site Principal, o Site de Espera e o peering de vNet de cada um desses sites.  Isso forma quatro redes virtuais separadas."]
+
+Em muitos aspectos, a implementação do Azure NetApp Files na nuvem do Azure é muito semelhante a uma arquitetura de armazenamento de dados ONTAP local com muitas redundâncias integradas, como RAID e controladores duplos.  Para recuperação de desastres, um site de espera pode ser configurado em diferentes regiões e o banco de dados pode ser sincronizado com o site principal usando replicação em nível de aplicativo (por exemplo, Oracle Data Guard).
+
+Em nossa validação de teste para implantação de banco de dados Oracle e proteção de dados, o banco de dados Oracle é implantado em uma única VM do Azure, conforme ilustrado no diagrama a seguir:
+
+image:db-ora-azure-anf-architecture2.png["Esta imagem descreve a organização de uma única VM do Azure com peering de vNet para criar duas redes virtuais separadas."]
+
+O ambiente Azure Oracle pode ser gerenciado com um nó controlador Ansible para automação usando kits de ferramentas fornecidos pela NetApp para implantação de banco de dados, backup, recuperação e migração de banco de dados.  Quaisquer atualizações no kernel do sistema operacional da instância da VM Oracle Azure ou patches da Oracle podem ser executados em paralelo para manter o primário e o standby sincronizados.  Na verdade, os kits de ferramentas iniciais podem ser facilmente expandidos para executar tarefas diárias do Oracle, se necessário.  Se precisar de ajuda para configurar um controlador CLI Ansible, consultelink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html["Automação de soluções NetApp ^"^] para começar.

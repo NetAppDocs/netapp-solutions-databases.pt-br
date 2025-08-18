@@ -1,0 +1,45 @@
+---
+sidebar: sidebar 
+permalink: dbops/hybrid-dbops-sc-gs.html 
+summary: Esta seção fornece um resumo das tarefas que devem ser concluídas para atender aos requisitos pré-requisitos descritos na seção anterior.  A seção a seguir fornece uma lista de tarefas de alto nível para operações locais e na nuvem pública.  Os processos e procedimentos detalhados podem ser acessados clicando nos links relevantes. 
+keywords: introduction, workflow 
+---
+= Visão geral de introdução
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Esta seção fornece um resumo das tarefas que devem ser concluídas para atender aos requisitos pré-requisitos descritos na seção anterior.  A seção a seguir fornece uma lista de tarefas de alto nível para operações locais e na nuvem pública.  Os processos e procedimentos detalhados podem ser acessados clicando nos links relevantes.
+
+
+
+== No local
+
+* Configurar usuário administrador do banco de dados no SnapCenter
+* Pré-requisitos de instalação do plugin SnapCenter
+* Instalação do plugin do host SnapCenter
+* Descoberta de recursos de banco de dados
+* Configurar peering de cluster de armazenamento e replicação de volume de banco de dados
+* Adicionar armazenamento de banco de dados CVO SVM ao SnapCenter
+* Configurar política de backup de banco de dados no SnapCenter
+* Implementar política de backup para proteger o banco de dados
+* Validar backup
+
+
+
+
+== Nuvem pública da AWS
+
+* Verificação pré-voo
+* Etapas para implantar o Cloud Manager e o Cloud Volumes ONTAP na AWS
+* Implantar instância de computação EC2 para carga de trabalho de banco de dados
+
+
+Clique nos links a seguir para obter detalhes:
+
+link:hybrid-dbops-sc-gs-onprem.html["No local"],link:hybrid-dbops-sc-gs-aws.html["Nuvem Pública - AWS"]

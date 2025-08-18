@@ -1,0 +1,43 @@
+---
+sidebar: sidebar 
+permalink: dbops/hybrid-dbops-snapcenter-usecases.html 
+summary: Esta solução fornece aos clientes e ao campo da NetApp instruções e orientações para configurar, operar e migrar bancos de dados para um ambiente de nuvem híbrida usando a ferramenta baseada em GUI do NetApp SnapCenter e o serviço de armazenamento CVO da NetApp em nuvens públicas. 
+keywords: tr-4908, tr4908, 4908, hybrid cloud, database, snapcenter, gui 
+---
+= TR-4908: Visão geral de soluções de banco de dados em nuvem híbrida com SnapCenter
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+Alan Cao, Felix Melligan, NetApp
+
+[role="lead"]
+Esta solução fornece ao campo e aos clientes da NetApp instruções e orientações para configurar, operar e migrar bancos de dados para um ambiente de nuvem híbrida usando a ferramenta baseada em GUI do NetApp SnapCenter e o serviço de armazenamento CVO da NetApp em nuvens públicas para os seguintes casos de uso:
+
+* Operações de desenvolvimento/teste de banco de dados na nuvem híbrida
+* Recuperação de desastres de banco de dados na nuvem híbrida
+
+
+Hoje, muitos bancos de dados empresariais ainda residem em data centers corporativos privados por motivos de desempenho, segurança e/ou outros.  Esta solução de banco de dados em nuvem híbrida permite que as empresas operem seus bancos de dados primários no local enquanto usam uma nuvem pública para operações de banco de dados de desenvolvimento/teste, bem como para recuperação de desastres, a fim de reduzir custos operacionais e de licenciamento.
+
+Muitos bancos de dados corporativos, como Oracle, SQL Server, SAP HANA e assim por diante, têm altos custos operacionais e de licenciamento.  Muitos clientes pagam uma taxa de licença única, bem como custos anuais de suporte com base no número de núcleos de computação em seu ambiente de banco de dados, independentemente de os núcleos serem usados para desenvolvimento, teste, produção ou recuperação de desastres.  Muitos desses ambientes podem não ser totalmente utilizados durante o ciclo de vida do aplicativo.
+
+As soluções oferecem uma opção para os clientes reduzirem potencialmente sua contagem de núcleos licenciáveis movendo seus ambientes de banco de dados dedicados ao desenvolvimento, teste ou recuperação de desastres para a nuvem.  Ao usar escala de nuvem pública, redundância, alta disponibilidade e um modelo de cobrança baseado no consumo, a economia de custos com licenciamento e operação pode ser substancial, sem sacrificar a usabilidade ou disponibilidade do aplicativo.
+
+Além da potencial economia nos custos de licença do banco de dados, o modelo de licença CVO baseado em capacidade da NetApp permite que os clientes economizem nos custos de armazenamento por GB, ao mesmo tempo em que oferece alto nível de capacidade de gerenciamento de banco de dados que não está disponível em serviços de armazenamento concorrentes.  O gráfico a seguir mostra uma comparação de custos de armazenamento de serviços de armazenamento populares disponíveis na nuvem pública.
+
+image:cvo-cloud-cost-comparision.png["Figura mostrando diálogo de entrada/saída ou representando conteúdo escrito"]
+
+Esta solução demonstra que, usando a ferramenta de software baseada em GUI SnapCenter e a tecnologia NetApp SnapMirror , as operações de banco de dados em nuvem híbrida podem ser facilmente configuradas, implementadas e operadas.
+
+Os vídeos a seguir demonstram o SnapCenter em ação:
+
+* https://www.youtube.com/watch?v=-DDTVtd868Q&list=PLdXI3bZJEw7nofM6lN44eOe4aOSoryckg&index=35["Backup de um banco de dados Oracle em uma nuvem híbrida usando SnapCenter"^]
+* https://www.youtube.com/watch?v=NpeDbhK5f4c["SnapCenter- Clonar DEV/TEST para AWS Cloud para um banco de dados Oracle"^]
+
+
+Notavelmente, embora as ilustrações ao longo deste documento mostrem o CVO como uma instância de armazenamento de destino na nuvem pública, a solução também é totalmente validada para a nova versão do mecanismo de armazenamento FSx ONTAP para AWS.

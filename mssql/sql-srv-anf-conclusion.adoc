@@ -1,0 +1,32 @@
+---
+sidebar: sidebar 
+permalink: mssql/sql-srv-anf-conclusion.html 
+keywords: takeaways, hybrid-cloud 
+summary: Não importa se você tem como alvo uma nuvem híbrida ou totalmente em nuvem com bancos de dados expansíveis, o Azure NetApp Files oferece excelentes opções para implantar e gerenciar cargas de trabalho de banco de dados, ao mesmo tempo em que reduz seu TCO ao tornar os requisitos de dados integrados à camada de aplicativo. 
+---
+= Conclusão
+:hardbreaks:
+:allow-uri-read: 
+:nofooter: 
+:icons: font
+:linkattrs: 
+:imagesdir: ../media/
+
+
+[role="lead"]
+Não importa se você tem como alvo uma nuvem híbrida ou totalmente em nuvem com bancos de dados expansíveis, o Azure NetApp Files oferece excelentes opções para implantar e gerenciar cargas de trabalho de banco de dados, ao mesmo tempo em que reduz seu TCO ao tornar os requisitos de dados integrados à camada de aplicativo.
+
+Este documento aborda recomendações para planejamento, design, otimização e dimensionamento de implantações do Microsoft SQL Server com o Azure NetApp Files, que podem variar muito entre as implementações.  A solução certa depende dos detalhes técnicos da implementação e dos requisitos de negócios que impulsionam o projeto.
+
+
+
+== Takeaways
+
+Os pontos principais deste documento incluem:
+
+* Agora você pode usar o Azure NetApp Files para hospedar o banco de dados e a testemunha de compartilhamento de arquivos para o cluster do SQL Server.
+* Você pode aumentar os tempos de resposta do aplicativo e fornecer 99,9999% de disponibilidade para fornecer acesso aos dados do SQL Server quando e onde for necessário.
+* Você pode simplificar a complexidade geral da implantação do SQL Server e do gerenciamento contínuo, como a divisão de RAID, com redimensionamento simples e instantâneo.
+* Você pode contar com recursos de operações inteligentes para ajudar a implantar bancos de dados do SQL Server em minutos e acelerar os ciclos de desenvolvimento.
+* Se o Azure Cloud for o destino, o Azure NetApp Files é a solução de armazenamento certa para implantação otimizada.
+
