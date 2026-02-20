@@ -5276,4 +5276,315 @@
   <block id="5ffbe0deb5b41148dc58e63a20df8411" category="sidebar">Bancos de dados Oracle</block>
   <block id="39a2008d48dcc4f61288e4668979970c" category="sidebar">Bancos de dados SQL Server</block>
   <block id="22d04ecae9fae88d0b8d4548a46a545b" category="sidebar">Solicitação de automação</block>
+  <block id="8f3bd24c41b19b143e326bf56b5f0a8d" category="summary">Configurar grupos de disponibilidade Always On do SQL Server em instâncias do Google Compute Engine usando Google Cloud NetApp Volumes com protocolo iSCSI para armazenamento em bloco.</block>
+  <block id="7b9f71eb2b074e2fe0245862fab29398" category="doc">Configurar grupos de disponibilidade Always On do SQL Server com Google Cloud NetApp Volumes</block>
+  <block id="e9b77ddb32e1b86e0792cf4779d9520d" category="paragraph">Configure grupos de disponibilidade Always On do SQL Server em instâncias do Google Compute Engine em uma única sub-rede usando o armazenamento em bloco iSCSI do Google Cloud NetApp Volumes. Saiba como configurar instâncias de computação, configurar volumes NetApp, estabelecer clustering de failover e implantar grupos de disponibilidade para alta disponibilidade e recuperação de desastres.</block>
+  <block id="a7f327f308c31f423bdddfc07ac8a537" category="paragraph">Antes de prosseguir, conclua as etapas de pré-requisito de configuração na documentação do Google Cloud:</block>
+  <block id="e2d9091402d12c6616c41d0b2f18fe19" category="list-text"><block ref="e2d9091402d12c6616c41d0b2f18fe19" category="inline-link-macro-rx"></block></block>
+  <block id="91c253c99264458ee96029b72e15b547" category="inline-link-macro">Prepare seu projeto e rede</block>
+  <block id="319a49999ca237b80468601960c1ae93" category="list-text"><block ref="319a49999ca237b80468601960c1ae93" category="inline-link-macro-rx"></block></block>
+  <block id="4dfddd1829f7fb340bd9b36bff6e3130" category="inline-link-macro">Regras de firewall</block>
+  <block id="cf1d8d962cec65d4e38efdb0c80e175d" category="list-text"><block ref="cf1d8d962cec65d4e38efdb0c80e175d" category="inline-link-macro-rx"></block></block>
+  <block id="69b38281f95a5dbf6fdb2ed4b6c2ea21" category="inline-link-macro">Configurar volumes NetApp</block>
+  <block id="9d7293ba9c220e3e8a185aecc1a280b8" category="list-text"><block ref="9d7293ba9c220e3e8a185aecc1a280b8" category="inline-link-macro-rx"></block></block>
+  <block id="de909bb4061d8bac62f8a3dbfc6a88a0" category="paragraph">Certifique-se de ter concluído os seguintes requisitos:</block>
+  <block id="5b92d31d3ce582944c226202d1cf24d5" category="list-text">Projeto do Google Cloud com permissões de administrador para computação, rede, IAM e armazenamento</block>
+  <block id="53730ebe2ba9e46735b0f245ac76405b" category="list-text">Rede VPC com sub-rede para setup de região</block>
+  <block id="6472e202cb160d0a5eae85da07e1fd16" category="list-text">Configuração do Active Directory e DNS disponível em uma região</block>
+  <block id="25b3b1d7cecf00ec9cb18bcfab35d4df" category="list-text">Regras de firewall configuradas para permitir as portas necessárias</block>
+  <block id="5037f321fd9407c8d2eb4eb07edb48d7" category="list-text">Familiaridade com SQL Server Always On availability groups e failover clustering</block>
+  <block id="25f340deb73b9a7042efb7759028a797" category="inline-link-macro">créditos de teste grátis</block>
+  <block id="22c5a29b2bd6fb21cb161d3c6a3883fe" category="admonition">Novos usuários do Google Cloud podem ser elegíveis para <block ref="14c4a58e00da7181913005b9b179e942" category="inline-link-macro-rx"></block>.</block>
+  <block id="d03cbf063b0125881276987e9e53b79c" category="section-title">Objetivos</block>
+  <block id="f6387159c1f35f863df150a455927e5c" category="paragraph">A configuração do grupo de disponibilidade Always On do SQL Server inclui as seguintes tarefas de alto nível:</block>
+  <block id="6a036b0f009e5f384f4c043c33af08ce" category="list-text">Configurar instâncias do Compute Engine e volumes de armazenamento NetApp</block>
+  <block id="3569899a0391388181d7eef2af1b71b7" category="list-text">Configurar o SQL Server em ambos os nós</block>
+  <block id="1d75e8f5284825f06033c351fca468a1" category="list-text">Configurar o clustering de failover do Windows Server</block>
+  <block id="77354e6cde4bc8374df497e6b1020448" category="list-text">Configurar o quorum do cluster com file share witness</block>
+  <block id="e7338db4e57a91de043eef6ef6c5ec12" category="list-text">Configurar os grupos de disponibilidade do SQL Server</block>
+  <block id="30c6e2bb6c0c093a9bd8d2ad723da60c" category="list-text">Configurar Distributed Network Name (DNN) para acesso do listener</block>
+  <block id="67d9bef477b4472baf899e87265b663f" category="section-title">Considerações sobre custos</block>
+  <block id="5bf681d1b31ed43ea88605b8001dc263" category="inline-link-macro">Instâncias do Compute Engine</block>
+  <block id="a18b27087b25fa352c54673643e8590c" category="paragraph">Este tutorial utiliza componentes faturáveis do Google Cloud, incluindo <block ref="3a1ebe9b19683720297dac57a364f02a" category="inline-link-macro-rx"></block> e <block ref="80e2b8e1929af94d0d431c3af598baa1" category="inline-link-macro-rx"></block> armazenamento.</block>
+  <block id="d55aae0750946219ffe6ded7a93572c5" category="inline-link-macro">Calculadora de preços</block>
+  <block id="d2c2245107909b7a43f23c0a25c85ee0" category="paragraph">Use a <block ref="6db332576e202722c7746833344678fa" category="inline-link-macro-rx"></block> para gerar uma estimativa de custo com base nos seus requisitos de computação e armazenamento. A configuração de exemplo utiliza instâncias de computação N4-SKU e armazenamento de nível de serviço Flex da NetApp para a configuração do grupo de disponibilidade Always On do SQL Server.</block>
+  <block id="197975c347610a0c817c1da0ec52f425" category="section-title">Configurar contas de domínio</block>
+  <block id="a1f03d5aba0438e49f5ece7dd8d7c5e9" category="paragraph">Configure duas contas no Active Directory: uma conta de instalação (sua conta de administrador) e uma conta de serviço para ambas as VMs do SQL Server.</block>
+  <block id="fe73a438890160cd4c22461250d1318e" category="paragraph">Por exemplo, use os valores na tabela a seguir para as contas:</block>
+  <block id="8179379e85dbc15566710aade67a12ed" category="admonition">Este exemplo usa<block ref="3630d6c0e151e118f8efcf085e64d5de" prefix=" " category="inline-code"></block> como nome de domínio. Substitua<block ref="3630d6c0e151e118f8efcf085e64d5de" prefix=" " category="inline-code"></block> pelo seu nome de domínio ao longo deste procedimento.</block>
+  <block id="08bd40c7543007ad06e4fce31618f6ec" category="cell">Conta</block>
+  <block id="583a65df9db4119165f5ea0abaa50281" category="cell">VM</block>
+  <block id="cb52d77c3d46973445526342b9695371" category="cell">Nome de domínio completo</block>
+  <block id="b5a7adde1af5c87d7fd797b6245c2a39" category="cell">Descrição</block>
+  <block id="9a8762286c7ec92a4156b28859cfa3bb" category="cell">&lt;your account&gt;</block>
+  <block id="742bfbbfd6f67cd7b2b81a1970c9c76e" category="cell">Ambos (sqlnode1 e sqlnode2)</block>
+  <block id="b8542256694ec8618c091abc9585ca77" category="cell">cvsdemo\DomainAdmin</block>
+  <block id="73db3477165bd17e48ad4cd3edb5937d" category="cell">Conta de administrador para fazer login em qualquer uma das máquinas virtuais e configurar o clustering e o grupo de disponibilidade</block>
+  <block id="fedba7534a3b74936c581a5c4150cd9a" category="cell">sqlsvc</block>
+  <block id="2142485140e575f5ae75daccf28b1640" category="cell">cvsdemo\sqlsvc</block>
+  <block id="ce576e8c0942fec8928dd9b538c7f84c" category="cell">Conta de serviço para SQL Server e SQL Server Agent em ambas as VMs do SQL Server</block>
+  <block id="3c84b77c89dbb7530544443c7e493ebe" category="section-title">Criar VMs do Compute Engine para SQL Server</block>
+  <block id="d23abfe0834f018fa6d064f3369c485b" category="paragraph">Crie duas instâncias de máquina virtual do Google Compute Engine com SQL Server 2022 Enterprise pré-instalado no Windows Server 2025 para hospedar as réplicas do grupo de disponibilidade.</block>
+  <block id="f3a29486bed19a90f2da6d007818b427" category="list-title">Passos</block>
+  <block id="4e56fb4e419e4a5280cd8befd99dcf6c" category="inline-link-macro">*Criar uma instância*</block>
+  <block id="135f2f17832c859cf6dcf77dc33f79bb" category="list-text">No console do Google Cloud, acesse a página <block ref="bdef467b6b14dd3ba6ca3f46b88cf158" category="inline-link-macro-rx"></block>.</block>
+  <block id="b0cd7667098b2a3439c52ba1f9334faa" category="inline-link-macro">Documentação do Google Cloud</block>
+  <block id="516529ae4af3b34eb008e628b15ece21" category="paragraph">Consulte o <block ref="ff97077a8dfbaedc5c48d8aec6962b04" category="inline-link-macro-rx"></block> para mais informações.</block>
+  <block id="9e611395afebc72da92dab6cd48d161d" category="list-text">Para *Nome*, insira <block ref="2f160ca341fc9751fc67d60aa5ee1363" prefix=" " category="inline-code"></block>.</block>
+  <block id="9031326eaae199365a458cd734aa9662" category="list-text">Na seção *Machine configuration*:</block>
+  <block id="b255f6f9ade354380244b8cee520f7e5" category="list-text">Selecione *General Purpose*</block>
+  <block id="4983be98cbbf27992bca6eeded0f12a5" category="list-text">Na lista *Series*, selecione *N4*</block>
+  <block id="9286ea0abb0e0036f258276ebb6950aa" category="list-text">Na lista *Tipo de máquina*, selecione *n4-highmem-8 (8 vCPU, 64 GB memória)*</block>
+  <block id="a79485f0fc88238eef0d2e939d230cf2" category="list-text">Selecione a região onde você criou sua VPC (por exemplo, region=us-west1, zone=us-west1-a).</block>
+  <block id="2a1389d2939d6392fefbb6bee0ce6c04" category="list-text">Na seção *Disco de inicialização*, clique em *Alterar*:</block>
+  <block id="4c7796716441e66779f4388459857af2" category="list-text">Na guia *Imagens públicas*, na lista *Sistema operacional*, selecione *SQL Server on Windows Server*.</block>
+  <block id="ade15be8ef1b5889dc1b47236686d188" category="list-text">Na lista *Versão*, selecione *SQL Server 2022 Enterprise on Windows Server 2025 Datacenter*.</block>
+  <block id="c11d549e71a69e4e5b056b0ed25bf838" category="list-text">Na lista *Tipo de disco de inicialização*, selecione *Hyperdisk Balanced*.</block>
+  <block id="0a68c3fa9f040d9b57a7cac8d1bb8cd4" category="list-text">No campo *Tamanho (GB)*, insira *50* GB.</block>
+  <block id="271e96b0b3156454cb380e2036000262" category="list-text">Clique em *Select* para salvar a configuração do disco de inicialização.</block>
+  <block id="8c65c6750228946b84e79933170ec4a2" category="list-text">Na seção *Networking*, edite a interface de rede para selecionar a VPC e a sub-rede corretas. Se você tiver apenas uma VPC network, ela será selecionada por padrão.</block>
+  <block id="9a8467535954406a0dd0eb5795740f40" category="list-text">Na placa de interface de rede, selecione *gVNIC*.</block>
+  <block id="d0356f2b1f2d7beaa989d18fc73ea4c1" category="inline-link-macro">*Nível de serviço de rede*</block>
+  <block id="7072286176efc247213ef03ece543695" category="list-text">Para <block ref="8f2d8560788eb594c4aa031f1f7a0140" category="inline-link-macro-rx"></block>, selecione *Premium* para cargas de trabalho de missão crítica ou *Standard* para otimizar custos.</block>
+  <block id="afb13a1a3a46c764af0667b74c01ad80" category="list-text">Clique em *Create* para criar a máquina virtual.</block>
+  <block id="40162ff06ee883b1e442abc4b4009a63" category="list-text">Repita estes passos para criar<block ref="c8bc214eb47a96ef32064c39c1002208" prefix=" " category="inline-code"></block>.</block>
+  <block id="c595a1d797511844a7d7c5c16d4a9dcf" category="section-title">Adicionar servidores ao domínio</block>
+  <block id="d6d1756e386507a18c343f051d310674" category="paragraph">Após criar as VMs, associe-as ao domínio do Active Directory e instale os recursos do Windows necessários para clustering de failover e conectividade iSCSI.</block>
+  <block id="272ce3dc8c70659196f0973f8f87901c" category="list-text">Conecte-se remotamente à máquina virtual com a conta de administrador local.</block>
+  <block id="9cc6fb3686b48f46270ef3d30943d545" category="list-text">No Server Manager, selecione *Local Server*.</block>
+  <block id="50856b82ac88bbf0ea2b421df2c42415" category="list-text">Selecione o link *WORKGROUP*.</block>
+  <block id="709647db6d0440aa7315dcbf66168a11" category="list-text">Na seção *Nome do computador*, selecione *Alterar*.</block>
+  <block id="b2bd74d8d5af5f1a348f63115897e42b" category="list-text">Selecione a caixa de seleção *Domínio* e insira seu domínio (por exemplo,<block ref="ef307a1d35684b2e5c8761a190647854" prefix=" " category="inline-code"></block>) na caixa de texto.</block>
+  <block id="a72cc47fad7d1846d19b085d2e77e5ba" category="list-text">Clique em *OK*.</block>
+  <block id="4107966c7ebe4dd13214de2fc65f0032" category="list-text">Na caixa de diálogo *Segurança do Windows*, especifique as credenciais da conta de administrador de domínio padrão (por exemplo,<block ref="b8542256694ec8618c091abc9585ca77" prefix=" " category="inline-code"></block>).</block>
+  <block id="8e40869bf943c08e628610699cd05418" category="list-text">Quando você vir a mensagem "Welcome to the cvsdemo.internal domain", clique em *OK*.</block>
+  <block id="e84965886efccc8be3c355f8dbdfcee0" category="list-text">Clique em *Fechar* e, em seguida, selecione *Reiniciar agora* na caixa de diálogo.</block>
+  <block id="b988d248ba3148948fb122910884ae5c" category="list-text">Após a reinicialização do servidor, adicione a<block ref="fedba7534a3b74936c581a5c4150cd9a" prefix=" " category="inline-code"></block> conta ao grupo Administradores.</block>
+  <block id="eaed6f6464a03e806f488b2e76693dba" category="admonition">Sua instância do SQL será executada usando a conta sqlsvc, que é necessária para clustering e configuração de failover.</block>
+  <block id="e66cb863334b90928ae9f775bbf3db37" category="section-title">Instalar os recursos necessários do Windows</block>
+  <block id="6c8860b8701c41f4753c0ce417e3e708" category="paragraph">Instale o clustering de failover e o MPIO em ambas as VMs do SQL Server usando Server Manager ou PowerShell.</block>
+  <block id="fec7eb7cf6c01fd6f5db984b6fbd7c5d" category="list-title">Opção 1: usando Server Manager</block>
+  <block id="f467589dc4325b3ce8c976b7a9994c7c" category="list-text">No Server Manager, selecione *Manage* &gt; *Add Roles and Features*.</block>
+  <block id="3ef2088711ca78170926c4c9861b1a77" category="list-text">Selecione *Role-based or feature-based installation* e clique em *Next*.</block>
+  <block id="fb2b7ec52582cb573c2b149ff468bdfc" category="list-text">Selecione o seu servidor e clique em *Next*.</block>
+  <block id="c91b93994d0909e349ae4e2bafdaafca" category="list-text">Na página *Recursos*, selecione *clustering* de failover e *Multipath I/O*.</block>
+  <block id="bd598bf58dbff60f1436d518f2ede57c" category="list-text">Clique em *Adicionar funcionalidades* quando solicitado a incluir ferramentas de gerenciamento.</block>
+  <block id="b58aba183a05e01a8f7ca378e955f164" category="list-text">Conclua o assistente e reinicie se solicitado.</block>
+  <block id="b0978f514856a8fae5ac43cdae23003c" category="paragraph-title">Opção 2: usando PowerShell</block>
+  <block id="6a5c2188f7ea1848a964ae12b72c366f" category="paragraph">Execute o PowerShell como administrador e execute os seguintes comandos:</block>
+  <block id="d20ba46dfebdd9d3f94251ce33be77e2" category="section-title">Obtenha nomes de iniciador iSCSI</block>
+  <block id="e4f0d0a68e41a3a62ce7202cd9ccbd2c" category="paragraph">Obtenha o nome qualificado iSCSI (IQN) para cada máquina virtual do SQL Server a ser incluída no grupo de hosts usando a interface gráfica do iniciador iSCSI ou PowerShell.</block>
+  <block id="3a3de96458fa1d6a66077a0d8e0876f5" category="list-title">Opção 1: usando o iniciador iSCSI</block>
+  <block id="afab98831212ab66b00fd2dde726dc89" category="list-text">Pressione *Win+R* ou use a barra de pesquisa do Windows para abrir<block ref="725b4899d93d1390ffc453e86443f2f3" prefix=" " category="inline-code"></block>.</block>
+  <block id="299ba66eadc169f51e1ededd24918872" category="list-text">Na caixa de diálogo Propriedades do iniciador iSCSI, vá para a guia *Configuração*.</block>
+  <block id="21d365be3b9e73549563b8cda0082e3d" category="list-text">Copie o valor *Initiator Name* e inclua-o no grupo de hosts.</block>
+  <block id="f9286e041e5781752d9c6c6a2cd14766" category="paragraph">Exemplo:<block ref="10967121e1978990152045c2597bebe3" prefix=" " category="inline-code"></block></block>
+  <block id="d27225164998c484204d9fe3cabdaff9" category="paragraph">Execute o seguinte comando no PowerShell:</block>
+  <block id="02918acbcd579563a19afabce89ac8a7" category="section-title">Criar volumes de armazenamento em bloco NetApp</block>
+  <block id="4728261747b297046ab680d4c882285c" category="paragraph">Crie volumes de armazenamento em bloco iSCSI usando o Google Cloud NetApp Volumes para fornecer storage compartilhado de alto desempenho para bancos de dados SQL Server. Esse processo inclui a criação de um grupo de hosts, pool de storage e volumes individuais para dados, logs, temp e backup.</block>
+  <block id="e45c9a116c72d77b660aba205d33114f" category="section-title">Crie o grupo de hosts</block>
+  <block id="08c341052775db63ec7116ae6a13d5f9" category="list-text">Crie um grupo de hosts contendo os iniciadores iSCSI de ambos os nós SQL.</block>
+  <block id="c0e4d3ec3c67921d9c97ebbb2a5bb072" category="inline-link-macro">Criar um grupo de hosts</block>
+  <block id="703949b2ff4fb7897f7a5a6bf0498baf" category="paragraph">Para mais detalhes, consulte a <block ref="bc66b2c07682b4a0046c5284d0c12ba9" category="inline-link-macro-rx"></block> documentação.</block>
+  <block id="d2274f8da9465e89ce9fe1d5e0faa28b" category="list-text">Substitua os seguintes valores:</block>
+  <block id="3fdece1d79577fa2dce50e563fea4ea2" category="list-text"><block ref="6fcf75d4e8c598e4ad173e89a6ffd806" prefix="" category="inline-code"></block>: Nome do grupo de hosts (por exemplo,<block ref="d77cdd0efafecccf66c4767d8e869375" prefix=" " category="inline-code"></block>)</block>
+  <block id="d27f0bbeff86b1b7abe225b63455a288" category="list-text"><block ref="71233d73cc90bba8f4d5bbea0792e551" prefix="" category="inline-code"></block>: região (por exemplo,<block ref="7460527a94dd1cdca7f80472ca36103e" prefix=" " category="inline-code"></block>)</block>
+  <block id="3bfb8bbfc46f1be67b2e31175ff59103" category="list-text"><block ref="ed7be72a59610a8faafe1aa482170890" prefix="" category="inline-code"></block>: Lista de IQNs separados por vírgulas de sqlnode1 e sqlnode2</block>
+  <block id="4791651d5ddc87f443660dea3962e500" category="paragraph">Exemplo:<block ref="a2204211085ecb370415d276d4364e5a" prefix=" " category="inline-code"></block></block>
+  <block id="467c33e3023f9b59997806eef1c2ccb5" category="list-text"><block ref="fbee18e2ba1ebbec8b0f1166155d6cc0" prefix="" category="inline-code"></block>: Tipo de sistema operacional (por exemplo,<block ref="d273a0465c8fbfd111aae706cdf9ec20" prefix=" " category="inline-code"></block>)</block>
+  <block id="49febfdcde0451b31c0f732e5ac94554" category="list-text"><block ref="35ba4a2677442e210c23a00a5601aba3" prefix="" category="inline-code"></block>: Descrição opcional para o grupo de hosts</block>
+  <block id="57a8edfcf7feaa6742b2abfa46d855e6" category="image-alt">Configuração do pool de storage</block>
+  <block id="b2525385d8e45990d362ed7340fb602a" category="section-title">Criar pool de storage</block>
+  <block id="74921684854caa419c4999d21b6af1ae" category="list-text">Crie um pool de storage com capacidade e desempenho adequados.</block>
+  <block id="07ee19ad7f0745ddcaa05e21f537e6d0" category="paragraph">Para mais detalhes, consulte a <block ref="ccf54767debcb21f2c036879522a1373" category="inline-link-macro-rx"></block> documentação.</block>
+  <block id="1b7b5149ab4d6f5cc8f2d4910be9e611" category="list-text"><block ref="840e7229f4bf28f57c64ebf3ff5a2f59" prefix="" category="inline-code"></block>: nome do pool (por exemplo,<block ref="e164a51a79d995a220aaaf628dc29fc9" prefix=" " category="inline-code"></block>)</block>
+  <block id="04f652e0ab836b14093daad62e355042" category="list-text"><block ref="63c379b3113b0d973ed13e2f511df07e" prefix="" category="inline-code"></block>: nome do seu projeto do Google Cloud</block>
+  <block id="61b98692cfb966becac778d292bb5e76" category="list-text"><block ref="71233d73cc90bba8f4d5bbea0792e551" prefix="" category="inline-code"></block>: mesmo local que suas instâncias de computação (por exemplo,<block ref="bffe9cca2446cbd9a50cb8fb48107c25" prefix=" " category="inline-code"></block>)</block>
+  <block id="89668e25c6b12a63437bf6277ff8d3c2" category="list-text"><block ref="5b3bc952620c21981c4b3b304fbd74f8" prefix="" category="inline-code"></block>: Capacidade do pool em GiB (por exemplo,<block ref="021bbc7ee20b71134d53e20206bd6feb" prefix=" " category="inline-code"></block>)</block>
+  <block id="a94f42ee868cc063bfaff29e238f2801" category="list-text"><block ref="4a6ea8e16f59a76e32c9926cac0b9a2a" prefix="" category="inline-code"></block>: Nível de serviço (por exemplo,<block ref="09d2bd168181f1e64c2b1651a80a8aa8" prefix=" " category="inline-code"></block>)</block>
+  <block id="5118dffc70c792f50ae2793092882ffd" category="list-text"><block ref="a991d6264763b053242908ab3d1b73a5" prefix="" category="inline-code"></block>: nome da sua rede VPC</block>
+  <block id="dd3136b9ea719b8766f476d98dc76564" category="list-text"><block ref="c32b07179e20b6975b9c1def85182007" prefix="" category="inline-code"></block>: faixa de acesso a serviços privados (por exemplo,<block ref="aa51b5e07b9a2f5349f0ed5e32564df1" prefix=" " category="inline-code"></block>)</block>
+  <block id="d934a1b5154d2225ddde07dd77b3bba5" category="list-text"><block ref="50f9b1f40c078d242af7ec323ace44b3" prefix="" category="inline-code"></block>: Taxa de transferência opcional em MiBps (por exemplo,<block ref="ea5d2f1c4608232e07d3aa3d998e5135" prefix=" " category="inline-code"></block>)</block>
+  <block id="56491ed7bc87f51717ca1d07f149d306" category="list-text"><block ref="79073619fba8242703524f16870ff858" prefix="" category="inline-code"></block>: IOPS opcionais (por exemplo,<block ref="021bbc7ee20b71134d53e20206bd6feb" prefix=" " category="inline-code"></block>)</block>
+  <block id="1c27e11c5e65b93611e6f5ce640f8184" category="section-title">Criar volumes</block>
+  <block id="3b3b7c56ab19a1de35e8338ee0ec6602" category="list-text">Crie volumes para dados, logs, temp e backup. Execute o seguinte comando para cada tipo de volume:</block>
+  <block id="723cf06e89d7ddac51fea9941d95c188" category="paragraph">Para mais detalhes, consulte a <block ref="4db6c28dc7628e964ce59182faf325bf" category="inline-link-macro-rx"></block> documentação.</block>
+  <block id="2353f1a4e88d32c9b6d6a039f8bbe546" category="list-text"><block ref="8d84412d06754d187f36566a49d3304c" prefix="" category="inline-code"></block>: Nome único para cada volume (por exemplo,<block ref="54cfc2df8f35edb6f16bfa5731b6dcf2" prefix=" " category="inline-code"></block>,<block ref="9f6be95d093fe5aa165b90ef8363ea86" prefix=" " category="inline-code"></block>,<block ref="8a843ec8c9346ab08353c8a54daa7479" prefix=" " category="inline-code"></block>,<block ref="deff2c806b85dafd015ab0e09a75943b" prefix=" " category="inline-code"></block>)</block>
+  <block id="af009e08d2f8994728bdba5a367628a3" category="list-text"><block ref="71233d73cc90bba8f4d5bbea0792e551" prefix="" category="inline-code"></block>: Mesmo local que pool de storage (por exemplo, <block ref="bffe9cca2446cbd9a50cb8fb48107c25" prefix=" " category="inline-code"></block>)</block>
+  <block id="fe57af3e5ae879c6a97459daa937e2e5" category="list-text"><block ref="840e7229f4bf28f57c64ebf3ff5a2f59" prefix="" category="inline-code"></block>: nome do pool de storage (por exemplo, <block ref="e164a51a79d995a220aaaf628dc29fc9" prefix=" " category="inline-code"></block>)</block>
+  <block id="bbcc043b20b7aab78147b3c670eaae26" category="list-text"><block ref="5b3bc952620c21981c4b3b304fbd74f8" prefix="" category="inline-code"></block>: Capacidade de volume em GiB (por exemplo,<block ref="3644a684f98ea8fe223c713b77189a77" prefix=" " category="inline-code"></block>)</block>
+  <block id="3043f19222b4568cf60a38e51a5b058a" category="list-text"><block ref="ffa7b09a67ef32c80a7483b2a904900f" prefix="" category="inline-code"></block>: caminho completo do recurso para o grupo de hosts (por exemplo, <block ref="9b531343c2353ca90b3cf41f19c55cab" prefix=" " category="inline-code"></block>)</block>
+  <block id="ee4ea10ce2e1bde0e824e04e93930df7" category="admonition">É possível especificar vários grupos de hosts com um sinal de # separando cada grupo de hosts.</block>
+  <block id="1d6bb88dca0a56c66a5eca3f7df6de4c" category="admonition">Repita esta etapa para cada tipo de volume: data, log, temp e backup.</block>
+  <block id="6299ec0ff9a5d74b37f24b4614f5d14b" category="section-title">Montar volumes iSCSI</block>
+  <block id="fb7f720a03abac5fddb036dd061a031d" category="paragraph">Monte os volumes iSCSI não compartilhados em cada instância do SQL Server:</block>
+  <block id="e884a797d192c101b4a9f743a28fe22c" category="list-text">No console do Google Cloud, navegue até *NetApp volumes* &gt; *Volumes*.</block>
+  <block id="e027515e349e1876128596eb13ad7203" category="list-text">Selecione o volume criado para a instância SQL (por exemplo,<block ref="54cfc2df8f35edb6f16bfa5731b6dcf2" prefix=" " category="inline-code"></block>).</block>
+  <block id="89c258c6e1cb8e3aa7141a2735978bfa" category="list-text">Copie os dois endereços IP do destino iSCSI (por exemplo,<block ref="377a0992c2585a852aea8b0f465c0990" prefix=" " category="inline-code"></block> e<block ref="c67bafc16f974a734a21b4e6d64ce41a" prefix=" " category="inline-code"></block>).</block>
+  <block id="8db72f21d6209071f153d4b9a230e9eb" category="list-text">No sqlnode1, execute <block ref="725b4899d93d1390ffc453e86443f2f3" prefix=" " category="inline-code"></block> ou use PowerShell:</block>
+  <block id="9f699a4f6dbf364e185651f84d3f41f1" category="list-text">Clique na aba *Discover* e, em seguida, em *Discover Portal*.</block>
+  <block id="31ab71bfd8940b81e42e9dabb25b4363" category="list-text">Adicione cada endereço IP obtido; deixe a porta padrão 3260.</block>
+  <block id="574d92cadde045712e7ba3c2897fe015" category="image-alt">Descobrir portais de destino iSCSI</block>
+  <block id="ff044190dc38f6df8210eb31091c6fb6" category="list-text">Na caixa de diálogo *Conectar ao destino*, marque *Habilitar multipath* se estiver usando multipathing.</block>
+  <block id="87ed4e0b87b32b3f58f29c98a70ebcb1" category="list-text">Clique em *Avançado* e selecione o endereço IP do portal de destino no menu suspenso.</block>
+  <block id="91249882086a5c5657d04aa7fdc073bc" category="list-text">Clique em *OK* para conectar.</block>
+  <block id="55bed6e71bbf03d8bb8c27716048e9b1" category="list-text">Configure MPIO para dispositivos iSCSI</block>
+  <block id="3147f22be8823beb2ed3eb221e2c545e" category="list-text">Abra o MPIO a partir do Painel de Controle ou Server Manager.</block>
+  <block id="75b85439e315e6205d31d62739175732" category="list-text">Clique na aba *Discover Multi-Paths*.</block>
+  <block id="110265e8a98e078cb738e8babe93a5c4" category="list-text">Marque a opção *Adicionar suporte para dispositivos iSCSI* e clique em *Adicionar*.</block>
+  <block id="17769eee0e0663d9690deadd23b9db9d" category="list-text">Reinicie se solicitado.</block>
+  <block id="d46851c8829e5527f6c831dfad48d60e" category="list-text">Verifique a configuração de multipath no Gerenciador de Dispositivos em *Unidades de disco*.</block>
+  <block id="160c9625717f64e149aa16b7959ff99d" category="list-text">Inicializar e formatar volumes</block>
+  <block id="93b0ef83a487b940ba24c2cd1ab8a5cb" category="list-text">Inicie o Gerenciamento do Computador <block ref="c9b86e44bd1e9f2b09f990fdf37dc58a" prefix="(" category="inline-code"></block>) e selecione *Gerenciamento de Disco*.</block>
+  <block id="c7236de9d42fb068337c53eda15942b7" category="list-text">Inicialize, particione e formate cada disco com unidade de alocação de 64K:</block>
+  <block id="a41fd69802c285c286782c87bc78ebc0" category="list-text">Atribua letras às unidades de disco (por exemplo, D: para dados, E: para log, F: para backup, G: para temp).</block>
+  <block id="421b9f86a88908c8def5cf189ad6fc44" category="list-text">Crie a estrutura de diretórios para SQL Server:</block>
+  <block id="23810c1fc82464432bd9a01813b9d377" category="section-title">Configurar SQL Server</block>
+  <block id="35724a5ea5ba1184532def8cb0fdefaf" category="paragraph">Configure o SQL Server em ambos os nós para usar a conta de serviço do domínio, atualize os caminhos padrão para usar NetApp volumes e mova os bancos de dados do sistema para os novos locais de storage.</block>
+  <block id="3c08dcdc979d5fd180f39bd0b723a69d" category="list-text">Atualize os serviços do SQL Server e do SQL Server Agent para serem executados na conta de serviço do domínio para autenticação do cluster e suporte a failover.</block>
+  <block id="8ef1e0764759d9939959fb13672e5956" category="list-text">Em cada instância SQL, abra<block ref="a9cc59a923a7097133d81844b71e601d" prefix=" " category="inline-code"></block>.</block>
+  <block id="9d77b0231971798aae245185e7589ba2" category="list-text">Atualize *Fazer logon como* <block ref="4984992230a54aa9c6b2fffe4e63355a" prefix=" " category="inline-code"></block> para os serviços do SQL Server e SQL Server Agent.</block>
+  <block id="314567c5be927b4f8d186759b63ccd11" category="list-text">Abra o SQL Server Management Studio (SSMS) e conecte-se com sua conta de domínio.</block>
+  <block id="098d7d07a6b92ddd1eeb2c4a66d371a5" category="paragraph">Se a conexão falhar, inicie o SSMS como <block ref="721cb38b17d0ae0056772a1fd6653c9d" prefix=" " category="inline-code"></block>. Certifique-se de que a conta Administrator esteja habilitada em Users &amp; Groups com a senha apropriada.</block>
+  <block id="caeef2b597c6eaf20de86dcb6c015fb7" category="list-text">Crie os logins das contas de domínio com as permissões necessárias.</block>
+  <block id="4d7b3afdc7bd44e6610c37a7d10fd96a" category="admonition">Substitua <block ref="5a9481e597df953f3e3eec19fbb8c4d2" prefix=" " category="inline-code"></block> pelo seu nome de domínio nos seguintes comandos SQL.</block>
+  <block id="768b5aa41d6904ae8318c3cf9bdee9ee" category="list-text">Atualize os caminhos padrão para usar os volumes NetApp em vez da unidade do sistema operacional:</block>
+  <block id="7fc1facb0845b5396ee65414231f2789" category="list-text">Mova os bancos de dados do sistema (model, msdb, tempdb e master) da unidade do sistema operacional para os volumes NetApp para melhor desempenho e gerenciamento.</block>
+  <block id="2f8936bae08c5fd02a7c236bf9600aad" category="list-text">Verifique os caminhos atuais:</block>
+  <block id="14b1e91cb43038f96d232b5520f149ea" category="list-text">Atualizar para novos locais:</block>
+  <block id="70803e2138cdf9821757ad37ad8f43a7" category="list-text">Pare o SQL Server, mova manualmente os arquivos do local antigo para os novos caminhos e, em seguida, reinicie o SQL Server.</block>
+  <block id="8589fbeefc674574e611f59e446a1362" category="list-text">Mover o banco de dados tempdb</block>
+  <block id="4b0a9dda449baceb1a16a3129012a175" category="list-text">Reinicie o SQL Server para que as alterações entrem em vigor:</block>
+  <block id="448f45588d2da5ce189028816215fc59" category="list-text">Mova o banco de dados mestre</block>
+  <block id="aea7765ebfb12830a83f6c6e4300c304" category="list-text">Abra o *SQL Server Configuration Manager*.</block>
+  <block id="09e07f6fcc6c4ec1584c7b64d218628d" category="list-text">Navegue até *SQL Server Services*, clique com o botão direito em *SQL Server (MSSQLSERVER)* e selecione *Properties*.</block>
+  <block id="8046af30f13e2340eb180d776f342587" category="list-text">Clique na guia *Startup Parameters*.</block>
+  <block id="e633125ca787b479758266df639d5bdb" category="list-text">Em *Parâmetros existentes*, localize os parâmetros que começam com<block ref="9b017020b9d48d433ec90c548e6b5c70" prefix=" " category="inline-code"></block>,<block ref="5067ee0ff4999c7b5b04f593dd3521b9" prefix=" " category="inline-code"></block> e<block ref="269889131ee4793a82191b78a2eb60e3" prefix=" " category="inline-code"></block>.</block>
+  <block id="45a29498f2e1a926e17cd547afcec48f" category="list-text">Remova os parâmetros antigos e adicione novos:</block>
+  <block id="86a020984d2d15dc3f7c977493702e6e" category="list-text">Pare o serviço do SQL Server.</block>
+  <block id="371b77252760ffce5be9369f845c233a" category="list-text">Mova manualmente <block ref="25c6fe467eb1ead4e59557e733472977" prefix=" " category="inline-code"></block> e <block ref="9a617981efbae46aa95f17d3f36246a2" prefix=" " category="inline-code"></block> da localização antiga para os novos caminhos.</block>
+  <block id="140995cfc8c82f4ac0ce4b777ec5165a" category="list-text">Se você atualizou o caminho do log de erros, mova o arquivo <block ref="8792137a205854c074d4481d7504a1b8" prefix=" " category="inline-code"></block> também.</block>
+  <block id="de167e4d81dc5b53bea20440cd0c62a5" category="list-text">Inicie o serviço SQL Server.</block>
+  <block id="f7fb84bb70dacfe27f3c68cea3a521e8" category="image-alt">Gerenciador de Configuração do SQL Server - Parâmetros de Inicialização</block>
+  <block id="40d98bd9d976a113891edc628fe4f3d8" category="section-title">Configurar cluster de failover</block>
+  <block id="d4a426f8d637fc83d787a32c9b618e75" category="inline-link-macro">Documentação sobre Clustering de Failover do Windows Server</block>
+  <block id="e33a3648c5dbb5045b94ca7d07aef7b6" category="paragraph">Configure o Failover Clustering do Windows Server para fornecer alta disponibilidade para o SQL Server. Para mais detalhes, consulte <block ref="1faa8a781b0124475cd22c5809716b4d" category="inline-link-macro-rx"></block>.</block>
+  <block id="e64a3b8686a1299f53ca33931ee3c503" category="section-title">Configurar regras de firewall</block>
+  <block id="a02ec6a59ba28a9cdd00352e68078595" category="paragraph">Abra as portas de rede necessárias em ambos os nós SQL para habilitar a comunicação do cluster, a conectividade com o SQL Server e a replicação do grupo de disponibilidade.</block>
+  <block id="c2151a18ab0b0d220a07d37ef0afb269" category="list-text">Abra as portas necessárias em ambos os nós SQL para comunicação do cluster.</block>
+  <block id="83d32fcdbe512c1833f2a419209cf714" category="paragraph">Portas necessárias incluem: UDP 3343, TCP 3343, TCP 1433, TCP 5022, TCP 135, TCP 445, TCP 49152-65535 (RPC dinâmico).</block>
+  <block id="8e9e0674f514401c315626d105eebbcd" category="list-text">Execute o seguinte ponto de verificação em ambos os servidores para permitir a comunicação entre o SQL Server e o cluster através do firewall.</block>
+  <block id="e3e7cd0f4a7ef7b2159e33cd0495d21b" category="paragraph">Ajuste os números das portas se você tiver configurações personalizadas.</block>
+  <block id="06880fa41019c1cec71a1f1d0dee33b1" category="inline-link-macro">Requisitos de serviço e porta de rede do Windows Server</block>
+  <block id="ea1bfb4e0199bc61655220a3e7ae9a8f" category="paragraph">Para obter requisitos detalhados de firewall, consulte <block ref="7d6297f1cd817785a1254289ad7b65fa" category="inline-link-macro-rx"></block>.</block>
+  <block id="1eeb53e050d9b4e4e35834f4b471cba7" category="list-text">Execute verificações de validação em ambos os nós antes de criar o cluster:</block>
+  <block id="4572920938cf8d7680040c800198b6b8" category="section-title">Crie o cluster de failover</block>
+  <block id="0ffad8e207b70ed5bd0af63d94e2b285" category="paragraph">Crie um Windows Server Failover Cluster com ambos os nós do SQL Server para habilitar alta disponibilidade e recursos de failover automático.</block>
+  <block id="4d06f67b14a82b9c555e0a7baee5bd99" category="list-text">Execute <block ref="40ec4e3c7d084c31d17d6a1dbcff57c7" prefix=" " category="inline-code"></block> ou abra o Gerenciador de Cluster de Failover no Server Manager.</block>
+  <block id="e5da6e567e666cec89caf08fbaaa9f5d" category="image-alt">Failover Cluster Manager</block>
+  <block id="9f81c4b0580fea32a530ea1db9771375" category="list-text">Selecione *Create Cluster*.</block>
+  <block id="9c6a73adf35fe44a26568510d2b35586" category="list-text">Adicione ambos os nós SQL (sqlnode1, sqlnode2).</block>
+  <block id="7ebc50d49da21100bbe432840fc9b56b" category="list-text">Execute testes de validação e certifique-se de que todas as verificações sejam aprovadas. Analise e corrija quaisquer avisos antes de prosseguir.</block>
+  <block id="b4581f9a3e84ae8b225907ab61b658c0" category="list-text">Forneça um nome de cluster (por exemplo,<block ref="c60c1a92e55ca496c663c428624a5137" prefix=" " category="inline-code"></block>).</block>
+  <block id="3344a1941882294ba3d04b7e4caa3a83" category="list-text">Conclua a criação do cluster.</block>
+  <block id="45e272d74455d8484503cb9c5900cd84" category="image-alt">Criação de cluster de failover</block>
+  <block id="5416dd275abbe8850ae41526a0ce4e96" category="section-title">Configurar o quorum do cluster com testemunha de compartilhamento de arquivos</block>
+  <block id="ae76790021e635e101b5e51a0cfc9fd1" category="paragraph">Configure uma testemunha de compartilhamento de arquivos para manter o quorum em um cluster de dois nós. A testemunha fornece um voto adicional para evitar cenários de split-brain e garantir a disponibilidade do cluster.</block>
+  <block id="0e7dd7e907a8dd283e10409da4b5f38d" category="section-title">Criar compartilhamento de arquivos</block>
+  <block id="6b6dfa6183907abb4d5a57319b7b507e" category="paragraph">Crie um compartilhamento de arquivos em uma VM em uma zona ou região diferente que tenha conectividade de rede e esteja dentro do mesmo domínio do Active Directory.</block>
+  <block id="cbbb3d2ffa83a802625675ca739bf495" category="list-text">Conecte-se à VM do servidor testemunha de compartilhamento de arquivos.</block>
+  <block id="11665fbffe3c8058754521f99092186f" category="list-text">No Server Manager, selecione *Tools* &gt; *Computer Management*.</block>
+  <block id="a7621a9215cd00e33672384319664791" category="list-text">Selecione *Pastas Compartilhadas*, clique com o botão direito em *Compartilhamentos* e selecione *Novo Compartilhamento*.</block>
+  <block id="4960bca531e05836e131834eeb8b8533" category="image-alt">Criar novo compartilhamento para testemunha de quórum do cluster</block>
+  <block id="c787c9a8d1f3d1e201759422696409bf" category="list-text">Use o *Assistente para Criar uma Pasta Compartilhada* para criar um compartilhamento<block ref="3577dd616e6b88c428c95ca5b9795e9f" prefix=" " category="inline-code"></block>.</block>
+  <block id="e07917dd9a1385cb544a4de94b068934" category="list-text">Na página *Caminho da Pasta*, selecione *Procurar*.</block>
+  <block id="ef92c152d295ab22daab0c7615cab30c" category="list-text">Localize ou crie um caminho para a pasta compartilhada e selecione *Next*.</block>
+  <block id="6bb4df3f4c286d6664eafbba462e8c1c" category="list-text">Na página *Nome, Descrição e Configurações*, verifique o nome e o caminho do compartilhamento e selecione *Next*.</block>
+  <block id="b776a30e9a18e1ee3d4a4f7d520b9cc9" category="list-text">Na página *Permissões de pasta compartilhada*, selecione *Personalizar permissões* e clique em *Custom*</block>
+  <block id="eb74e5d192cbbb04722cbdb5cf81b7cc" category="list-text">Na caixa de diálogo *Personalizar permissões*, selecione *Adicionar* para adicionar a conta do cluster.</block>
+  <block id="ac3f77150bff8b35e107c1d62a14f49f" category="paragraph">Certifique-se de que a conta que está sendo usada para criar o cluster (sqlcluwest1$) tenha controle total.</block>
+  <block id="ceb8cfea60f38b30e1e13eebbd1ae139" category="list-text">Clique em *OK* para salvar permissões.</block>
+  <block id="80cfb6d99165b17f50d439330d34e2d4" category="list-text">Na página *Permissões de Pasta Compartilhada*, selecione *Concluir* e selecione *Concluir* novamente.</block>
+  <block id="1c16b4c70456b818e9194c0890f67c01" category="section-title">Configurar configurações de quorum</block>
+  <block id="534da31c3fbaf88cddab5cb08e2b23e7" category="paragraph">Configurar o cluster para usar o compartilhamento de arquivos como testemunha para votação de quorum.</block>
+  <block id="53de8ad677279cf2f42643bb54e0f576" category="list-text">No Failover Cluster Manager, clique com o botão direito do mouse no cluster e selecione *More Actions* &gt; *Configure Cluster Quorum Settings*.</block>
+  <block id="a66183e338eb6406f9ad1aed190d42da" category="image-alt">Menu Configurar configurações de quorum do cluster</block>
+  <block id="47d38a1c649c923d99aacdd53d9a0278" category="list-text">No Assistente de Configurar Quórum de Cluster, clique em *Avançar*.</block>
+  <block id="c90068c23c1ee646544f473e149e4cfb" category="list-text">Na página *Selecionar Configuração de Quórum*, escolha *Selecionar a testemunha de quórum* e clique em *Next*.</block>
+  <block id="674f63e045a6cdf33bf7d6c8026a03c8" category="list-text">Na página *Selecionar testemunha de quórum*, selecione *Configurar um file share witness*.</block>
+  <block id="0548b6b6f93f5095d6e64f20ab6935b4" category="list-text">Na página *Configurar File Share Witness*, selecione *Configurar a file share witness*.</block>
+  <block id="9b7fd988a8a732e2460dda236cc5e451" category="list-text">Insira o caminho para o compartilhamento que você criou (por exemplo,<block ref="3577dd616e6b88c428c95ca5b9795e9f" prefix=" " category="inline-code"></block>) e clique em *Avançar*.</block>
+  <block id="680baa7834e8c4e77f5777fc65d1496b" category="list-text">Verifique as configurações na página de Confirmação e clique em *Next*.</block>
+  <block id="1859e92122e266181cafb9c13d7400a0" category="list-text">Clique em *Concluir*.</block>
+  <block id="3616477092a25f625723cd1411e8d701" category="paragraph">Os recursos principais do cluster agora estão configurados com um file share witness.</block>
+  <block id="e920b4aed326c8fd2327cd837dd0b6dd" category="image-alt">Quórum do cluster configurado com file share witness</block>
+  <block id="e52f01575ad3445b66cf17221744ed01" category="section-title">Ativar grupos de disponibilidade Always On</block>
+  <block id="76a9bd1577ae30b80037a6a56510d0d6" category="paragraph">Ative os grupos de disponibilidade Always On em ambas as VMs do SQL Server:</block>
+  <block id="9783f3433ed9424b22124207a9310fcb" category="list-text">No menu Iniciar, abra o *SQL Server Configuration Manager*.</block>
+  <block id="e226969eea4a95585fa4bc0342d84cd6" category="list-text">Na árvore do navegador, selecione *SQL Server Services*.</block>
+  <block id="7454019143619b72c5986b718a4c1a6b" category="list-text">Clique com o botão direito em *SQL Server (MSSQLSERVER)* e selecione *Propriedades*.</block>
+  <block id="a85c989ebd9e3aeae017455d0f08de78" category="list-text">Selecione a guia *Always On High Availability*.</block>
+  <block id="5299f6f30c65ed84e4c3f9c33fc3778a" category="list-text">Marque *Ativar grupos de disponibilidade Always On*.</block>
+  <block id="8faf18e8b122bf6d4adbb0bcf5691896" category="list-text">Clique em *Aplicar* e, em seguida, reinicie o serviço do SQL Server quando solicitado.</block>
+  <block id="9f089c4fb6ffc92c7f50391695df48e8" category="image-alt">Ativar Always On High Availability</block>
+  <block id="425929ceda90bcb7eb89e21c146f0695" category="list-text">Repita para a segunda instância do SQL Server.</block>
+  <block id="0d8c140a23e1685087655fe99767cab9" category="section-title">Crie um banco de dados na primeira instância do SQL Server</block>
+  <block id="fb23aeee09f6549ea542c5ba7afbee92" category="paragraph">Crie um banco de dados na primeira instância do SQL Server.</block>
+  <block id="76956ed66620a38846a69dc38ed13783" category="list-text">Conecte-se à primeira máquina virtual do SQL Server com uma conta de domínio que seja membro da função do servidor sysadmin fixa.</block>
+  <block id="750daf7476a3979a1c888d89a0918f47" category="list-text">Abra o SQL Server Management Studio e conecte-se à primeira instância do SQL Server.</block>
+  <block id="61ad0e6d3d230791ca8793ba5d866868" category="list-text">No *Explorador de Objetos*, clique com o botão direito do mouse em *Bancos de Dados* e selecione *Novo Banco de Dados*.</block>
+  <block id="f247456b2d886ca88aac172b20757b38" category="list-text">Insira um nome de banco de dados (por exemplo,<block ref="6f5f1b53bc0222fddc9aaf690510e7ea" prefix=" " category="inline-code"></block>) e clique em *OK*.</block>
+  <block id="1a4739113c1f8435727f09aa1ab1b9ff" category="list-text">Defina o modo de recuperação de banco de dados como Completo:</block>
+  <block id="eb3b976b711b0b8c07645c9ac07bfa3b" category="section-title">Criar e configurar grupo de disponibilidade</block>
+  <block id="981bb57a6711a53cffe32660b3cf22f3" category="paragraph">Crie um grupo de disponibilidade Always On com commit síncrono e failover automático para fornecer alta disponibilidade para seus bancos de dados SQL Server.</block>
+  <block id="7f9d11cdc0ad4f5279bf144c309f76b1" category="list-text">Faça um backup completo e um backup do log de transações do banco de dados.</block>
+  <block id="56c50c3d447fcd4151db7c64331daf5c" category="list-text">Copie os arquivos de backup para a segunda instância do SQL Server e restaure-os com NORECOVERY.</block>
+  <block id="089ab4d40fabe93d4b26bf442e81af0b" category="list-text">Crie o grupo de disponibilidade com commit síncrono, failover automático e réplicas secundárias legíveis:</block>
+  <block id="c9654b2598a48b6cf48a61dfbf38d087" category="list-text">Crie o grupo de disponibilidade usando o Assistente de Grupo de Disponibilidade.</block>
+  <block id="70fed15b7995af5ebffbba688b303e5f" category="image-alt">Assistente de criação de grupo de disponibilidade</block>
+  <block id="1a7926c2eeda6a079382922e0df1cb5c" category="image-alt">Adicionar banco de dados e réplicas ao grupo de disponibilidade</block>
+  <block id="79013a965a7bffeb8d1ed5fd1afc7302" category="admonition">Certifique-se de que a porta 5022 do firewall esteja liberada em ambos os nós SQL.</block>
+  <block id="6648cb0a136f72dbfcdf56fa3be84ef3" category="image-alt">Sincronização do grupo de disponibilidade</block>
+  <block id="cd448b3cb1d0f7093c0c46f5a18de479" category="image-alt">Grupo de disponibilidade criado com sucesso</block>
+  <block id="d551794e5e1f433a3a01dcff5c8948ad" category="section-title">Criar recurso de listener DNN</block>
+  <block id="c75cbb6b3a10f0bcd8640078d4558fef" category="paragraph">Crie um ouvinte de Distributed Network Name (DNN) para rotear o tráfego para o recurso clusterizado apropriado sem a necessidade de um balanceador de carga.</block>
+  <block id="77b08cfabbc6543c8db5bc16c47b993b" category="paragraph">Utilize PowerShell para criar o recurso DNN:</block>
+  <block id="92d66b864c4df29c6686b9aad90e427d" category="section-title">Configurar possíveis proprietários</block>
+  <block id="0906492c5ba412578206f0eb705fa045" category="paragraph">Por padrão, o cluster associa o nome DNS do DNN a todos os nós. Exclua os nós que não participam do grupo de disponibilidade:</block>
+  <block id="c5993defca1f340b6c393f514b129ebd" category="list-text">No Failover Cluster Manager, localize o recurso DNN.</block>
+  <block id="de5d68f5271b2e3b9c4a7d32ce8c356e" category="list-text">Clique com o botão direito do mouse no recurso DNN e selecione *Propriedades*.</block>
+  <block id="76ea87e086cbfbc4f207bd78927cbd86" category="image-alt">Propriedades de recursos DNN</block>
+  <block id="45505fd2d7da750e18b208b6ae77ea1d" category="list-text">Desmarque a caixa de seleção de quaisquer nós que não participam do grupo de disponibilidade.</block>
+  <block id="27785f0b1e6ba9c12272902202ac5da5" category="image-alt">Configurar possíveis proprietários de DNN</block>
+  <block id="b4c815502a9d7d3f5e39e88958c0e0a1" category="list-text">Clique em *OK* para salvar configurações.</block>
+  <block id="1b1e5d185113de738c63e2d8dadd22ef" category="section-title">Atualize strings de conexão do aplicativo</block>
+  <block id="38603988db8b368e61a0eb1203223f2d" category="paragraph">Atualize as strings de conexão para usar o nome do listener DNN e inclua o <block ref="810ef623cfbef0967e4ac38518a200dd" prefix=" " category="inline-code"></block> parâmetro:</block>
+  <block id="1bc3d18e3b4947dbff414813ad7fb0d5" category="listing-title">Exemplo de string de conexão</block>
+  <block id="7be3919d33b3cd55db89a8db306820fd" category="admonition">Se o seu cliente não suportar o parâmetro MultiSubnetFailover, ele não será compatível com DNN.</block>
+  <block id="cebb1167d3e78885137c837f0abf8026" category="section-title">Testar failover</block>
+  <block id="83559cd4851542c00e7606b743fb3a6c" category="paragraph">Verifique a configuração do grupo de disponibilidade e teste o failover para garantir que o failover automático funcione corretamente entre os nós.</block>
+  <block id="e16b1be10016da283351ca2797fda0e2" category="list-text">Execute o seguinte comando em qualquer réplica para verificar a configuração do grupo de disponibilidade.</block>
+  <block id="fcedbea0569ad38ff6d26338a4e0d052" category="paragraph">Ambas as réplicas devem mostrar <block ref="d8091fb51f31a4ef069b7f5bf785f35a" prefix=" " category="inline-code"></block> para o modo de disponibilidade e <block ref="008f6cdd0c190839e9885cf9f9e2a652" prefix=" " category="inline-code"></block> para o modo de failover, o que garante zero perda de dados durante o failover automático.</block>
+  <block id="b4c0ecd0e6def6e6e82ff1adc6b09abe" category="list-text">Execute o seguinte comando no nó secundário para iniciar o failover:</block>
+  <block id="42a51e77f8dd37f3c73300ea1f2b062f" category="list-text">Verifique se o destino da conectividade foi alterado para o novo primário:</block>
+  <block id="4d7ef023f25cc47278a70f70ca109c00" category="paragraph">No SSMS, expanda o nó do grupo de disponibilidade, clique com o botão direito em *Always On High Availability* e selecione *Show Dashboard*.</block>
+  <block id="ef6ccf78dd6d8aa4c4fb42fe23138e32" category="paragraph">O painel de controle deve exibir ambos os nós com status saudável e confirmar o failover.</block>
+  <block id="e87a6d2aeb93e6d109247f31770d95aa" category="image-alt">Always On High Availability dashboard mostrando failover bem-sucedido</block>
+  <block id="ad41a433069c2236a391eb921e4692dd" category="section-title">Limpar recursos</block>
+  <block id="baec841933b7c1c753d4f2b3cebd3dff" category="paragraph">Após concluir o tutorial, exclua os recursos que você criou para evitar cobranças adicionais:</block>
+  <block id="18b0ddc1d58cf58f0c29feaf8318678e" category="list-text">Excluir instâncias do Compute Engine (sqlnode1, sqlnode2)</block>
+  <block id="1e449cfb477d2bad527f429ab05b3e12" category="list-text">Excluir Google Cloud NetApp Volumes (volumes, pools de armazenamento, grupos de hosts)</block>
+  <block id="a3e5e9c78aa544a8cd78cbadd38c465a" category="list-text">Exclua os recursos de VPC e de rede se eles tiverem sido criados especificamente para este tutorial</block>
+  <block id="54a796062944c695817f4eb1c9921ef1" category="list-text">Exclua o servidor file share witness, se aplicável</block>
+  <block id="471bdb0aa2d84f6d114789368ffc1cc1" category="inline-link-macro">Documentação do Google Cloud NetApp Volumes</block>
+  <block id="eccc5dc285a077576fffa4a8f36c3cf8" category="inline-link-macro">Documentação do Google Compute Engine</block>
+  <block id="274d6ae1c8edd119fb605bf14d977c17" category="paragraph">Consulte <block ref="05976eea54c43c5f3d26d0dd5e48dcfe" category="inline-link-macro-rx"></block> e <block ref="853a7c74ba4c1f5c31317922ec69d7b0" category="inline-link-macro-rx"></block> para obter instruções detalhadas sobre como excluir recursos.</block>
+  <block id="b151ed2f061e28c11e00ad100972205e" category="paragraph">Para obter mais informações sobre o SQL Server no Google Cloud com NetApp storage, consulte a seguinte documentação:</block>
+  <block id="d141630f195a78c1d62c0a995385a3e1" category="list-text"><block ref="d141630f195a78c1d62c0a995385a3e1" category="inline-link-macro-rx"></block></block>
+  <block id="11694a64abeff77c3c8ca3202e48a600" category="inline-link-macro">Grupos de disponibilidade Always On do SQL Server</block>
+  <block id="a8b42226e0afe2c99fcad206668c8e3a" category="list-text"><block ref="a8b42226e0afe2c99fcad206668c8e3a" category="inline-link-macro-rx"></block></block>
+  <block id="6458349f90f9f03e0ac5b2055316563d" category="inline-link-macro">Windows Server Failover Clustering</block>
+  <block id="9912061c9c8234ff34f20279442a2a5c" category="list-text"><block ref="9912061c9c8234ff34f20279442a2a5c" category="inline-link-macro-rx"></block></block>
+  <block id="fe2659a563c4cc8c7bd4c361d7aa7af6" category="list-text"><block ref="fe2659a563c4cc8c7bd4c361d7aa7af6" category="inline-link-macro-rx"></block></block>
+  <block id="1a5eb59a4ec4e77747e800700cdc4b8d" category="sidebar">SQL Server Always On com Google Cloud NetApp Volumes</block>
 </blocks>
