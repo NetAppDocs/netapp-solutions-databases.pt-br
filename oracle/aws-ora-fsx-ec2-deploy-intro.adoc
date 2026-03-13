@@ -26,4 +26,5 @@ O objetivo desta documentação é fornecer processos passo a passo, procediment
 
 Para saber mais sobre a solução e o caso de uso, assista ao seguinte vídeo de visão geral:
 
-link:https://www.netapp.tv/insight/details/30000?playlist_id=275&mcid=04891225598830484314259903524057913910["Modernize seu banco de dados Oracle com nuvem híbrida na AWS e FSx ONTAP, Parte 1 - Caso de uso e arquitetura de solução"^]
+.Modernize seu banco de dados Oracle com nuvem híbrida na AWS e FSx ONTAP, Parte 1 - Caso de uso e arquitetura de solução
+video::b1a7bb05-caea-44a0-bd9a-b01200f372e9[panopto,width=360]
