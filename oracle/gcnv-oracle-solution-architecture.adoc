@@ -1,0 +1,138 @@
+---
+sidebar: sidebar 
+permalink: oracle/gcnv-oracle-solution-architecture.html 
+keywords: oracle database, google cloud netapp volumes, gcnv, iscsi, data guard, fsfo, architecture, topology, standby initialization 
+summary: Saiba mais sobre a arquitetura do Google Cloud NetApp Volumes para alta disponibilidade do Oracle Database 26ai, incluindo o design de armazenamento em bloco iSCSI, a integração com o Data Guard, a replicação na camada de storage para inicialização acelerada do standby e as responsabilidades da plataforma. 
+---
+= Saiba mais sobre a arquitetura do Google Cloud NetApp Volumes para alta disponibilidade do Oracle Database 26ai
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Google Cloud NetApp Volumes oferece storage em blocos iSCSI de alto desempenho para arquiteturas de alta disponibilidade do Oracle Database 26ai, com replicação na camada de storage que acelera significativamente a inicialização do banco de dados standby em comparação com os métodos tradicionais do Oracle RMAN. Explore a integração do GCNV com o Oracle Data Guard, incluindo caminhos de dados de referência, topologia de storage e a divisão de responsabilidades entre o storage em blocos do GCNV e a sincronização contínua do Data Guard.
+
+
+
+== Visão geral da arquitetura
+
+Esta arquitetura usa o armazenamento em blocos iSCSI do *Google Cloud NetApp Volumes (GCNV)* para fornecer alta disponibilidade para o *Oracle Database 26ai* no Google Cloud com o *Oracle Data Guard*.
+
+O GCNV oferece armazenamento em blocos de alto desempenho e acelera a inicialização do banco de dados em espera usando replicação, snapshots e clones na camada de storage.
+
+O Data Guard oferece *transporte contínuo de redo*, gerenciamento de funções e *orquestração de failover* (Broker, Fast-Start Failover, Observer).
+
+[cols="1,3"]
+|===
+| Camada | Papel 
+
+
+| GCNV | Armazenamento em blocos, inicialização em espera, replicação de armazenamento 
+
+
+| Data Guard | Sincronização contínua, aplicação de redo, switchover, FSFO 
+|===
+A replicação GCNV reduz significativamente o tempo de inicialização do standby em comparação com a duplicação ativa do RMAN, movendo os dados na *camada de storage* em vez de através dos canais do banco de dados Oracle.
+
+Use *GCNV replicate, snapshot ou clone* para inicializar o banco de dados em espera, depois ative o Data Guard para sincronização contínua e alta disponibilidade.
+
+[cols="1,3"]
+|===
+| Componente | Detalhe 
+
+
+| Hosts de banco de dados | oracdb1 / oracdb2 - zonas diferentes, cinco volumes iSCSI GCNV cada 
+
+
+| Storage | /u01 + ASM +DATA, +RECO, +FRA no GCNV (EXTERNAL) 
+
+
+| Inicialização em espera | GCNV replicar / snapshot / clonar -> Oracle finalizar -> Data Guard 
+
+
+| HA | Reiniciar, standby físico (MOUNTED), Broker, FSFO, Observer (oradg-obs) 
+
+
+| Aplicativos | Serviço orclapp (Etapa 8.2) 
+|===
+
+
+=== Zoneamento
+
+Implante um pool GCNV Flex Unified por zona de banco de dados e atribua volumes dedicados a cada host. Use discos de inicialização apenas para o sistema operacional.
+
+*Fora do escopo:* TDE, RAC, NVMe/TCP, OEM e Active Data Guard (o standby permanece *MOUNTED*).
+
+
+
+== Diagrama de referência de arquitetura
+
+A arquitetura da solução fornece três caminhos de dados independentes. A replicação de storage e o transporte de redo do Data Guard são caminhos separados.
+
+image::gcnv-oracle-26ai-ha.png[Arquitetura de referência GCNV]
+
+.A replicação de storage não é o mesmo que replicação de redo.
+* O caminho 1 move os arquivos de dados na camada GCNV para inicialização do standby.
+* O caminho 2 mantém os bancos de dados sincronizados após a migração.
+* O caminho 3 orquestra as transições de função e o failover automático por meio do Oracle Data Guard Broker e do Observer.
+
+
+
+
+== Funções da plataforma
+
+A tabela a seguir resume qual camada da plataforma fornece serviços de storage e qual camada fornece sincronização de banco de dados e controle de failover.
+
+[cols="1,3"]
+|===
+| Plataforma | Entrega 
+
+
+| GCNV | volumes iSCSI, snapshots, replicação de volumes (baseline + incrementais) - inicialização em standby 
+
+
+| Data Guard | Redo transport, MRP, Broker, FSFO - sincronização contínua e failover 
+|===
+A replicação GCNV executa uma cópia de linha de base e, em seguida, atualizações incrementais de bloco por política. O Data Guard é responsável pela aplicação de redo e pelo FSFO após a inicialização do standby.
+
+
+
+== Topologia e armazenamento
+
+Essa topologia coloca as funções de primário, standby e observador em zonas separadas e mapeia cada host de banco de dados para pools GCNV dedicados e volumes iSCSI dedicados.
+
+[cols="1,1,1,1,2"]
+|===
+| Papel | VM | Zona | Pool GCNV | Volumes (por host) 
+
+
+| Primário | `oracdb1` | `us-west1-a` | `oracle-pool-a` | `ora_<host>_u01`, `ora_<host>_data_01/02`, `ora_<host>_arch_01`, `ora_<host>_fra_01` 
+
+
+| Espera | `oracdb2` | `us-west1-b` | `oracle-pool-b` | Mesmo padrão de nomenclatura 
+
+
+| Observador | `oradg-obs` | `us-west1-c` | - | Somente disco de inicialização 
+|===
+[cols="1,1,2"]
+|===
+| Storage | Apoio | Usar 
+
+
+| SO | Disco de inicialização GCE | Somente SO 
+
+
+| `/u01` | GCNV iSCSI | Homes Grid/DB, staging (XFS) 
+
+
+| `+DATA` / `+RECO` / `+FRA` | GCNV iSCSI | ASM EXTERNO - arquivos de dados, arquivos de log, FRA 
+|===
+.Tipos de máquinas
+Exemplo `n4-highmem-8` nesta solução; cargas de trabalho OLTP normalmente usam  `c4-standard-*`.
+
+
+
+== Qual é o próximo passo?
+
+Para escolher o caminho de implantação que corresponda aos seus objetivos de recuperação e disponibilidade, acesse xref:gcnv-oracle-deployment-options.adoc[Saiba mais sobre as opções de implantação do Oracle Database 26ai no Google Cloud NetApp Volumes].

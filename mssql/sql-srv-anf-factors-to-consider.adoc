@@ -2,7 +2,7 @@
 sidebar: sidebar 
 permalink: mssql/sql-srv-anf-factors-to-consider.html 
 keywords: performance, redundancy, high availability, storage configuration, continuously available shares, validation, 
-summary: Esta seção descreve os diferentes problemas que você deve considerar ao usar o Azure NetApp Files com o SQL Server na nuvem. 
+summary: Esta seção descreve os diferentes problemas que você deve considerar ao usar o Azure NetApp Files com SQL Server na nuvem. 
 ---
 = Fatores a considerar
 :hardbreaks:
@@ -65,7 +65,7 @@ Os benefícios de usar o Azure NetApp Files para SQL Server incluem o seguinte:
 *Notas:*
 
 * Para aumentar a redundância e a alta disponibilidade, as VMs do SQL Server devem estar no mesmo https://docs.microsoft.com/en-us/azure/virtual-machines/availability-set-overview["conjunto de disponibilidade"^] ou em diferentes https://docs.microsoft.com/en-us/azure/availability-zones/az-overview["zonas de disponibilidade"^] .  Considere os requisitos do caminho do arquivo se forem necessários arquivos de dados definidos pelo usuário; nesse caso, selecione SQL FCI em vez de SQL AOAG.
-* O seguinte caminho UNC é suportado: file:///\\ANFSMB-b4ca.anf.test\SQLDB%20and%20\\ANFSMB-b4ca.anf.test\SQLDB\["\\ANFSMB-b4ca.anf.test\SQLDB e \\ANFSMB-b4ca.anf.test\SQLDB\"^] .
+* Os seguintes caminhos UNC são suportados: `\\ANFSMB-b4ca.anf.test\SQLDB` e `\\ANFSMB-b4ca.anf.test\SQLDB\`.
 * O caminho UNC de loopback não é suportado.
 * Para dimensionamento, use dados históricos do seu ambiente local.  Para cargas de trabalho OLTP, combine o IOPS de destino com os requisitos de desempenho usando cargas de trabalho em horários médios e de pico, juntamente com os contadores de desempenho de leituras de disco/s e gravações de disco/s.  Para cargas de trabalho de data warehouse e relatórios, corresponda a taxa de transferência de destino usando cargas de trabalho em horários médios e de pico e bytes de leitura de disco/seg e bytes de gravação de disco/seg.  Valores médios podem ser usados em conjunto com recursos de remodelação de volume.
 

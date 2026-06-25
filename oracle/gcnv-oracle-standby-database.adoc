@@ -1,0 +1,388 @@
+---
+sidebar: sidebar 
+permalink: oracle/gcnv-oracle-standby-database.html 
+keywords: oracle database, standby database, data guard, gcnv replication, iscsi, asm, oracle restart, managed recovery, physical standby 
+summary: Crie o banco de dados standby físico do Oracle usando a replicação na camada de storage do Google Cloud NetApp Volumes, snapshots ou clones para acelerar a inicialização do standby. Este procedimento abrange configurar o listener e o pfile do standby, preencher os volumes do standby com replicação GCNV, finalizar a instância do Oracle, criar os logs de redo do standby, ativar o redo apply com recuperação gerenciada e registrar o standby com o Oracle Restart. 
+---
+= Crie o banco de dados standby do Oracle com o seeding da camada de storage do Google Cloud NetApp Volumes
+:allow-uri-read: 
+:icons: font
+:imagesdir: ../media/
+
+
+[role="lead"]
+Crie o banco de dados standby físico do Oracle usando a replicação na camada de storage do Google Cloud NetApp Volumes, snapshots ou clones para acelerar a inicialização do standby em comparação com os métodos tradicionais do RMAN. Este procedimento abrange configurar o listener, criar o pfile do standby, preencher os volumes do standby com replicação GCNV, finalizar a instância do Oracle e registrar o standby com o Oracle Restart. Todas as camadas de HA concluem essas etapas. Para a camada *Prod HA (Data Guard + FSFO)*, continue com xref:gcnv-oracle-standby-finalize-dg.adoc[Finalização do Data Guard] antes de configurar xref:gcnv-oracle-data-guard.adoc[Data Guard Broker, Fast-Start Failover e o Observer].
+
+
+
+== Etapa 1: Configurar os parâmetros do listener e do Data Guard
+
+Configure o listener em ambos os hosts do banco de dados para suportar conexões Data Guard, incluindo o  `_DGMGRL` serviço necessário para o broker. Configure o arquivo de senhas e configure os parâmetros de arquivamento de logs no banco de dados primário.
+
+. Configure o ouvinte primário e verifique o ambiente em  `oracdb1`:
++
+[source, bash]
+----
+sudo su - oracle
+. ~/.bash_profile        # ORACLE_SID=orcl, ORACLE_HOME set
+----
+. Configure o ouvinte em espera em `oracdb2` para incluir os `orcls` e `orcls_DGMGRL` serviços:
++
+[source, bash]
+----
+GRID_HOME=/u01/app/26ai/grid
+sudo -u grid tee "$GRID_HOME/network/admin/listener.ora" >/dev/null <<'EOF'
+LISTENER =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = oracdb2.example.internal)(PORT = 1521)))
+
+SID_LIST_LISTENER =
+  (SID_LIST =
+    (SID_DESC = (GLOBAL_DBNAME = orcls)        (ORACLE_HOME = /u01/app/oracle/product/26ai/db_1) (SID_NAME = orcls))
+    (SID_DESC = (GLOBAL_DBNAME = orcls_DGMGRL) (ORACLE_HOME = /u01/app/oracle/product/26ai/db_1) (SID_NAME = orcls)))
+EOF
+----
+. Reinicie o listener através do Oracle Restart em ambos os hosts e verifique se o  `_DGMGRL` serviço está registrado:
++
+[source, bash]
+----
+sudo -u grid bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=$GRID_HOME
+$GRID_HOME/bin/srvctl stop listener
+$GRID_HOME/bin/srvctl start listener
+$GRID_HOME/bin/lsnrctl status
+'
+----
++
+`lsnrctl status` deve listar  `<SID>` e  `<SID>_DGMGRL`.
+
+
+
+
+
+== Etapa 2: prepare o pfile de standby e o NOMOUNT
+
+Prepare a instância de banco de dados em espera copiando o arquivo de senha do primário, criando um arquivo init.ora mínimo com parâmetros do Data Guard e iniciando a instância no modo NOMOUNT.
+
+. Copie o arquivo de senha principal para o host em espera usando IAP e  `gcloud compute scp`:
++
+[source, bash]
+----
+PRIMARY_ZONE=us-west1-a       # zone of oracdb1
+STANDBY_ZONE=us-west1-b       # zone of oracdb2
+
+gcloud compute scp \
+  oracdb1:/u01/app/oracle/product/26ai/db_1/dbs/orapworcl ./orapworcl \
+  --zone=$PRIMARY_ZONE --tunnel-through-iap
+
+gcloud compute scp \
+  ./orapworcl oracdb2:/u01/app/oracle/product/26ai/db_1/dbs/orapworcls \
+  --zone=$STANDBY_ZONE --tunnel-through-iap
+----
+. Consulte o valor do parâmetro  `compatible` no banco de dados principal:
++
+[source, bash]
+----
+# On oracdb1
+sudo -u oracle sqlplus -s / as sysdba \
+  <<<"SELECT value FROM v\$parameter WHERE name='compatible';"
+----
+. Crie o arquivo pfile de standby em  `oracdb2`, defina a propriedade do arquivo de senha e inicie a instância no modo NOMOUNT. Substitua o valor de  `compatible` da etapa anterior por  `<COPY_FROM_PRIMARY>`:
++
+[source, bash]
+----
+sudo -u oracle mkdir -p /u01/app/oracle/admin/orcls/adump
+sudo chown oracle:oinstall /u01/app/oracle/product/26ai/db_1/dbs/orapworcls
+sudo chmod 0600 /u01/app/oracle/product/26ai/db_1/dbs/orapworcls
+
+sudo -u oracle tee /u01/app/oracle/product/26ai/db_1/dbs/initorcls.ora >/dev/null <<'EOF'
+*.db_name='orcl'
+*.db_unique_name='orcls'
+*.audit_file_dest='/u01/app/oracle/admin/orcls/adump'
+*.diagnostic_dest='/u01/app/oracle'
+*.compatible='<COPY_FROM_PRIMARY>'
+*.sga_target=3072m
+*.pga_aggregate_target=1024m
+*.processes=320
+*.remote_login_passwordfile='EXCLUSIVE'
+*.standby_file_management='AUTO'
+*.fal_server='orcl'
+*.log_archive_config='DG_CONFIG=(orcl,orcls)'
+*.log_archive_dest_1='LOCATION=+RECO VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=orcls'
+*.log_archive_dest_2='SERVICE=orcl AFFIRM SYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=orcl'
+*.log_archive_dest_state_2='DEFER'
+*.log_archive_format='%t_%s_%r.arc'
+*.dg_broker_start=TRUE
+*.undo_tablespace='UNDOTBS1'
+*.open_cursors=300
+*.db_create_file_dest='+DATA'
+*.db_create_online_log_dest_1='+DATA'
+*.db_recovery_file_dest='+FRA'
+*.db_recovery_file_dest_size=25000m
+EOF
+
+echo "orcls:/u01/app/oracle/product/26ai/db_1:N" | sudo tee -a /etc/oratab
+
+sudo -u oracle bash -c '
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export ORACLE_SID=orcls
+sqlplus / as sysdba <<SQL
+STARTUP NOMOUNT PFILE=/u01/app/oracle/product/26ai/db_1/dbs/initorcls.ora;
+EXIT
+SQL
+'
+----
++
+A instância em espera agora está no modo NOMOUNT, sem arquivos de dados até <<gcnv-standby-initialization,Etapa 3: inicialize o armazenamento em espera com GCNV>>.
+
+
+
+
+
+== Etapa 3: inicialize o armazenamento em espera com GCNV
+
+Inicialize os volumes de standby em  `oracle-pool-b`, anexe-os a  `oracdb2`, monte os grupos de discos ASM e finalize a instância de standby no estado MOUNT.
+
+Use a replicação GCNV para o seeding de produção e o seeding por snapshot para fluxos de trabalho de laboratório pontuais.
+
+
+
+=== Escolha o caminho de seeding
+
+Escolha o método de semeadura de standby com base no seu ambiente e nos requisitos de recuperação.
+
+* *Recomendado para produção:* Use o caminho de replicação em <<create-volume-replications,Caminho de replicação: criar e sincronizar replicações>> e <<cutover-quiesce-stop-repl-attach,Caminho de replicação: migrar e anexar volumes em espera>>.
+* *Alternativa para laboratórios:* Use <<snapshot-seed,Caminho alternativo: seed a partir de um snapshot>>.
+
+
+Todos os caminhos se reencontram em <<standby-iscsi-and-asm-before-rman,Montar grupos de discos ASM em espera>> e <<oracle-finalize,Finalize a instância em espera>>.
+
+
+
+=== Verifique os pré-requisitos
+
+Confirme os seguintes pré-requisitos antes de inicializar os volumes standby.
+
+* `gcloud netapp` com suporte para replicação de volume.
+* Duas pools em *Default-mode* em locais diferentes (`oracle-pool-a`, `oracle-pool-b`).
+* Volumes de origem no pool primário anexados a  `oracdb1-hg`; volumes de destino criados por replicação.
+* Execute a replicação a partir do Cloud Shell ou da estação de trabalho — não a partir de DB VMs.
+* Em  `oracdb2`, conclua a configuração completa do host iSCSI e ASM a partir de xref:gcnv-oracle-provision-storage.adoc#configure-iscsi-and-multipath[Etapa 4], xref:gcnv-oracle-provision-storage.adoc#partition-asm-backing-devices[Etapa 5] e xref:gcnv-oracle-provision-storage.adoc#format-and-mount-u01[Etapa 6].
++
+[source, bash]
+----
+export PROJECT=<your-gcp-project>
+export LOC_A=us-west1-a
+export LOC_B=us-west1-b
+export DEST_POOL="projects/${PROJECT}/locations/${LOC_B}/storagePools/oracle-pool-b"
+----
+* Crie um pool de espera se necessário:
++
+[source, bash]
+----
+gcloud netapp storage-pools create oracle-pool-b \
+  --project="${PROJECT}" --location="${LOC_B}" \
+  --service-level=flex --type=unified --mode=default \
+  --capacity=1024 --network=name=<your-vpc>
+----
+
+
+
+
+=== Criar e sincronizar replicações
+
+Crie relações de replicação dos volumes primários para os volumes em espera, depois aguarde a conclusão da sincronização inicial.
+
+[source, bash]
+----
+gcloud netapp volumes replications create repl-oracdb2-data \
+  --project="${PROJECT}" --location="${LOC_A}" --volume=oracdb1_data \
+  --replication-schedule=EVERY_10_MINUTES \
+  --destination-volume-parameters="storage_pool=${DEST_POOL},volume_id=oracdb2_data,share_name=oracdb2_data"
+
+gcloud netapp volumes replications create repl-oracdb2-reco \
+  --project="${PROJECT}" --location="${LOC_A}" --volume=oracdb1_reco \
+  --replication-schedule=EVERY_10_MINUTES \
+  --destination-volume-parameters="storage_pool=${DEST_POOL},volume_id=oracdb2_reco,share_name=oracdb2_reco"
+----
++
+
+Aguarde até  `mirrorState` estar  `MIRRORED` e a sincronização inicial ser concluída para cada replicação.
+
+
+
+=== Corte e anexe volumes standby
+
+Coloque o host primário em estado quiescente, interrompa a replicação após a sincronização final e anexe os volumes de destino ao grupo de hosts em espera.
+
+No servidor primário, suspenda as gravações e capture os metadados de recuperação:
+
+[source]
+----
+ALTER DATABASE BEGIN BACKUP;
+SELECT CURRENT_SCN FROM V$DATABASE;
+ALTER DATABASE CREATE STANDBY CONTROLFILE AS '/tmp/orcls_stby.ctl';
+----
+Permita um último ciclo de replicação e, em seguida, interrompa as replicações:
+
+[source, bash]
+----
+gcloud netapp volumes replications stop repl-oracdb2-data \
+  --project="${PROJECT}" --location="${LOC_A}" --volume=oracdb1_data --force
+
+gcloud netapp volumes replications stop repl-oracdb2-reco \
+  --project="${PROJECT}" --location="${LOC_A}" --volume=oracdb1_reco --force
+----
+Anexe os volumes de destino a `oracdb2-hg` (os LUNs replicados podem manter os nomes de origem):
+
+[source, bash]
+----
+HG=$(gcloud netapp host-groups describe oracdb2-hg --project="${PROJECT}" \
+  --location=us-west1 --format='value(name)')
+
+gcloud netapp volumes update oracdb2_data --project="${PROJECT}" --location="${LOC_B}" \
+  --block-devices="name=oracdb1_data_lun,host-groups=${HG},os-type=LINUX"
+----
+Copie o arquivo de controle de espera para  `oracdb2`, depois encerre o modo de backup no servidor primário:
+
+[source]
+----
+ALTER DATABASE END BACKUP;
+----
+
+
+=== Semear a partir de um snapshot
+
+Use este caminho para semear o laboratório uma única vez, quando a replicação contínua não for necessária.
+
+Para uma configuração inicial de laboratório única, crie um snapshot de origem e crie volumes de espera a partir desse snapshot em `oracle-pool-b` (Console do Cloud ou API). Anexe os volumes criados a `oracdb2-hg`, depois continue com <<standby-iscsi-and-asm-before-rman,Montar grupos de discos ASM em espera>>.
+
+
+
+=== Montar grupos de discos ASM em espera
+
+No host de espera, descubra os caminhos de storage conectados e monte os grupos de discos ASM antes da recuperação de banco de dados.
+
+Em  `oracdb2`, faça login nos portais iSCSI do pool de espera e faça uma nova varredura nos dispositivos multipath. Se os cabeçalhos de disco ASM corresponderem à nomenclatura primária em um fluxo de trabalho de laboratório, use aliases no estilo primário (por exemplo,  `ora_oracdb1_data_01`,  `ora_oracdb1_arch_01`), defina  `asm_diskstring='/dev/mapper/ora_oracdb1_*p*'` e confirme se a propriedade da partição é  `grid:asmadmin`, depois monte os grupos de discos:
+
+[source]
+----
+ALTER DISKGROUP DATA MOUNT FORCE;
+ALTER DISKGROUP RECO MOUNT FORCE;
+ALTER DISKGROUP FRA MOUNT FORCE;
+----
+
+
+=== Finalize a instância em espera
+
+Restaure o controlfile em standby, recupere até o SCN capturado, converta para standby físico e inicie a recuperação gerenciada.
+
+[source]
+----
+STARTUP NOMOUNT;
+RESTORE STANDBY CONTROLFILE FROM '/tmp/orcls_stby.ctl';
+ALTER DATABASE MOUNT;
+RECOVER DATABASE UNTIL SCN <quiesce_scn>;
+ALTER DATABASE CONVERT TO PHYSICAL STANDBY;
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE RECOVER MANAGED STANDBY DATABASE DISCONNECT FROM SESSION;
+----
+Neste ponto, o standby deve estar  `PHYSICAL STANDBY` e  `MOUNTED` com a recuperação gerenciada iniciada.
+
+*Próximos passos específicos para cada tier:*
+
+* *Produção HA (sem Data Guard):* Continue diretamente para <<register-standby-with-oracle-restart,Etapa 4: registre o standby com o Oracle Restart>>.
+* *Prod HA (Data Guard + FSFO):* Continue para <<register-standby-with-oracle-restart,Etapa 4: registre o standby com o Oracle Restart>>, depois prossiga para xref:gcnv-oracle-standby-finalize-dg.adoc[Etapas de finalização do Data Guard].
+
+
+
+
+== Etapa 4: registre o standby com o Oracle Restart
+
+Registre o banco de dados standby no Oracle Restart para que as reinicializações recuperem automaticamente os grupos de discos ASM, montem o banco de dados standby e reiniciem a recuperação gerenciada. Adicione também o serviço de aplicativo aos dois recursos de banco de dados.
+
+. Capture a localização do spfile do banco de dados standby e registre-a com o Oracle Restart em  `oracdb2`. Substitua  `<STANDBY_SPFILE_PATH>` da consulta (geralmente em  `+DATA`):
++
+[source, bash]
+----
+sudo -u oracle bash -c '
+export ORACLE_SID=orcls
+sqlplus -s / as sysdba <<< "SHOW PARAMETER spfile;"
+'
+
+sudo -u oracle bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+
+srvctl add database \
+  -db orcls \
+  -dbname orcl \
+  -oraclehome /u01/app/oracle/product/26ai/db_1 \
+  -spfile <STANDBY_SPFILE_PATH> \
+  -pwfile /u01/app/oracle/product/26ai/db_1/dbs/orapworcls \
+  -role PHYSICAL_STANDBY \
+  -startoption MOUNT \
+  -stopoption IMMEDIATE \
+  -diskgroup DATA,RECO,FRA
+
+srvctl config database -db orcls
+srvctl status database -db orcls
+'
+----
+. Verifique e atualize o recurso de banco de dados primário em  `oracdb1` para incluir todas as dependências do grupo de discos ASM:
++
+[source, bash]
+----
+sudo -u oracle bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+srvctl config database -db orcl
+srvctl modify database -db orcl -diskgroup DATA,RECO,FRA
+srvctl config database -db orcl
+'
+----
+. Adicione o serviço de aplicação ao recurso de banco de dados em espera (`orcls` em  `oracdb2`). Use  `role PRIMARY` em ambos os lados para que  `orclapp` esteja disponível após switchover:
++
+[source, bash]
+----
+sudo -u oracle bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+
+srvctl add service \
+  -db orcls \
+  -service orclapp \
+  -pdb orclpdb \
+  -role PRIMARY \
+  -policy AUTOMATIC
+
+srvctl config service -db orcls -service orclapp
+'
+----
+. Verifique o recurso de banco de dados em espera em  `oracdb2`:
++
+[source, bash]
+----
+sudo -u oracle bash -c '
+export GRID_HOME=/u01/app/26ai/grid
+export ORACLE_HOME=/u01/app/oracle/product/26ai/db_1
+export PATH=$ORACLE_HOME/bin:$GRID_HOME/bin:$PATH
+srvctl status database -db orcls
+'
+----
+
+
+
+
+== Qual é o próximo passo?
+
+*Específico para cada tier:*
+
+* *Prod HA (sem Data Guard):* Para manter um destino de recuperação baseado em replicação de armazenamento, a inicialização do standby está concluída e o banco de dados standby está registrado no Oracle Restart como uma instância de backup.
+* *Prod HA (Data Guard + FSFO):* Para habilitar o switchover gerenciado pelo broker e o failover de inicialização rápida, continue com xref:gcnv-oracle-standby-finalize-dg.adoc[Finalize o banco de dados standby para Data Guard].
+
