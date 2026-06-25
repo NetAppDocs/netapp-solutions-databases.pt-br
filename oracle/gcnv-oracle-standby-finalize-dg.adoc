@@ -17,6 +17,8 @@ Finalize o banco de dados standby para o Oracle Data Guard no Google Cloud NetAp
 
 
 
+[[step-1-create-standby-redo-log-files]]
+[[standby-redo-log-files]]
 == Etapa 1: criar arquivos de redo log em espera
 
 Crie arquivos de redo log em espera em ambos os hosts do banco de dados para suportar o Fast-Start Failover. O tamanho deve ser maior ou igual ao maior redo log online primário, e a contagem deve ser igual a (grupos online por thread) + 1. Após a inicialização do GCNV, exclua e recrie os redo logs em espera no standby para corrigir os caminhos replicados.
@@ -46,6 +48,8 @@ ALTER DATABASE RECOVER MANAGED STANDBY DATABASE USING CURRENT LOGFILE DISCONNECT
 
 
 
+[[step-2-enable-flashback-and-start-recovery]]
+[[enable-flashback-on-standby]]
 == Passo 2: ative o flashback e inicie a recuperação
 
 Habilite o flashback database no standby para suportar a reinstalação automática após o failover e, em seguida, inicie a recuperação gerenciada com aplicação em tempo real. O flashback deve ser habilitado antes de iniciar a recuperação gerenciada, pois não pode ser habilitado enquanto o MRP estiver ativo.
@@ -85,6 +89,8 @@ SQL'
 
 
 
+[[step-3-enable-redo-shipping]]
+[[enable-redo-shipping-on-primary]]
 == Etapa 3: Ative o envio de redo log
 
 Habilite o transporte de redo do primário para o standby ativando  `LOG_ARCHIVE_DEST_STATE_2`, que foi definido deliberadamente como  `DEFER` em xref:gcnv-oracle-standby-database.adoc#standby-init-ora-and-nomount[Etapa 2] do procedimento de inicialização do standby para suprimir  `ORA-12154` erros durante a criação do standby.
@@ -121,6 +127,8 @@ Se  `dest_2` mostrar  `ORA-12154`, reinicie o primário. Após xref:gcnv-oracle-
 
 
 
+[[step-4-verify-data-guard-state]]
+[[verify-target-dg-state]]
 == Etapa 4: Verifique o estado do Data Guard
 
 Verifique se o banco de dados primário está no modo READ WRITE e se o banco de dados em espera está montado com recuperação gerenciada aplicando redo logs.
@@ -175,6 +183,7 @@ SQL'
 
 
 
+[[whats-next]]
 == Qual é o próximo passo?
 
 Para ativar o gerenciamento automático de funções e a proteção contra falhas, continue com xref:gcnv-oracle-data-guard.adoc[Configurar o Oracle Data Guard Broker, Fast-Start Failover e Observer].

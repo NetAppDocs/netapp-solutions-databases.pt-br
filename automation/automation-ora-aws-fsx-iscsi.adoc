@@ -20,6 +20,7 @@ Esta solução fornece uma visão geral e detalhes para implantação e proteç�
 
 
 
+[[purpose]]
 == Propósito
 
 O Amazon FSx ONTAP é um serviço de armazenamento que permite iniciar e executar sistemas de arquivos NetApp ONTAP totalmente gerenciados na Nuvem AWS.  Ele fornece os recursos, o desempenho, as funcionalidades e as APIs familiares dos sistemas de arquivos NetApp com a agilidade, a escalabilidade e a simplicidade de um serviço AWS totalmente gerenciado.  Ele permite que você execute a carga de trabalho de banco de dados mais exigente, como Oracle, na nuvem AWS com tranquilidade.
@@ -35,6 +36,7 @@ Esta solução aborda os seguintes casos de uso:
 
 
 
+[[audience]]
 == Público
 
 Esta solução é destinada às seguintes pessoas:
@@ -47,18 +49,21 @@ Esta solução é destinada às seguintes pessoas:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente de teste e validação de soluções
 
 Os testes e a validação desta solução foram realizados em um ambiente de laboratório que pode não corresponder ao ambiente de implantação final.  Veja a seção<<Fatores-chave para consideração de implantação>> para maiores informações.
 
 
 
+[[architecture]]
 === Arquitetura
 
 image:automation-ora-aws-fsx-iscsi-architecture.png["Esta imagem fornece uma visão detalhada da configuração de implantação do Oracle na nuvem pública da AWS com iSCSI e ASM."]
 
 
 
+[[hardware-and-software-components]]
 === Componentes de hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -99,6 +104,7 @@ image:automation-ora-aws-fsx-iscsi-architecture.png["Esta imagem fornece uma vis
 |===
 
 
+[[oracle-database-configuration-in-the-lab-environment]]
 === Configuração do banco de dados Oracle no ambiente de laboratório
 
 [cols="33%, 33%, 33%"]
@@ -118,6 +124,7 @@ image:automation-ora-aws-fsx-iscsi-architecture.png["Esta imagem fornece uma vis
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fatores-chave para consideração de implantação
 
 * *Layout de armazenamento do banco de dados Oracle.*  Nesta implantação automatizada do Oracle, provisionamos quatro volumes de banco de dados para hospedar binários, dados e logs do Oracle por padrão.  Um único LUN em um volume é alocado ao binário Oracle.  Em seguida, criamos dois grupos de discos ASM a partir de dados e logs LUNs.  Dentro do grupo de discos +DATA asm, provisionamos dois volumes de dados com duas LUNs em um volume.  Dentro do grupo de discos +LOGS asm, criamos dois LUNs em um volume de log.  Vários LUNs dispostos dentro de um volume ONTAP proporcionam melhor desempenho em geral.
@@ -129,12 +136,14 @@ image:automation-ora-aws-fsx-iscsi-architecture.png["Esta imagem fornece uma vis
 
 
 
+[[solution-deployment]]
 == Implantação da solução
 
 As seções a seguir fornecem procedimentos passo a passo para implantação e proteção automatizadas do Oracle 19c no sistema de arquivos Amazon FSx ONTAP com LUNs de banco de dados montados diretamente via iSCSI para VM de instância EC2 em um único nó. Reinicie a configuração com o Oracle ASM como gerenciador de volume do banco de dados.
 
 
 
+[[prerequisites-for-deployment]]
 === Pré-requisitos para implantação
 
 [%collapsible%open]
@@ -183,6 +192,7 @@ video::81e389a0-d9b8-495c-883b-b0d701710847[panopto,width=360]
 ====
 
 
+[[automation-parameter-files]]
 === Arquivos de parâmetros de automação
 
 [%collapsible%open]
@@ -199,6 +209,7 @@ Além desses arquivos de variáveis definidos pelo usuário, há vários arquivo
 ====
 
 
+[[parameter-files-configuration]]
 === Configuração de arquivos de parâmetros
 
 [%collapsible%open]
@@ -279,6 +290,7 @@ memory_limit: 8192
 ====
 
 
+[[playbook-execution]]
 === Execução do manual de instruções
 
 [%collapsible%open]
@@ -354,6 +366,7 @@ ansible-playbook -i hosts 5-destroy.yml -u ec2-user -e @vars/vars.yml
 ====
 
 
+[[post-execution-validation]]
 === Validação pós-execução
 
 [%collapsible%open]
@@ -576,6 +589,7 @@ image:automation-ora-aws-fsx-iscsi-em-001.png["Esta imagem fornece a tela de log
 ====
 
 
+[[oracle-backup-restore-and-clone-with-snapcenter]]
 === Backup, restauração e clonagem do Oracle com SnapCenter
 
 [%collapsible%open]
@@ -585,6 +599,7 @@ Consulte TR-4979link:../oracle/aws-ora-fsx-vmc-guestmount.html#oracle-backup-res
 ====
 
 
+[[where-to-find-additional-information]]
 == Onde encontrar informações adicionais
 
 Para saber mais sobre as informações descritas neste documento, revise os seguintes documentos e/ou sites:

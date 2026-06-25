@@ -22,6 +22,7 @@ Presumimos que os servidores de banco de dados de produção sejam hospedados no
 
 
 
+[[requirements]]
 == Requisitos
 
 [cols="3, 9"]

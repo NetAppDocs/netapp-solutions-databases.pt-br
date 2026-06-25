@@ -18,6 +18,7 @@ Esta solução foi projetada para ser executada em um ambiente AWX/Tower ou por 
 
 
 
+[[awxtower]]
 == AWX/Torre
 
 Para ambientes AWX/Tower, você será orientado na criação de um inventário do gerenciamento de cluster ONTAP e do servidor Oracle (IPs e nomes de host), na criação de credenciais, na configuração de um projeto que extrai o código Ansible do NetApp Automation Github e no modelo de tarefa que inicia a automação.
@@ -29,6 +30,7 @@ Para ambientes AWX/Tower, você será orientado na criação de um inventário d
 
 
 
+[[cli-via-the-ansible-control-host]]
 == CLI por meio do host de controle Ansible
 
 . Para configurar o host Linux para que ele possa ser usado como um host de controle Ansiblelink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/getting-started.html["clique aqui para instruções detalhadas"^]
@@ -41,6 +43,7 @@ Para ambientes AWX/Tower, você será orientado na criação de um inventário d
 
 
 
+[[requirements]]
 == Requisitos
 
 [cols="3, 9"]
@@ -82,6 +85,7 @@ Para ambientes AWX/Tower, você será orientado na criação de um inventário d
 |===
 
 
+[[automation-details]]
 == Detalhes de automação
 
 Esta implantação automatizada foi projetada com um único manual do Ansible que consiste em três funções separadas.  As funções são para configurações ONTAP, Linux e Oracle.  A tabela a seguir descreve quais tarefas estão sendo automatizadas.
@@ -158,12 +162,14 @@ Esta implantação automatizada foi projetada com um único manual do Ansible qu
 |===
 
 
+[[default-parameters]]
 == Parâmetros padrão
 
 Para simplificar a automação, predefinimos muitos parâmetros de implantação necessários do Oracle com valores padrão.  Geralmente não é necessário alterar os parâmetros padrão para a maioria das implantações.  Um usuário mais avançado pode fazer alterações nos parâmetros padrão com cautela.  Os parâmetros padrão estão localizados em cada pasta de função, no diretório defaults.
 
 
 
+[[deployment-instructions]]
 == Instruções de implantação
 
 Antes de começar, baixe os seguintes arquivos de instalação e patch do Oracle e coloque-os no `/tmp/archive` diretório com acesso de leitura, gravação e execução para todos os usuários em cada servidor de banco de dados a ser implantado.  As tarefas de automação procuram os arquivos de instalação nomeados naquele diretório específico para instalação e configuração do Oracle.
@@ -176,6 +182,7 @@ p6880880_190000_Linux-x86-64.zip -- opatch version 12.2.0.1.23
 ----
 
 
+[[license]]
 == Licença
 
 Você deve ler as informações de licença conforme consta no repositório do Github.  Ao acessar, baixar, instalar ou usar o conteúdo deste repositório, você concorda com os termos da licença estabelecidalink:https://github.com/NetApp-Automation/na_oracle19c_deploy/blob/master/LICENSE.TXT["aqui"^] .

@@ -15,6 +15,7 @@ Google Cloud NetApp Volumes oferece suporte ao Oracle Database 26ai em vários n
 
 
 
+[[deployment-requirements]]
 == Requisitos de implantação
 
 Certifique-se de ter os seguintes itens instalados antes de provisionar o Google Cloud NetApp Volumes para alta disponibilidade do Oracle Database 26ai:
@@ -62,6 +63,8 @@ timedatectl
 
 
 
+[[example-deployment-configuration]]
+[[example-configuration]]
 == Exemplo de configuração de implantação
 
 Esta solução utiliza a seguinte configuração de implantação:
@@ -83,6 +86,7 @@ Substitua todos os valores de exemplo nos comandos por valores do seu ambiente, 
 
 
 
+[[deployment-options]]
 == Opções de implantação
 
 A tabela a seguir compara os padrões de implantação de HA e DR e destaca onde a automação proporciona o maior benefício operacional.
@@ -111,6 +115,7 @@ A tabela a seguir compara os padrões de implantação de HA e DR e destaca onde
 
 
 
+[[deployment-tasks-by-ha-tier]]
 == Tarefas de implantação por nível de alta disponibilidade
 
 O xref:gcnv-oracle-deployment.html[fluxo de trabalho de implantação] fornece uma sequência de etapas numeradas para todos os níveis de implantação. Todos os níveis concluem as tarefas básicas de implantação mostradas abaixo e, em seguida, adicionam tarefas específicas do nível para alta disponibilidade em produção:
@@ -144,6 +149,7 @@ O xref:gcnv-oracle-deployment.html[fluxo de trabalho de implantação] fornece u
 |===
 
 
+[[whats-next]]
 == Qual é o próximo passo?
 
 Para preparar seu ambiente antes da implantação, continue com xref:gcnv-oracle-access-and-apis.html[Acesso e APIs para o Oracle Database 26ai no Google Cloud NetApp Volumes].

@@ -20,6 +20,7 @@ Este documento aborda recomendações para planejamento, design, otimização e 
 
 
 
+[[takeaways]]
 == Takeaways
 
 Os pontos principais deste documento incluem:

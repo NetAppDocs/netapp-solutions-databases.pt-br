@@ -20,6 +20,7 @@ As seções a seguir descrevem as principais considerações ao implantar um ban
 
 
 
+[[vm-type-and-sizing]]
 == Tipo e dimensionamento de VM
 
 Selecionar o tipo e o tamanho corretos de VM é importante para o desempenho ideal de um banco de dados relacional em uma nuvem pública.  Uma máquina virtual do Azure fornece uma variedade de instâncias de computação que podem ser usadas para hospedar cargas de trabalho do banco de dados Oracle.  Veja a documentação da Microsoftlink:https://docs.microsoft.com/en-us/azure/virtual-machines/sizes["Tamanhos para máquinas virtuais no Azure"^] para diferentes tipos de máquinas virtuais do Azure e seus dimensionamentos.  Em geral, a NetApp recomenda o uso de uma máquina virtual do Azure de uso geral para a implantação de bancos de dados Oracle de pequeno e médio porte.  Para a implantação de bancos de dados Oracle maiores, uma VM do Azure otimizada para memória é apropriada.  Com mais RAM disponível, um Oracle SGA maior ou um cache flash inteligente podem ser configurados para reduzir a E/S física, o que por sua vez melhora o desempenho do banco de dados.
@@ -34,6 +35,7 @@ Outros fatores a serem considerados incluem os seguintes:
 
 
 
+[[azure-netapp-files-performance]]
 == Desempenho do Azure NetApp Files
 
 Os volumes do Azure NetApp Files são alocados de um pool de capacidade que o cliente deve provisionar em sua conta de armazenamento do Azure NetApp Files .  Cada pool de capacidade é atribuído da seguinte forma:
@@ -46,6 +48,7 @@ O nível de serviço e a capacidade de armazenamento provisionada inicialmente d
 
 
 
+[[1-service-levels-for-azure-netapp-files]]
 === 1. Níveis de serviço para Azure NetApp Files
 
 O Azure NetApp Files oferece suporte a três níveis de serviço: Ultra, Premium e Standard.
@@ -57,6 +60,7 @@ O Azure NetApp Files oferece suporte a três níveis de serviço: Ultra, Premium
 
 
 
+[[2-capacity-pool-and-quality-of-service]]
 === 2. Capacidade do pool e qualidade do serviço
 
 Cada um dos níveis de serviço desejados tem um custo associado para capacidade provisionada e inclui um nível de qualidade de serviço (QoS) que define a taxa de transferência máxima geral para o espaço provisionado.
@@ -67,6 +71,7 @@ O tamanho mínimo do pool de capacidade é 4 TiB.  Você pode alterar o tamanho 
 
 
 
+[[3-calculate-the-service-level-at-a-database-volume]]
 === 3. Calcular o nível de serviço em um volume de banco de dados
 
 O limite de taxa de transferência para um volume de banco de dados Oracle é determinado por uma combinação dos seguintes fatores: O nível de serviço do pool de capacidade ao qual o volume pertence e A cota atribuída ao volume.
@@ -83,6 +88,7 @@ Observe que o tamanho mínimo do volume é 100 GiB.
 
 
 
+[[storage-layout-and-settings]]
 == Layout e configurações de armazenamento
 
 A NetApp recomenda o seguinte layout de armazenamento:
@@ -99,6 +105,7 @@ image:db-ora-azure-anf-factors-003.png["Esta imagem mostra dois bancos de dados 
 
 
 
+[[nfs-configuration]]
 == Configuração NFS
 
 Linux, o sistema operacional mais comum, inclui recursos NFS nativos.  A Oracle oferece um cliente NFS direto (dNFS) nativamente integrado ao Oracle.  O Oracle dNFS ignora o cache do sistema operacional e permite o processamento paralelo para melhorar o desempenho do banco de dados.  A Oracle oferece suporte ao NFSv3 há mais de 20 anos, e o NFSv4 é compatível com o Oracle 12.1.0.2 e versões posteriores.

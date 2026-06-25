@@ -25,6 +25,7 @@ Este documento aborda as etapas necessárias para executar backup e recuperaçã
 
 
 
+[[snapcenter-configuration]]
 == Configuração do SnapCenter
 
 As etapas a seguir devem ser executadas para a configuração do SnapCenter e a proteção dos recursos do Microsoft SQL Server.  Cada uma das etapas a seguir é detalhada nas seções a seguir.
@@ -38,6 +39,7 @@ As etapas a seguir devem ser executadas para a configuração do SnapCenter e a 
 
 
 
+[[snapcenter-newly-installed-user-interface]]
 == Interface de usuário recém-instalada do SnapCenter
 
 Configure as credenciais para backup do SQL Server e restaure o usuário com direitos de administrador de sistema.
@@ -144,6 +146,7 @@ image:sqlsb-aws-015.png["Figura mostrando diálogo de entrada/saída ou represen
 ====
 
 
+[[configure-a-backup-policy]]
 == Configurar uma política de backup
 
 Uma política de backup é um conjunto de regras que determinam como gerenciar, agendar e manter o backup.  Ajuda com o tipo e a frequência de backup com base no SLA da sua empresa.
@@ -196,6 +199,7 @@ image:sqlsb-aws-024.png["Figura mostrando diálogo de entrada/saída ou represen
 ====
 
 
+[[configure-and-protect-mssql-server-database]]
 == Configurar e proteger o banco de dados MSSQL Server
 
 . Defina a data de início e a data de expiração da política de backup.
@@ -223,6 +227,7 @@ image:sqlsb-aws-029.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[snapcenter-backup-operations]]
 == Operações de backup do SnapCenter
 
 Para criar backups sob demanda do SQL Server, conclua as seguintes etapas:
@@ -243,6 +248,7 @@ image:sqlsb-aws-032.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[monitor-backup-job]]
 == Monitorar trabalho de backup
 
 . Na aba *Monitor*, clique no trabalho e selecione *Detalhes* à direita para visualizar os trabalhos.
@@ -258,6 +264,7 @@ Quando o backup estiver concluído, uma nova entrada será exibida na exibição
 
 
 
+[[backup-operation-for-multiple-databases]]
 == Operação de backup para vários bancos de dados
 
 Para configurar uma política de backup para vários bancos de dados do SQL Server, crie políticas de grupo de recursos concluindo as seguintes etapas:
@@ -326,6 +333,7 @@ image:sqlsb-aws-047.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[configure-and-protect-multiple-sql-server-databases]]
 == Configurar e proteger vários bancos de dados SQL Server
 
 . Clique no sinal (*+*) para configurar a data de início e a data de expiração.
@@ -355,6 +363,7 @@ image:sqlsb-aws-053.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[trigger-on-demand-backup-for-multiple-sql-server-databases]]
 == Acionar backup sob demanda para vários bancos de dados do SQL Server
 
 . Na aba *Recurso*, selecione visualizar.  No menu suspenso, selecione *Grupo de recursos*.
@@ -378,6 +387,7 @@ image:sqlsb-aws-057.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[monitor-multiple-database-backup-jobs]]
 == Monitorar trabalhos de backup de vários bancos de dados
 
 Na barra de navegação à esquerda, clique em *Monitor*, selecione o trabalho de backup e clique em *Detalhes* para ver o andamento do trabalho.
@@ -390,6 +400,7 @@ image:sqlsb-aws-059.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[transaction-log-backup-for-multiple-database-backup]]
 == Backup de log de transações para backup de vários bancos de dados
 
 O SnapCenter oferece suporte aos modelos de recuperação completa, em massa e simples.  O modo de recuperação simples não suporta backup de log transacional.
@@ -446,6 +457,7 @@ image:sqlsb-aws-069.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[configure-and-protect-multiple-mssql-server-databases]]
 == Configurar e proteger vários bancos de dados MSSQL Server
 
 . Clique na política de backup do log de transações recém-criada.
@@ -477,6 +489,7 @@ image:sqlsb-aws-075.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[triggering-an-on-demand-transaction-log-backup-for-mutiple-sql-server-databases]]
 == Acionando um backup de log de transações sob demanda para vários bancos de dados SQL Server
 
 Para acionar um backup sob demanda do log transacional para vários bancos de dados do SQL Server, conclua as seguintes etapas:
@@ -498,6 +511,7 @@ image:sqlsb-aws-078.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[monitoring]]
 == Monitoramento
 
 Vá para a aba *Monitoramento* e monitore o progresso do trabalho de backup.
@@ -506,6 +520,7 @@ image:sqlsb-aws-079.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[restore-and-recovery]]
 == Restauração e recuperação
 
 Veja os seguintes pré-requisitos necessários para restaurar um banco de dados SQL Server no SnapCenter.
@@ -519,6 +534,7 @@ Veja os seguintes pré-requisitos necessários para restaurar um banco de dados 
 
 
 
+[[restoring-deleted-tables-on-a-sql-server-database-to-a-point-in-time]]
 == Restaurando tabelas excluídas em um banco de dados SQL Server para um ponto no tempo
 
 Para restaurar um banco de dados do SQL Server para um determinado momento, conclua as seguintes etapas:
@@ -582,6 +598,7 @@ image:sqlsb-aws-090.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[monitoring-the-restore-progress]]
 == Monitorando o progresso da restauração
 
 . Na aba *Monitoramento*, clique nos detalhes do trabalho de restauração para visualizar o andamento do trabalho de restauração.
@@ -600,6 +617,7 @@ image:sqlsb-aws-093.png["Figura mostrando diálogo de entrada/saída ou represen
 
 
 
+[[where-to-find-additional-information]]
 == Onde encontrar informações adicionais
 
 Para saber mais sobre as informações descritas neste documento, revise os seguintes documentos e/ou sites:

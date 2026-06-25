@@ -15,6 +15,8 @@ Instale o Oracle Grid Infrastructure com Oracle Restart e ASM no armazenamento i
 
 
 
+[[step-1-install-grid-infrastructure-on-each-db-host]]
+[[install-grid-infrastructure]]
 == Etapa 1: Instale a infraestrutura de Grid em cada host do banco de dados
 
 Instale a Oracle Grid Infrastructure GoldImage em cada host de banco de dados para habilitar o Oracle Restart e o ASM. Ambos os hosts requerem seu próprio Grid home, instância ASM e grupos de discos; o Data Guard replica dados pela Oracle Net, não por storage compartilhado. Conclua todas as etapas em  `oracdb1` antes de repeti-las em  `oracdb2`.
@@ -136,6 +138,8 @@ Use os mesmos nomes de grupo de discos ASM — o Data Guard replica pela Oracle 
 
 
 
+[[step-2-install-oracle-database-on-each-db-host]]
+[[install-oracle-db-home]]
 == Etapa 2: instale o Oracle Database em cada host do banco de dados
 
 Instale o diretório de instalação do software Oracle Database 26ai em cada host de banco de dados usando uma instalação silenciosa, somente de software, com a Release Update mais recente aplicada. Conclua todas as etapas em  `oracdb1` antes de repetir em  `oracdb2`.
@@ -204,6 +208,7 @@ O banco de dados standby é criado em xref:gcnv-oracle-standby-database.adoc[Cri
 
 
 
+[[whats-next]]
 == Qual é o próximo passo?
 
 Para criar a instância primária de produção para sua implantação de alta disponibilidade, acesse xref:gcnv-oracle-primary-database.adoc[Crie o banco de dados primário do Oracle] em  `oracdb1`.

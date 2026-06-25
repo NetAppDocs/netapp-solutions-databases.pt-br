@@ -18,6 +18,7 @@ Esta solução foi projetada para ser executada em um ambiente AWX/Torre.
 
 
 
+[[awxtower]]
 == AWX/Torre
 
 Para ambientes AWX/Tower, você será orientado na criação de um inventário do gerenciamento de cluster ONTAP e do servidor Oracle (IPs e nomes de host), na criação de credenciais, na configuração de um projeto que extrai o código Ansible do NetApp Automation Github e no modelo de tarefa que inicia a automação.
@@ -31,6 +32,7 @@ Para ambientes AWX/Tower, você será orientado na criação de um inventário d
 
 
 
+[[requirements]]
 == Requisitos
 
 [role="tabbed-block"]
@@ -133,6 +135,7 @@ Para ambientes AWX/Tower, você será orientado na criação de um inventário d
 ====
 
 
+[[automation-details]]
 == Detalhes de automação
 
 [role="tabbed-block"]
@@ -266,12 +269,14 @@ Esta implantação automatizada foi projetada com um único manual do Ansible qu
 ====
 
 
+[[default-parameters]]
 == Parâmetros padrão
 
 Para simplificar a automação, predefinimos muitos parâmetros necessários do Oracle com valores padrão.  Geralmente não é necessário alterar os parâmetros padrão para a maioria das implantações.  Um usuário mais avançado pode fazer alterações nos parâmetros padrão com cautela.  Os parâmetros padrão estão localizados em cada pasta de função, no diretório defaults.
 
 
 
+[[license]]
 == Licença
 
 Você deve ler as informações de licença conforme consta no repositório do Github.  Ao acessar, baixar, instalar ou usar o conteúdo deste repositório, você concorda com os termos da licença estabelecidalink:https://github.com/NetApp-Automation/na_oracle19c_deploy/blob/master/LICENSE.TXT["aqui"^] .

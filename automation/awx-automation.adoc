@@ -18,10 +18,12 @@ Esta página descreve o método automatizado para implantar o Oracle19c no armaz
 
 
 
+[[awxtower-deployment-oracle-19c-database]]
 == Implantação AWX/Tower Banco de Dados Oracle 19c
 
 
 
+[[1-create-the-inventory-group-hosts-and-credentials-for-your-environment]]
 === 1. Crie o inventário, grupo, hosts e credenciais para seu ambiente
 
 Esta seção descreve a configuração de inventário, grupos, hosts e credenciais de acesso no AWX/Ansible Tower que preparam o ambiente para o consumo de soluções automatizadas da NetApp .
@@ -91,6 +93,7 @@ extra_vars:
 
 
 
+[[2-create-a-project]]
 === 2. Criar um projeto
 
 . Vá para Recursos → Projetos e clique em Adicionar.
@@ -106,6 +109,7 @@ extra_vars:
 
 
 
+[[3-configure-oracle-hostvars]]
 === 3. Configurar Oracle host_vars
 
 As variáveis definidas nesta seção são aplicadas a cada servidor e banco de dados Oracle individual.
@@ -118,6 +122,7 @@ NOTE: Os itens em azul devem ser alterados para combinar com seu ambiente.
 
 
 
+[[host-vars-config]]
 === Configuração do VARS do host
 
 [source, shell]
@@ -164,6 +169,7 @@ host_datastores_nfs:
 
 
 
+[[4-configure-global-variables]]
 === 4. Configurar variáveis globais
 
 As variáveis definidas nesta seção se aplicam a todos os hosts Oracle, bancos de dados e ao cluster ONTAP .
@@ -274,6 +280,7 @@ initial_pwd_all: "netapp123"
 
 
 
+[[5-configure-and-launch-the-job-template]]
 === 5. Configure e inicie o modelo de trabalho.
 
 . Crie o modelo de trabalho.
@@ -321,6 +328,7 @@ NOTE: requirements_config garante que você tenha as bibliotecas corretas para e
 
 
 
+[[6-deploy-additional-database-on-same-oracle-host]]
 === 6. Implantar banco de dados adicional no mesmo host Oracle
 
 A parte Oracle do manual cria um único banco de dados de contêiner Oracle em um servidor Oracle por execução.  Para criar bancos de dados de contêiner adicionais no mesmo servidor, conclua as seguintes etapas.
@@ -424,6 +432,7 @@ Isso confirma que o ouvinte do Oracle está funcionando corretamente.
 
 
 
+[[where-to-go-for-help]]
 === Onde procurar ajuda?
 
 Se precisar de ajuda com o kit de ferramentas, junte-se a nóslink:https://netapppub.slack.com/archives/C021R4WC0LC["Canal do Slack de suporte da comunidade de automação de soluções da NetApp"] e procure o canal de automação de soluções para postar suas dúvidas ou perguntas.

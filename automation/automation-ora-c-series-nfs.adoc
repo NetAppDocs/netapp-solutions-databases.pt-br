@@ -20,6 +20,7 @@ Esta solução fornece uma visão geral e detalhes para implantação automatiza
 
 
 
+[[purpose]]
 == Propósito
 
 O NetApp AFF C-Series é um armazenamento flash de capacidade que torna o all-flash mais acessível e econômico para armazenamento unificado.  Em termos de desempenho, é suficiente para muitas cargas de trabalho de banco de dados Oracle de nível 1 ou 2.  Equipados com o software de gerenciamento de dados NetApp ONTAP , os sistemas AFF C-Series oferecem eficiência líder do setor, flexibilidade superior, os melhores serviços de dados e integração em nuvem para ajudar você a dimensionar sua infraestrutura de TI, simplificar seu gerenciamento de dados e reduzir o custo de armazenamento e o consumo de energia.
@@ -34,6 +35,7 @@ Esta solução aborda os seguintes casos de uso:
 
 
 
+[[audience]]
 == Público
 
 Esta solução é destinada às seguintes pessoas:
@@ -46,18 +48,21 @@ Esta solução é destinada às seguintes pessoas:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente de teste e validação de soluções
 
 Os testes e a validação desta solução foram realizados em um ambiente de laboratório que pode não corresponder ao ambiente de implantação final.  Veja a seção<<Fatores-chave para consideração de implantação>> para maiores informações.
 
 
 
+[[architecture]]
 === Arquitetura
 
 image:automation-ora-c-series-nfs-architecture.png["Esta imagem fornece uma visão detalhada da configuração de implantação do Oracle na nuvem pública da AWS com iSCSI e ASM."]
 
 
 
+[[hardware-and-software-components]]
 === Componentes de hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -104,6 +109,7 @@ image:automation-ora-c-series-nfs-architecture.png["Esta imagem fornece uma vis�
 |===
 
 
+[[oracle-database-configuration-in-the-lab-environment]]
 === Configuração do banco de dados Oracle no ambiente de laboratório
 
 [cols="33%, 33%, 33%"]
@@ -123,6 +129,7 @@ image:automation-ora-c-series-nfs-architecture.png["Esta imagem fornece uma vis�
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fatores-chave para consideração de implantação
 
 * *Layout de armazenamento do banco de dados Oracle.*  Nesta implantação automatizada do Oracle, provisionamos três volumes de banco de dados para cada banco de dados hospedar binários, dados e logs do Oracle por padrão.  Os volumes são montados no servidor Oracle DB como /u01 - binário, /u02 - dados, /u03 - logs via NFS.  Arquivos de controle duplo são configurados nos pontos de montagem /u02 e /u03 para redundância.
@@ -134,12 +141,14 @@ image:automation-ora-c-series-nfs-architecture.png["Esta imagem fornece uma vis�
 
 
 
+[[solution-deployment]]
 == Implantação da solução
 
 As seções a seguir fornecem procedimentos passo a passo para implantação automatizada do Oracle 19c e informações para proteção e clonagem do banco de dados Oracle após a implantação.
 
 
 
+[[prerequisites-for-deployment]]
 === Pré-requisitos para implantação
 
 [%collapsible%open]
@@ -174,6 +183,7 @@ installer_archives:
 ====
 
 
+[[configure-networking-and-svm-on-c-series-for-oracle]]
 === Configurar rede e SVM no C-Series para Oracle
 
 [%collapsible%open]
@@ -274,6 +284,7 @@ Isso conclui a configuração do controlador da série C para Oracle.
 ====
 
 
+[[automation-parameter-files]]
 === Arquivos de parâmetros de automação
 
 [%collapsible%open]
@@ -290,6 +301,7 @@ Além desses arquivos de variáveis definidos pelo usuário, há vários arquivo
 ====
 
 
+[[parameter-files-configuration]]
 === Configuração de arquivos de parâmetros
 
 [%collapsible%open]
@@ -368,6 +380,7 @@ nfs_lif: 172.30.136.68
 ====
 
 
+[[playbook-execution]]
 === Execução do manual de instruções
 
 [%collapsible%open]
@@ -432,6 +445,7 @@ ansible-playbook -i hosts 5-destroy.yml -u admin -e @vars/vars.yml
 ====
 
 
+[[post-execution-validation]]
 === Validação pós-execução
 
 [%collapsible%open]
@@ -664,6 +678,7 @@ image:automation-ora-c-series-nfs-em-001.png["Esta imagem fornece a tela de logi
 ====
 
 
+[[oracle-backup-restore-and-clone-with-snapcenter]]
 === Backup, restauração e clonagem do Oracle com SnapCenter
 
 [%collapsible%open]
@@ -673,6 +688,7 @@ A NetApp recomenda a ferramenta SnapCenter UI para gerenciar o banco de dados Or
 ====
 
 
+[[where-to-find-additional-information]]
 == Onde encontrar informações adicionais
 
 Para saber mais sobre as informações descritas neste documento, revise os seguintes documentos e/ou sites:

@@ -24,10 +24,12 @@ As seções a seguir fornecem detalhes da configuração e dos resultados dos te
 
 
 
+[[test-environment-setup]]
 == Configuração do ambiente de teste
 
 
 
+[[compute]]
 === Calcular
 
 Implantamos uma instância EC2 M5 com 8vCPU, 32G RAM e 10Gps de largura de banda de rede.
@@ -36,6 +38,7 @@ image:aws-ora-fsx-ec2-inst-010.png["Figura mostrando diálogo de entrada/saída 
 
 
 
+[[fsx-storage]]
 === Armazenamento FSx
 
 Criamos três volumes de banco de dados e montamos os volumes com NFS em uma instância EC2 da seguinte maneira:
@@ -53,6 +56,7 @@ O sistema de arquivos FSx é configurado com capacidade de 80.000 IOPS e taxa de
 
 
 
+[[oracle-configuration]]
 === Configuração do Oracle
 
 Instalamos o Oracle versão 19c com o patch RU 19.8. O dNFS foi habilitado no servidor.
@@ -63,6 +67,7 @@ image:aws-ora-fsx-ec2-inst-011.png["Figura mostrando diálogo de entrada/saída 
 
 
 
+[[swingbench-configuration]]
 === Configuração do Swingbench
 
 Implementamos o Swingbench 2.6 (a versão mais recente) em um host Windows com 8vCPU e 32G RAM.  Usamos o módulo de teste SOE plsql versão 2 para o benchmark.  O perfil de carga padrão fornece uma proporção de leitura/gravação de 80/20 para simular a carga de trabalho de transações OLTP do mundo real.
@@ -77,6 +82,7 @@ Como mostra este gráfico, o nível de transação foi mantido no mesmo nível d
 
 
 
+[[test-results-analysis]]
 == Análise dos resultados dos testes
 
 Capturamos os resultados do Swingbench para cada execução de teste e obtivemos os relatórios correspondentes do Oracle AWR para análise de desempenho.

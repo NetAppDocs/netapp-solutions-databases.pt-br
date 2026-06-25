@@ -20,6 +20,7 @@ Esta solução fornece um kit de ferramentas útil para dimensionar computação
 
 
 
+[[purpose]]
 == Propósito
 
 Mover a carga de trabalho Oracle existente de uma plataforma para outra, como do local para a nuvem pública, precisa dimensionar a computação e o armazenamento na plataforma de destino para atender aos requisitos de desempenho e nível de serviço.  Esta documentação demonstra um kit de ferramentas simples para atingir esse objetivo.
@@ -34,6 +35,7 @@ Esta solução aborda os seguintes casos de uso:
 
 
 
+[[audience]]
 == Público
 
 Esta solução é destinada às seguintes pessoas:
@@ -45,6 +47,7 @@ Esta solução é destinada às seguintes pessoas:
 
 
 
+[[license]]
 == Licença
 
 Ao acessar, baixar, instalar ou usar o conteúdo deste repositório de kit de ferramentas, você concorda com os termos da Licença estabelecida emlink:https://netapp.sharepoint.com/sites/CIEBuilt-OnsTeam-DatabasesandApps/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FCIEBuilt%2DOnsTeam%2DDatabasesandApps%2FShared%20Documents%2FDatabases%20and%20Apps%2FDatabase%20Solutions%2FDB%20Sizing%20Toolkits%2FOracle%20Sizing%20Guidance%20for%20ANF%2FLICENSE%2ETXT&parent=%2Fsites%2FCIEBuilt%2DOnsTeam%2DDatabasesandApps%2FShared%20Documents%2FDatabases%20and%20Apps%2FDatabase%20Solutions%2FDB%20Sizing%20Toolkits%2FOracle%20Sizing%20Guidance%20for%20ANF["Arquivo de licença"^] .
@@ -54,10 +57,12 @@ NOTE: Há certas restrições quanto à produção e/ou compartilhamento de quai
 
 
 
+[[solution-deployment]]
 == Implantação da solução
 
 
 
+[[prerequisites-for-deployment]]
 === Pré-requisitos para implantação
 
 [%collapsible%open]
@@ -71,6 +76,7 @@ A implantação requer os seguintes pré-requisitos.
 ====
 
 
+[[download-the-toolkit]]
 === Baixe o kit de ferramentas
 
 [%collapsible%open]
@@ -80,6 +86,7 @@ Recuperar o kit de ferramentas do repositóriolink:https://netapp.sharepoint.com
 ====
 
 
+[[how-to-use-the-toolkit]]
 === Como usar o kit de ferramentas?
 
 [%collapsible%open]
@@ -95,6 +102,7 @@ O kit de ferramentas consiste em um analisador HTML baseado na web e dois script
 ====
 
 
+[[toolkit-usage-demonstration]]
 === Demonstração de uso do kit de ferramentas
 
 [%collapsible%open]

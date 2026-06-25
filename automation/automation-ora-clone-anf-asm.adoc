@@ -20,6 +20,7 @@ A solução fornece um kit de ferramentas de automação baseado em Ansible para
 
 
 
+[[purpose]]
 == Propósito
 
 O aproveitamento dos clones do banco de dados Oracle standby físico na configuração do Oracle Data Guard para outros casos de uso atende a vários propósitos.  Ele fornece uma cópia gravável do banco de dados de produção para fins de desenvolvimento ou UAT.  Dessa forma, é possível eliminar os custos elevados da licença do Active Data Guard se um pequeno atraso (10 a 15 minutos) nos relatórios for aceitável.  Economiza em custos de armazenamento, principalmente quando o clone fino é uma opção.  Este kit de ferramentas de automação baseado em Ansible permite que os usuários configurem, clonem e atualizem bancos de dados Oracle clonados de acordo com as programações dos usuários para um gerenciamento simplificado do ciclo de vida.  O kit de ferramentas se aplica a bancos de dados Oracle implantados na nuvem pública do Azure usando o armazenamento do Azure NetApp Files e o banco de dados Oracle configurado em uma configuração do Data Guard.
@@ -32,6 +33,7 @@ Esta solução aborda os seguintes casos de uso:
 
 
 
+[[audience]]
 == Público
 
 Esta solução é destinada às seguintes pessoas:
@@ -43,6 +45,7 @@ Esta solução é destinada às seguintes pessoas:
 
 
 
+[[license]]
 == Licença
 
 Ao acessar, baixar, instalar ou usar o conteúdo deste repositório GitHub, você concorda com os termos da Licença estabelecida emlink:https://github.com/NetApp/na_ora_hadr_failover_resync/blob/master/LICENSE.TXT["Arquivo de licença"^] .
@@ -52,10 +55,12 @@ NOTE: Há certas restrições quanto à produção e/ou compartilhamento de quai
 
 
 
+[[solution-deployment]]
 == Implantação da solução
 
 
 
+[[prerequisites-for-deployment]]
 === Pré-requisitos para implantação
 
 [%collapsible%open]
@@ -83,6 +88,7 @@ NOTE: Para simplificar, o servidor Oracle de destino clone deve ser configurado 
 ====
 
 
+[[download-the-toolkit]]
 === Baixe o kit de ferramentas
 
 [%collapsible%open]
@@ -97,6 +103,7 @@ NOTE: No momento, o kit de ferramentas só pode ser acessado por usuários inter
 ====
 
 
+[[ansible-source-and-target-hosts-file-configuration]]
 === Configuração de arquivos de hosts de origem e destino do Ansible
 
 [%collapsible%open]
@@ -118,6 +125,7 @@ localhost ansible_connection=local
 ====
 
 
+[[global-variables-configuration]]
 === Configuração de variáveis globais
 
 [%collapsible%open]
@@ -194,6 +202,7 @@ sys_pwd: "xxxxxxxx"
 ====
 
 
+[[host-variables-configuration]]
 === Configuração de variáveis de host
 
 [%collapsible%open]
@@ -217,6 +226,7 @@ asm_sid: +ASM
 ====
 
 
+[[additional-clone-target-oracle-server-configuration]]
 === Configuração adicional do servidor Oracle de destino do clone
 
 [%collapsible%open]
@@ -240,6 +250,7 @@ alias asm='export ORACLE_HOME=$GRID_HOME;export PATH=$PATH:$GRID_HOME/bin;export
 ====
 
 
+[[playbook-execution]]
 === Execução do manual de instruções
 
 [%collapsible%open]
@@ -273,6 +284,7 @@ NOTE: A execução do kit de ferramentas em vários estágios é pausada para pe
 ====
 
 
+[[where-to-find-additional-information]]
 == Onde encontrar informações adicionais
 
 Para saber mais sobre a automação da solução NetApp , consulte o seguinte sitelink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html["Automação de soluções NetApp ^"^]

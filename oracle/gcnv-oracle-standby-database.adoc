@@ -15,6 +15,8 @@ Crie o banco de dados standby físico do Oracle usando a replicação na camada 
 
 
 
+[[step-1-configure-listener-and-data-guard-parameters]]
+[[primary-sys-password-and-dg-params]]
 == Etapa 1: Configurar os parâmetros do listener e do Data Guard
 
 Configure o listener em ambos os hosts do banco de dados para suportar conexões Data Guard, incluindo o  `_DGMGRL` serviço necessário para o broker. Configure o arquivo de senhas e configure os parâmetros de arquivamento de logs no banco de dados primário.
@@ -61,6 +63,8 @@ $GRID_HOME/bin/lsnrctl status
 
 
 
+[[step-2-prepare-standby-pfile-and-nomount]]
+[[standby-init-ora-and-nomount]]
 == Etapa 2: prepare o pfile de standby e o NOMOUNT
 
 Prepare a instância de banco de dados em espera copiando o arquivo de senha do primário, criando um arquivo init.ora mínimo com parâmetros do Data Guard e iniciando a instância no modo NOMOUNT.
@@ -140,6 +144,8 @@ A instância em espera agora está no modo NOMOUNT, sem arquivos de dados até <
 
 
 
+[[step-3-initialize-standby-storage-with-gcnv]]
+[[gcnv-standby-initialization]]
 == Etapa 3: inicialize o armazenamento em espera com GCNV
 
 Inicialize os volumes de standby em  `oracle-pool-b`, anexe-os a  `oracdb2`, monte os grupos de discos ASM e finalize a instância de standby no estado MOUNT.
@@ -148,6 +154,7 @@ Use a replicação GCNV para o seeding de produção e o seeding por snapshot pa
 
 
 
+[[choose-the-seeding-path]]
 === Escolha o caminho de seeding
 
 Escolha o método de semeadura de standby com base no seu ambiente e nos requisitos de recuperação.
@@ -160,6 +167,8 @@ Todos os caminhos se reencontram em <<standby-iscsi-and-asm-before-rman,Montar g
 
 
 
+[[check-prerequisites]]
+[[gcnv-seed-prereqs]]
 === Verifique os pré-requisitos
 
 Confirme os seguintes pré-requisitos antes de inicializar os volumes standby.
@@ -190,6 +199,8 @@ gcloud netapp storage-pools create oracle-pool-b \
 
 
 
+[[create-and-sync-replications]]
+[[create-volume-replications]]
 === Criar e sincronizar replicações
 
 Crie relações de replicação dos volumes primários para os volumes em espera, depois aguarde a conclusão da sincronização inicial.
@@ -212,6 +223,8 @@ Aguarde até  `mirrorState` estar  `MIRRORED` e a sincronização inicial ser co
 
 
 
+[[cut-over-and-attach-standby-volumes]]
+[[cutover-quiesce-stop-repl-attach]]
 === Corte e anexe volumes standby
 
 Coloque o host primário em estado quiescente, interrompa a replicação após a sincronização final e anexe os volumes de destino ao grupo de hosts em espera.
@@ -252,6 +265,8 @@ ALTER DATABASE END BACKUP;
 ----
 
 
+[[seed-from-snapshot]]
+[[snapshot-seed]]
 === Semear a partir de um snapshot
 
 Use este caminho para semear o laboratório uma única vez, quando a replicação contínua não for necessária.
@@ -260,6 +275,8 @@ Para uma configuração inicial de laboratório única, crie um snapshot de orig
 
 
 
+[[mount-standby-asm-disk-groups]]
+[[standby-iscsi-and-asm-before-rman]]
 === Montar grupos de discos ASM em espera
 
 No host de espera, descubra os caminhos de storage conectados e monte os grupos de discos ASM antes da recuperação de banco de dados.
@@ -274,6 +291,8 @@ ALTER DISKGROUP FRA MOUNT FORCE;
 ----
 
 
+[[finalize-the-standby-instance]]
+[[oracle-finalize]]
 === Finalize a instância em espera
 
 Restaure o controlfile em standby, recupere até o SCN capturado, converta para standby físico e inicie a recuperação gerenciada.
@@ -299,6 +318,8 @@ Neste ponto, o standby deve estar  `PHYSICAL STANDBY` e  `MOUNTED` com a recuper
 
 
 
+[[step-4-register-standby-with-oracle-restart]]
+[[register-standby-with-oracle-restart]]
 == Etapa 4: registre o standby com o Oracle Restart
 
 Registre o banco de dados standby no Oracle Restart para que as reinicializações recuperem automaticamente os grupos de discos ASM, montem o banco de dados standby e reiniciem a recuperação gerenciada. Adicione também o serviço de aplicativo aos dois recursos de banco de dados.
@@ -379,6 +400,7 @@ srvctl status database -db orcls
 
 
 
+[[whats-next]]
 == Qual é o próximo passo?
 
 *Específico para cada tier:*

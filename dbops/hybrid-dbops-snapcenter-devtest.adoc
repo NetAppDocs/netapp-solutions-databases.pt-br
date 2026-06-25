@@ -18,6 +18,7 @@ A agilidade da nuvem pública, o tempo de retorno e a economia de custos são pr
 
 
 
+[[clone-an-oracle-database-for-devtest-from-a-replicated-snapshot-backup]]
 == Clonar um banco de dados Oracle para desenvolvimento/teste a partir de um backup de snapshot replicado
 
 . Efetue login no SnapCenter com um ID de usuário de gerenciamento de banco de dados do Oracle.  Navegue até a guia Recursos, que mostra os bancos de dados Oracle sendo protegidos pelo SnapCenter.
@@ -86,6 +87,7 @@ image:snapctr-ora-clone-015.png["Figura mostrando diálogo de entrada/saída ou 
 
 
 
+[[clone-a-sql-database-for-devtest-from-a-replicated-snapshot-backup]]
 == Clonar um banco de dados SQL para desenvolvimento/teste a partir de um backup de Snapshot replicado
 
 . Efetue login no SnapCenter com uma ID de usuário de gerenciamento de banco de dados do SQL Server.  Navegue até a guia Recursos, que mostra os bancos de dados do usuário do SQL Server sendo protegidos pelo SnapCenter e uma instância SQL de espera de destino na nuvem pública.
@@ -135,6 +137,7 @@ image:snapctr-sql-clone-010.png["Figura mostrando diálogo de entrada/saída ou 
 
 
 
+[[post-clone-configuration]]
 == Configuração pós-clone
 
 . Um banco de dados de produção Oracle local geralmente é executado no modo de arquivamento de log.  Este modo não é necessário para um banco de dados de desenvolvimento ou teste.  Para desativar o modo de arquivamento de log, efetue login no Oracle DB como sysdba, execute um comando de alteração do modo de log e inicie o banco de dados para acesso.
@@ -144,6 +147,7 @@ image:snapctr-sql-clone-010.png["Figura mostrando diálogo de entrada/saída ou 
 
 
 
+[[refresh-clone-database]]
 == Atualizar banco de dados clone
 
 . Elimine bancos de dados clonados e limpe o ambiente do servidor de banco de dados na nuvem.  Em seguida, siga os procedimentos anteriores para clonar um novo banco de dados com dados atualizados.  Leva apenas alguns minutos para clonar um novo banco de dados.
@@ -152,6 +156,7 @@ image:snapctr-sql-clone-010.png["Figura mostrando diálogo de entrada/saída ou 
 
 
 
+[[where-to-go-for-help]]
 == Onde procurar ajuda?
 
 Se precisar de ajuda com esta solução e casos de uso, junte-se alink:https://netapppub.slack.com/archives/C021R4WC0LC["Canal do Slack de suporte da comunidade de automação de soluções da NetApp"] e procure o canal de automação de soluções para postar suas dúvidas ou perguntas.

@@ -24,6 +24,7 @@ A maioria das organizações de TI segue uma abordagem que prioriza a nuvem.  Os
 
 
 
+[[use-case]]
 == Caso de uso
 
 Mover o conjunto de recursos do SQL Server para o Azure e integrar o SQL Server com a ampla gama de recursos de plataforma como serviço (PaaS) do Azure, como Azure Data Factory, Azure IoT Hub e Azure Machine Learning, cria um enorme valor comercial para dar suporte à transformação digital.  A adoção da nuvem também permite que a respectiva unidade de negócios se concentre na produtividade e na entrega de novos recursos e melhorias mais rapidamente (caso de uso DevTest) do que depender do modelo CAPEX ou de modelos tradicionais de nuvem privada.  Este documento aborda uma implantação em tempo real do grupo de disponibilidade Always On (AOAG) do SQL Server no Azure NetApp Files, aproveitando as Máquinas Virtuais do Azure.

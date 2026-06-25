@@ -18,6 +18,7 @@ Certos pré-requisitos devem ser configurados no local e na nuvem antes da execu
 
 
 
+[[on-premises]]
 == No local
 
 * Instalação e configuração do SnapCenter
@@ -29,6 +30,7 @@ Certos pré-requisitos devem ser configurados no local e na nuvem antes da execu
 
 
 
+[[public-cloud]]
 == Nuvem pública
 
 * Um login do NetApp Cloud Central

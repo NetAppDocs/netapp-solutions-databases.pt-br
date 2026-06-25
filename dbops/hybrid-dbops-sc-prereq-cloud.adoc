@@ -18,6 +18,7 @@ Antes de instalar o conector Cloud Manager e o Cloud Volumes ONTAP e configurar 
 
 
 
+[[cloud-manager-and-cloud-volumes-ontap-deployment-prerequisites-checklist]]
 == Lista de verificação de pré-requisitos para implantação do Cloud Manager e do Cloud Volumes ONTAP
 
 * Um login do NetApp Cloud Central
@@ -31,10 +32,12 @@ Para obter mais informações sobre o que você precisa para começar, visite no
 
 
 
+[[considerations]]
 == Considerações
 
 
 
+[[1-what-is-a-cloud-manager-connector]]
 === 1. O que é um conector do Cloud Manager?
 
 Na maioria dos casos, um administrador de conta do Cloud Central deve implantar um conector na sua rede local ou na nuvem.  O conector permite que o Cloud Manager gerencie recursos e processos dentro do seu ambiente de nuvem pública.
@@ -43,6 +46,7 @@ Para mais informações sobre Conectores, visite nosso https://docs.netapp.com/u
 
 
 
+[[2-cloud-volumes-ontap-sizing-and-architecture]]
 === 2. Dimensionamento e arquitetura do Cloud Volumes ONTAP
 
 Ao implantar o Cloud Volumes ONTAP, você pode escolher entre um pacote predefinido ou a criação de sua própria configuração.  Embora muitos desses valores possam ser alterados posteriormente sem interrupções, há algumas decisões importantes que precisam ser tomadas antes da implantação com base nas cargas de trabalho a serem implantadas na nuvem.
@@ -60,6 +64,7 @@ Se desejar mais informações, leia a documentação sobre o planejamento corret
 
 
 
+[[3-single-node-or-high-availability]]
 === 3. Nó único ou alta disponibilidade?
 
 Em todas as nuvens, há a opção de implantar o CVO em um único nó ou em um par de alta disponibilidade em cluster com dois nós.  Dependendo do caso de uso, você pode querer implantar um único nó para economizar custos ou um par de HA para fornecer mais disponibilidade e redundância.

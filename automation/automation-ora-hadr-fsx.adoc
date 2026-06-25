@@ -20,6 +20,7 @@ Esta solução fornece um kit de ferramentas de automação baseado em Ansible p
 
 
 
+[[purpose]]
 == Propósito
 
 Este kit de ferramentas automatiza as tarefas de configuração e gerenciamento de um ambiente de alta disponibilidade e recuperação de desastres (HR/DR) para banco de dados Oracle implantado na nuvem AWS com armazenamento FSx ONTAP e instâncias de computação EC2.
@@ -36,6 +37,7 @@ Esta solução aborda os seguintes casos de uso:
 
 
 
+[[audience]]
 == Público
 
 Esta solução é destinada às seguintes pessoas:
@@ -48,6 +50,7 @@ Esta solução é destinada às seguintes pessoas:
 
 
 
+[[license]]
 == Licença
 
 Ao acessar, baixar, instalar ou usar o conteúdo deste repositório GitHub, você concorda com os termos da Licença estabelecida emlink:https://github.com/NetApp/na_ora_hadr_failover_resync/blob/master/LICENSE.TXT["Arquivo de licença"^] .
@@ -57,10 +60,12 @@ NOTE: Há certas restrições quanto à produção e/ou compartilhamento de quai
 
 
 
+[[solution-deployment]]
 == Implantação da solução
 
 
 
+[[prerequisites-for-deployment]]
 === Pré-requisitos para implantação
 
 [%collapsible%open]
@@ -86,6 +91,7 @@ AWS EC2 Instance
 ====
 
 
+[[download-the-toolkit]]
 === Baixe o kit de ferramentas
 
 [%collapsible%open]
@@ -97,6 +103,7 @@ git clone https://github.com/NetApp/na_ora_hadr_failover_resync.git
 ====
 
 
+[[global-variables-configuration]]
 === Configuração de variáveis globais
 
 [%collapsible%open]
@@ -127,6 +134,7 @@ Linux and DB specific global variables - keep it as is.
 ====
 
 
+[[host-variables-configuration]]
 === Configuração de variáveis de host
 
 [%collapsible%open]
@@ -151,6 +159,7 @@ Linux - define host specific variables at Linux level
 ====
 
 
+[[db-server-host-file-configuration]]
 === Configuração do arquivo host do servidor de banco de dados
 
 [%collapsible%open]
@@ -166,6 +175,7 @@ A instância do AWS EC2 usa o endereço IP para nomenclatura de host por padrão
 ====
 
 
+[[playbook-execution-executed-in-sequence]]
 === Execução do manual de instruções - executado em sequência
 
 [%collapsible%open]
@@ -222,6 +232,7 @@ ansible-playbook -i hosts ontap_ora_resync.yml -u ec2-user --private-key db2.pem
 ====
 
 
+[[where-to-find-additional-information]]
 == Onde encontrar informações adicionais
 
 Para saber mais sobre a automação da solução NetApp , consulte o seguinte sitelink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html["Automação de soluções NetApp ^"^]

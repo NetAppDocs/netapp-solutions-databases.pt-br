@@ -20,6 +20,7 @@ Esta solução fornece uma visão geral e detalhes para recuperação rápida do
 
 
 
+[[purpose]]
 == Propósito
 
 Recuperar um banco de dados muito grande (VLDB) no Oracle usando a ferramenta de backup Oracle Recovery Manager (RMAN) pode ser uma tarefa altamente desafiadora.  O processo de restauração do banco de dados a partir da mídia de backup em caso de falha pode ser demorado, atrasando a recuperação do banco de dados e potencialmente impactando significativamente seu Contrato de Nível de Serviço (SLA).  No entanto, a partir da versão 10g, a Oracle introduziu um recurso RMAN que permite aos usuários criar cópias de imagem preparadas dos arquivos de dados do banco de dados Oracle em armazenamento em disco adicional localizado no host do servidor de banco de dados.  Essas cópias de imagem podem ser atualizadas incrementalmente usando o RMAN diariamente.  Em caso de falha, o administrador do banco de dados (DBA) pode alternar rapidamente o banco de dados Oracle da mídia com falha para a cópia de imagem, eliminando a necessidade de uma restauração completa da mídia do banco de dados.  O resultado é um SLA muito melhorado, embora ao custo de dobrar o armazenamento de banco de dados necessário.
@@ -35,6 +36,7 @@ Esta solução aborda os seguintes casos de uso:
 
 
 
+[[audience]]
 == Público
 
 Esta solução é destinada às seguintes pessoas:
@@ -47,18 +49,21 @@ Esta solução é destinada às seguintes pessoas:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente de teste e validação de soluções
 
 O teste e a validação desta solução foram realizados em um ambiente de armazenamento de pool de capacidade ANF da Microsoft e em um ambiente de computação de VM do Azure que pode não corresponder ao ambiente de implantação final. Para mais informações, consulte a seção <<Fatores-chave para consideração de implantação>> .
 
 
 
+[[architecture]]
 === Arquitetura
 
 image:azure-ora-anf-vldb-architecture.png["Esta imagem fornece uma visão detalhada da implementação de mesclagem incremental do Oracle VLDB na nuvem pública do Azure com ANF."]
 
 
 
+[[hardware-and-software-components]]
 === Componentes de hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -90,6 +95,7 @@ image:azure-ora-anf-vldb-architecture.png["Esta imagem fornece uma visão detalh
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fatores-chave para consideração de implantação
 
 * *Layout de armazenamento Oracle VLDB para mesclagem incremental RMAN.*  Em nossos testes e validações, o volume NFS para backup incremental e mesclagem do Oracle é alocado de um único pool de capacidade ANF, que tem 100 TiB por volume e um limite de capacidade total de 1000 TiB.  Para implantação acima dos limites, vários volumes e pools de capacidade ANF podem ser concatenados em paralelo com vários pontos de montagem NFS para fornecer maior capacidade.
@@ -102,6 +108,7 @@ image:azure-ora-anf-vldb-architecture.png["Esta imagem fornece uma visão detalh
 
 
 
+[[solution-deployment]]
 == Implantação da solução
 
 Supõe-se que você já tenha seu Oracle VLDB implantado no ambiente de nuvem do Azure dentro de uma VNet.  Se precisar de ajuda na implantação do Oracle no Azure, consulte os seguintes relatórios técnicos para obter ajuda.
@@ -114,6 +121,7 @@ Seu Oracle VLDB pode ser executado em um armazenamento ANF ou em qualquer outro 
 
 
 
+[[prerequisites-for-deployment]]
 === Pré-requisitos para implantação
 
 [%collapsible%open]
@@ -131,6 +139,7 @@ NOTE: Certifique-se de ter alocado pelo menos 128 GB no volume raiz da VM do Azu
 ====
 
 
+[[provision-and-export-nfs-volume-to-be-mounted-on-primary-oracle-vldb-server]]
 === Provisionar e exportar volume NFS para ser montado no servidor Oracle VLDB primário
 
 [%collapsible%open]
@@ -183,6 +192,7 @@ sudo chown oracle:oinstall /nfsanf
 ====
 
 
+[[setup-oracle-rman-incremental-merge-to-image-copy-on-anf]]
 === Configurar mesclagem incremental do Oracle RMAN para cópia de imagem no ANF
 
 [%collapsible%open]
@@ -810,6 +820,7 @@ Isso conclui a configuração de um backup e mesclagem de cópia de imagem stand
 ====
 
 
+[[switch-oracle-vldb-to-image-copy-for-quick-recovery]]
 === Alterne o Oracle VLDB para cópia de imagem para recuperação rápida
 
 [%collapsible%open]
@@ -1092,6 +1103,7 @@ SQL>
 ====
 
 
+[[oracle-vldb-recovery-from-image-copy-to-a-standby-db-server]]
 === Recuperação de VLDB do Oracle a partir de uma cópia de imagem para um servidor de banco de dados em espera
 
 [%collapsible%open]
@@ -1863,6 +1875,7 @@ Isso conclui a recuperação do banco de dados Oracle VLDB da cópia de imagem d
 ====
 
 
+[[where-to-find-additional-information]]
 == Onde encontrar informações adicionais
 
 Para saber mais sobre as informações descritas neste documento, revise os seguintes documentos e/ou sites:

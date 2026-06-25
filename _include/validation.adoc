@@ -91,6 +91,7 @@ Isso confirma que o ouvinte do Oracle está funcionando corretamente.
 
 
 
+[[where-to-go-for-help]]
 === Onde procurar ajuda?
 
 Se precisar de ajuda com o kit de ferramentas, junte-se a nóslink:https://netapppub.slack.com/archives/C021R4WC0LC["Canal do Slack de suporte da comunidade de automação de soluções da NetApp"] e procure o canal de automação de soluções para postar suas dúvidas ou perguntas.

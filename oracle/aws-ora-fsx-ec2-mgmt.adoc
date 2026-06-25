@@ -31,12 +31,14 @@ A clonagem de banco de dados cria uma réplica de um banco de dados primário em
 
 
 
+[[taking-a-snapshot]]
 == Tirando uma foto instantânea
 
 Um banco de dados Oracle EC2/FSx é submetido a backup regularmente em intervalos configurados pelo usuário.  Um usuário também pode fazer um backup instantâneo único a qualquer momento.  Isso se aplica tanto a backups de snapshots de banco de dados completo quanto a backups de snapshots somente de log de arquivamento.
 
 
 
+[[taking-a-full-database-snapshot]]
 === Tirando um instantâneo completo do banco de dados
 
 Um instantâneo completo do banco de dados inclui todos os arquivos Oracle, incluindo arquivos de dados, arquivos de controle e arquivos de log de arquivamento.
@@ -63,6 +65,7 @@ image:aws-rds-custom-deploy-snp-013.png["Figura mostrando diálogo de entrada/sa
 
 
 
+[[taking-an-archive-log-snapshot]]
 === Tirando um instantâneo do log de arquivo
 
 Um instantâneo do log de arquivo é tirado somente para o volume de log de arquivo do Oracle.
@@ -89,6 +92,7 @@ image:aws-rds-custom-deploy-snp-016.png["Figura mostrando diálogo de entrada/sa
 
 
 
+[[restoring-to-a-point-in-time]]
 == Restaurando para um ponto no tempo
 
 A restauração baseada em SnapCenter para um ponto no tempo é executada no mesmo host de instância do EC2.  Conclua as seguintes etapas para executar a restauração:
@@ -160,6 +164,7 @@ image:aws-rds-custom-deploy-snp-029-b.png["Figura mostrando diálogo de entrada/
 
 
 
+[[creating-a-database-clone]]
 == Criando um clone de banco de dados
 
 A seção a seguir demonstra como usar o fluxo de trabalho de clone do SnapCenter para criar um clone de banco de dados de um banco de dados primário para uma instância EC2 em espera.
@@ -247,6 +252,7 @@ NOTE: Em vez de cópias de backup primárias do Oracle, um clone também pode se
 
 
 
+[[ha-failover-to-standby-and-resync]]
 == Failover de HA para espera e ressincronização
 
 O cluster Oracle HA em espera fornece alta disponibilidade em caso de falha no site principal, seja na camada de computação ou na camada de armazenamento.  Um benefício significativo da solução é que um usuário pode testar e validar a infraestrutura a qualquer momento ou com qualquer frequência.  O failover pode ser simulado pelo usuário ou acionado por uma falha real.  Os processos de failover são idênticos e podem ser automatizados para recuperação rápida de aplicativos.

@@ -18,12 +18,14 @@ Esta seção descreve os procedimentos de implantação do banco de dados person
 
 
 
+[[deploy-an-ec2-linux-instance-for-oracle-via-ec2-console]]
 == Implantar uma instância EC2 Linux para Oracle via console EC2
 
 Se você é novo na AWS, primeiro precisa configurar um ambiente AWS.  A guia de documentação na página inicial do site da AWS fornece links de instruções do EC2 sobre como implantar uma instância do Linux EC2 que pode ser usada para hospedar seu banco de dados Oracle por meio do console do AWS EC2.  A seção a seguir é um resumo dessas etapas.  Para obter detalhes, consulte a documentação específica do AWS EC2 vinculada.
 
 
 
+[[setting-up-your-aws-ec2-environment]]
 === Configurando seu ambiente AWS EC2
 
 Você deve criar uma conta AWS para provisionar os recursos necessários para executar seu ambiente Oracle no serviço EC2 e FSx.  A seguinte documentação da AWS fornece os detalhes necessários:
@@ -40,6 +42,7 @@ Tópicos principais:
 
 
 
+[[enabling-multiple-availability-zones-in-aws-account-attributes]]
 === Habilitando várias zonas de disponibilidade em atributos de conta da AWS
 
 Para uma configuração de alta disponibilidade do Oracle, conforme demonstrado no diagrama de arquitetura, você deve habilitar pelo menos quatro zonas de disponibilidade em uma região.  As múltiplas zonas de disponibilidade também podem ser situadas em diferentes regiões para atender às distâncias necessárias para recuperação de desastres.
@@ -48,6 +51,7 @@ image:aws-ora-fsx-ec2-inst-001.png["Figura mostrando diálogo de entrada/saída 
 
 
 
+[[creating-and-connecting-to-an-ec2-instance-for-hosting-oracle-database]]
 === Criação e conexão a uma instância EC2 para hospedar banco de dados Oracle
 
 Veja o tutoriallink:https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html["Comece a usar instâncias do Amazon EC2 Linux"^] para procedimentos de implantação passo a passo e melhores práticas.
@@ -107,12 +111,14 @@ Você precisa criar duas instâncias do EC2 como servidores Oracle primário e d
 
 
 
+[[provision-fsx-ontap-file-systems-for-oracle-database-storage]]
 == Provisionar sistemas de arquivos FSx ONTAP para armazenamento de banco de dados Oracle
 
 A implantação da instância do EC2 aloca um volume raiz do EBS para o sistema operacional.  Os sistemas de arquivos FSx ONTAP fornecem volumes de armazenamento de banco de dados Oracle, incluindo volumes binários, de dados e de log do Oracle.  Os volumes NFS de armazenamento do FSx podem ser provisionados a partir do console do AWS FSx ou da instalação e automação de configuração do Oracle que aloca os volumes conforme o usuário configura em um arquivo de parâmetros de automação.
 
 
 
+[[creating-fsx-ontap-file-systems]]
 === Criação de sistemas de arquivos FSx ONTAP
 
 Referiu-se a esta documentação https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-file-systems.html["Gerenciando sistemas de arquivos FSx ONTAP"^] para criar sistemas de arquivos FSx ONTAP .
@@ -168,6 +174,7 @@ image:aws-ora-fsx-ec2-stor-008.png["Figura mostrando diálogo de entrada/saída 
 
 
 
+[[provisioning-of-database-volumes-for-oracle-database]]
 === Provisionamento de volumes de banco de dados para banco de dados Oracle
 
 Verlink:https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-volumes.html["Gerenciando volumes FSx ONTAP - criando um volume"^] para mais detalhes.
@@ -193,18 +200,21 @@ NOTE: A criação de LUNs iSCSI não é suportada atualmente pelo console FSx.  
 
 
 
+[[install-and-configure-oracle-on-an-ec2-instance-with-fsx-database-volumes]]
 == Instalar e configurar o Oracle em uma instância EC2 com volumes de banco de dados FSx
 
 A equipe de automação da NetApp fornece um kit de automação para executar a instalação e a configuração do Oracle em instâncias do EC2 de acordo com as práticas recomendadas.  A versão atual do kit de automação oferece suporte ao Oracle 19c no NFS com o patch RU padrão 19.8.  O kit de automação pode ser facilmente adaptado para outros patches RU, se necessário.
 
 
 
+[[prepare-a-ansible-controller-to-run-automation]]
 === Preparar um controlador Ansible para executar a automação
 
 Siga as instruções na seção "<<Criação e conexão a uma instância EC2 para hospedar banco de dados Oracle>> "para provisionar uma pequena instância do EC2 Linux para executar o controlador Ansible.  Em vez de usar RedHat, o Amazon Linux t2.large com 2vCPU e 8G RAM deve ser suficiente.
 
 
 
+[[retrieve-netapp-oracle-deployment-automation-toolkit]]
 === Recuperar o kit de ferramentas de automação de implantação do NetApp Oracle
 
 Faça login na instância do controlador EC2 Ansible provisionada na etapa 1 como ec2-user e, no diretório inicial do ec2-user, execute o comando `git clone` comando para clonar uma cópia do código de automação.
@@ -219,6 +229,7 @@ git clone https://github.com/NetApp-Automation/na_rds_fsx_oranfs_config.git
 ----
 
 
+[[execute-automated-oracle-19c-deployment-using-automation-toolkit]]
 === Execute a implantação automatizada do Oracle 19c usando o kit de ferramentas de automação
 
 Veja estas instruções detalhadaslink:../automation/cli-automation.html["Implantação CLI do banco de dados Oracle 19c"^] para implantar o Oracle 19c com automação CLI.  Há uma pequena alteração na sintaxe do comando para execução do playbook porque você está usando um par de chaves SSH em vez de uma senha para autenticação de acesso ao host.  A lista a seguir é um resumo de alto nível:
@@ -262,6 +273,7 @@ Altere o bit de permissão no arquivo de chave SSH para 400, se necessário.  Al
 
 
 
+[[setting-up-snapmirror-between-primary-and-standby-fsx-ha-cluster]]
 == Configurando o SnapMirror entre o cluster FSx HA primário e o de espera
 
 Para alta disponibilidade e recuperação de desastres, você pode configurar a replicação do SnapMirror entre o cluster de armazenamento FSx primário e em espera.  Diferentemente de outros serviços de armazenamento em nuvem, o FSx permite que um usuário controle e gerencie a replicação do armazenamento na frequência e na taxa de transferência de replicação desejadas.  Ele também permite que os usuários testem HA/DR sem qualquer efeito na disponibilidade.
@@ -401,16 +413,19 @@ NOTE: Replicar o binário Oracle do cluster primário para um cluster de espera 
 
 
 
+[[snapcenter-deployment]]
 == Implantação do SnapCenter
 
 
 
+[[snapcenter-installation]]
 === Instalação do SnapCenter
 
 Seguirlink:https://docs.netapp.com/ocsc-41/index.jsp?topic=%2Fcom.netapp.doc.ocsc-isg%2FGUID-D3F2FBA8-8EE7-4820-A445-BC1E5C0AF374.html["Instalando o SnapCenter Server"^] para instalar o servidor SnapCenter .  Esta documentação aborda como instalar um servidor SnapCenter autônomo.  Uma versão SaaS do SnapCenter está em análise beta e poderá estar disponível em breve.  Verifique com seu representante da NetApp a disponibilidade, se necessário.
 
 
 
+[[configure-snapcenter-plugin-for-ec2-oracle-host]]
 === Configurar o plugin SnapCenter para o host EC2 Oracle
 
 . Após a instalação automatizada do SnapCenter , efetue login no SnapCenter como usuário administrativo para o host do Windows no qual o servidor SnapCenter está instalado.
@@ -474,6 +489,7 @@ image:aws-rds-custom-deploy-snp-008.png["Figura mostrando diálogo de entrada/sa
 
 
 
+[[configure-backup-policy-for-oracle-database]]
 === Configurar política de backup para banco de dados Oracle
 
 Consulte esta seçãolink:../dbops/hybrid-dbops-sc-gs-onprem.html#7-setup-database-backup-policy-in-snapcenter["Configurar política de backup de banco de dados no SnapCenter"^] para obter detalhes sobre como configurar a política de backup do banco de dados Oracle.
@@ -485,6 +501,7 @@ NOTE: Você pode habilitar a remoção de log de arquivamento do Oracle na polí
 
 
 
+[[configure-oracle-database-backup-and-scheduling]]
 === Configurar backup e agendamento do banco de dados Oracle
 
 O backup do banco de dados no SnapCenter é configurável pelo usuário e pode ser configurado individualmente ou em grupo em um grupo de recursos.  O intervalo de backup depende dos objetivos do RTO e do RPO.  A NetApp recomenda que você execute um backup completo do banco de dados a cada poucas horas e arquive o backup do log com uma frequência maior, como 10 a 15 minutos para recuperação rápida.

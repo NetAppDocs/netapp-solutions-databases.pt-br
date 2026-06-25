@@ -18,12 +18,14 @@ Esta seção descreve os procedimentos de implantação do banco de dados person
 
 
 
+[[deploy-an-azure-vm-with-anf-for-oracle-via-azure-portal-console]]
 == Implantar uma VM do Azure com ANF para Oracle por meio do console do portal do Azure
 
 Se você é novo no Azure, primeiro precisa configurar um ambiente de conta do Azure.  Isso inclui inscrever sua organização para usar o Azure Active Directory.  A seção a seguir é um resumo dessas etapas.  Para obter detalhes, consulte a documentação específica do Azure vinculada.
 
 
 
+[[create-and-consume-azure-resources]]
 === Criar e consumir recursos do Azure
 
 Depois que seu ambiente do Azure estiver configurado e uma conta for criada e associada a uma assinatura, você poderá fazer logon no portal do Azure com a conta para criar os recursos necessários para executar o Oracle.
@@ -118,18 +120,21 @@ image:db-ora-azure-anf-vols-005.png["Revise e crie o estágio da tela de criaç�
 
 
 
+[[install-and-configure-oracle-on-azure-vm-with-anf]]
 == Instalar e configurar o Oracle na VM do Azure com ANF
 
 A equipe de soluções da NetApp criou muitos kits de ferramentas de automação baseados em Ansible para ajudar você a implantar o Oracle no Azure sem problemas.  Siga estas etapas para implantar o Oracle em uma VM do Azure.
 
 
 
+[[set-up-an-ansible-controller]]
 === Configurar um controlador Ansible
 
 Se você não configurou um controlador Ansible, consultelink:https://docs.netapp.com/us-en/netapp-solutions-dataops/automation/automation-introduction.html["Automação de soluções NetApp ^"^] , que contém instruções detalhadas sobre como configurar um controlador Ansible.
 
 
 
+[[obtain-oracle-deployment-automation-toolkit]]
 === Obtenha o kit de ferramentas de automação de implantação do Oracle
 
 Clone uma cópia do kit de ferramentas de implantação do Oracle no seu diretório inicial sob o ID de usuário que você usa para efetuar login no controlador Ansible.
@@ -140,6 +145,7 @@ git clone https://github.com/NetApp-Automation/na_oracle19c_deploy.git
 ----
 
 
+[[execute-the-toolkit-with-your-configuration]]
 === Execute o kit de ferramentas com sua configuração
 
 Veja olink:../automation/cli-automation.html#cli-deployment-oracle-19c-database["Implantação CLI do banco de dados Oracle 19c"^] para executar o manual com a CLI.  Você pode ignorar a parte ONTAP da configuração de variáveis no arquivo VARS global ao criar volumes de banco de dados no console do Azure em vez da CLI.
@@ -149,12 +155,14 @@ NOTE: O kit de ferramentas implanta por padrão o Oracle 19c com o RU 19.8.  Ele
 
 
 
+[[set-up-azacsnap-backup-tool-for-app-consistent-snapshots-for-oracle]]
 == Configurar a ferramenta de backup AzAcSnap para snapshots consistentes com o aplicativo para Oracle
 
 A ferramenta Azure Application-Consistent Snapshot (AzAcSnap) é uma ferramenta de linha de comando que permite a proteção de dados para bancos de dados de terceiros, manipulando toda a orquestração necessária para colocá-los em um estado consistente com o aplicativo antes de tirar um instantâneo de armazenamento.  Ele então retorna esses bancos de dados para um estado operacional.  A NetApp recomenda instalar a ferramenta no host do servidor de banco de dados.  Veja os seguintes procedimentos de instalação e configuração.
 
 
 
+[[install-azacsnap-tool]]
 === Instalar a ferramenta AzAcSnap
 
 . Obtenha a versão mais recente dolink:https://aka.ms/azacsnapinstaller["o instalador do AzArcSnap"^] .
@@ -169,6 +177,7 @@ A ferramenta Azure Application-Consistent Snapshot (AzAcSnap) é uma ferramenta 
 
 
 
+[[configure-oracle-connectivity]]
 === Configurar conectividade Oracle
 
 As ferramentas de snapshot se comunicam com o banco de dados Oracle e precisam de um usuário do banco de dados com permissões apropriadas para habilitar ou desabilitar o modo de backup.
@@ -296,6 +305,7 @@ SQL>
 
 
 
+[[configure-anf-connectivity]]
 === Configurar conectividade ANF
 
 Esta seção explica como habilitar a comunicação com o Azure NetApp Files (com uma VM).
@@ -345,6 +355,7 @@ NOTE: Certifique-se de que o formato do arquivo JSON seja exatamente como descri
 
 
 
+[[complete-the-setup-of-azacsnap-tool]]
 === Conclua a configuração da ferramenta AzAcSnap
 
 Siga estas etapas para configurar e testar as ferramentas de instantâneo.  Após o teste bem-sucedido, você pode executar o primeiro snapshot de armazenamento consistente com o banco de dados.

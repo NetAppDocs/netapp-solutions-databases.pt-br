@@ -18,6 +18,7 @@ Explore a abrangente biblioteca de vídeos da NetApp com soluções de banco de 
 
 
 
+[[deployment-and-automation]]
 == Implantação e automação
 
 .Implantação simplificada e automatizada do Oracle no Azure NetApp Files com NFS
@@ -32,6 +33,7 @@ video::74062c18-b120-45b7-9bf9-b2db00f73675[panopto,width=360]
 video::VcQMJIRzhoY[youtube,width=360]
 
 
+[[backup-recovery-and-cloning]]
 == Backup, recuperação e clonagem
 
 .Backup, recuperação e clonagem de banco de dados Oracle em ANF com SnapCenter
@@ -46,6 +48,7 @@ video::4b0fd212-7641-46b8-9e55-b01200f9383a[panopto,width=360]
 video::krzMWjrrMb0[youtube,width=360]
 
 
+[[modernization-and-migration]]
 == Modernização e migração
 
 .Parte 1 - Modernização da Oracle com nuvem híbrida na AWS e FSx ONTAP
@@ -56,6 +59,7 @@ video::bb088a3e-bbfb-4927-bf44-b01200f38b17[panopto,width=360]
 video::c0df32f8-d6d3-4b79-b0bd-b01200f3a2e8[panopto,width=360]
 
 
+[[high-availability-disaster-recovery-and-replication]]
 == Alta disponibilidade, recuperação de desastres e replicação
 
 .Parte 3 - Configuração automatizada de replicação de HA/DR de banco de dados, failover, ressincronização

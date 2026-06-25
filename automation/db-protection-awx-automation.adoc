@@ -18,10 +18,12 @@ Esta página descreve a proteção de dados automatizada do Oracle19c no armazen
 
 
 
+[[awxtower-oracle-data-protection]]
 == Proteção de dados Oracle AWX/Tower
 
 
 
+[[create-the-inventory-group-hosts-and-credentials-for-your-environment]]
 === Crie o inventário, grupo, hosts e credenciais para seu ambiente
 
 Esta seção descreve a configuração de inventário, grupos, hosts e credenciais de acesso no AWX/Ansible Tower que preparam o ambiente para o consumo de soluções automatizadas da NetApp .
@@ -217,6 +219,7 @@ extra_vars:
 ====
 
 
+[[create-a-project]]
 === Criar um projeto
 
 . Vá para Recursos → Projetos e clique em Adicionar.
@@ -232,6 +235,7 @@ extra_vars:
 
 
 
+[[configure-global-variables]]
 === Configurar variáveis globais
 
 As variáveis definidas nesta seção se aplicam a todos os hosts Oracle, bancos de dados e ao cluster ONTAP .
@@ -556,6 +560,7 @@ control_files:
 ====
 
 
+[[automation-playbooks]]
 === Manuais de Automação
 
 Há quatro manuais separados que precisam ser executados.
@@ -687,6 +692,7 @@ NOTE: Este manual não será executado até que você esteja pronto para restaur
 ====
 
 
+[[recovering-oracle-database]]
 === Recuperando o banco de dados Oracle
 
 . Os volumes de dados dos bancos de dados Oracle de produção local são protegidos por meio da replicação do NetApp SnapMirror para um cluster ONTAP redundante no data center secundário ou no Cloud Volume ONTAP na nuvem pública.  Em um ambiente de recuperação de desastres totalmente configurado, as instâncias de computação de recuperação no data center secundário ou na nuvem pública ficam em espera e prontas para recuperar o banco de dados de produção em caso de desastre.  As instâncias de computação em espera são mantidas sincronizadas com as instâncias locais por meio da execução de atualizações paralelas no patch do kernel do sistema operacional ou atualização em sincronia.

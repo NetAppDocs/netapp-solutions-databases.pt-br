@@ -20,6 +20,7 @@ A solução fornece uma visão geral e detalhes para backup, recuperação e clo
 
 
 
+[[purpose]]
 == Propósito
 
 O software NetApp SnapCenter software é uma plataforma empresarial fácil de usar para coordenar e gerenciar com segurança a proteção de dados em aplicativos, bancos de dados e sistemas de arquivos.  Ele simplifica o gerenciamento do ciclo de vida de backup, restauração e clonagem, transferindo essas tarefas para os proprietários dos aplicativos sem sacrificar a capacidade de supervisionar e regular a atividade nos sistemas de armazenamento.  Ao aproveitar o gerenciamento de dados baseado em armazenamento, ele permite maior desempenho e disponibilidade, bem como tempos reduzidos de teste e desenvolvimento.
@@ -34,6 +35,7 @@ Esta solução aborda os seguintes casos de uso:
 
 
 
+[[audience]]
 == Público
 
 Esta solução é destinada às seguintes pessoas:
@@ -46,18 +48,21 @@ Esta solução é destinada às seguintes pessoas:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente de teste e validação de soluções
 
 Os testes e a validação desta solução foram realizados em um ambiente de laboratório que pode não corresponder ao ambiente de implantação final.  Veja a seção<<Fatores-chave para consideração de implantação>> para maiores informações.
 
 
 
+[[architecture]]
 === Arquitetura
 
 image:snapctr-psql-brc-architecture.png["Esta imagem fornece uma visão detalhada do backup, recuperação e clonagem do PostgreSQL com o SnapCenter."]
 
 
 
+[[hardware-and-software-components]]
 === Componentes de hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -98,6 +103,7 @@ image:snapctr-psql-brc-architecture.png["Esta imagem fornece uma visão detalhad
 |===
 
 
+[[postgresql-database-configuration-in-the-lab-environment]]
 === Configuração do banco de dados PostgreSQL no ambiente de laboratório
 
 [cols="33%, 33%, 33%"]
@@ -117,6 +123,7 @@ image:snapctr-psql-brc-architecture.png["Esta imagem fornece uma visão detalhad
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fatores-chave para consideração de implantação
 
 * * Implantação do SnapCenter .*  O SnapCenter pode ser implantado em um domínio do Windows ou em um ambiente de grupo de trabalho.  Para implantação baseada em domínio, a conta de usuário do domínio deve ser uma conta de administrador de domínio ou o usuário do domínio deve pertencer ao grupo de administradores locais no servidor de hospedagem do SnapCenter .
@@ -128,12 +135,14 @@ image:snapctr-psql-brc-architecture.png["Esta imagem fornece uma visão detalhad
 
 
 
+[[solution-deployment]]
 == Implantação da solução
 
 As seções a seguir fornecem procedimentos passo a passo para implantação, configuração, backup, recuperação e clonagem do banco de dados PostgreSQL do SnapCenter no armazenamento NetApp ONTAP na nuvem pública ou no local.
 
 
 
+[[prerequisites-for-deployment]]
 === Pré-requisitos para implantação
 
 [%collapsible%open]
@@ -145,6 +154,7 @@ As seções a seguir fornecem procedimentos passo a passo para implantação, co
 ====
 
 
+[[snapcenter-installation-and-setup]]
 === Instalação e configuração do SnapCenter
 
 [%collapsible%open]
@@ -205,6 +215,7 @@ image:snapctr-psql-bkup-001.png["Esta imagem fornece Configurações-Políticas 
 ====
 
 
+[[database-backup]]
 === Backup de banco de dados
 
 [%collapsible%open]
@@ -296,6 +307,7 @@ image:snapctr-psql-bkup-019.png["Esta imagem fornece backup de banco de dados pa
 ====
 
 
+[[database-recovery]]
 === Recuperação de banco de dados
 
 [%collapsible%open]
@@ -404,6 +416,7 @@ postgres=# select now();
 ====
 
 
+[[database-clone]]
 === Clone de banco de dados
 
 [%collapsible%open]
@@ -479,6 +492,7 @@ postgres=# select pg_read_file('/etc/hostname') as hostname;
 ====
 
 
+[[where-to-find-additional-information]]
 == Onde encontrar informações adicionais
 
 Para saber mais sobre as informações descritas neste documento, revise os seguintes documentos e/ou sites:

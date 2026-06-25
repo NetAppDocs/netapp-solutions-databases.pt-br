@@ -20,6 +20,7 @@ A solução fornece uma visão geral e detalhes para implantação e proteção 
 
 
 
+[[purpose]]
 == Propósito
 
 O VMware vSphere Virtual Volumes (vVols) é uma estrutura de gerenciamento e integração SAN/NAS que expõe discos virtuais como objetos de armazenamento nativos e permite operações baseadas em matriz no nível do disco virtual.  Em outras palavras, os vVols tornam os dispositivos SAN/NAS compatíveis com VM e desbloqueiam a capacidade de aproveitar serviços de dados baseados em array com uma abordagem centrada em VM na granularidade de um único disco virtual. Os vVols permitem que os clientes aproveitem os recursos exclusivos de seus investimentos atuais em armazenamento e façam a transição sem interrupções para um modelo operacional mais simples e eficiente, otimizado para ambientes virtuais que funcionam em todos os tipos de armazenamento.
@@ -34,6 +35,7 @@ Esta solução aborda os seguintes casos de uso:
 
 
 
+[[audience]]
 == Público
 
 Esta solução é destinada às seguintes pessoas:
@@ -46,18 +48,21 @@ Esta solução é destinada às seguintes pessoas:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente de teste e validação de soluções
 
 O teste e a validação desta solução foram realizados em um ambiente de laboratório no VCF com armazenamento de dados vVols no armazenamento NetApp ONTAP AFF que pode não corresponder ao ambiente de implantação final. Para mais informações, consulte a seção <<Fatores-chave para consideração de implantação>> .
 
 
 
+[[architecture]]
 === Arquitetura
 
 image:vcf-orarac-vvol-architecture.png["Esta imagem fornece uma visão detalhada da configuração de implantação do Oracle na nuvem pública da AWS com iSCSI e ASM."]
 
 
 
+[[hardware-and-software-components]]
 === Componentes de hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -107,6 +112,7 @@ image:vcf-orarac-vvol-architecture.png["Esta imagem fornece uma visão detalhada
 |===
 
 
+[[oracle-rac-database-configuration-in-vcf]]
 === Configuração do banco de dados Oracle RAC em VCF
 
 [cols="33%, 33%, 33%"]
@@ -126,6 +132,7 @@ image:vcf-orarac-vvol-architecture.png["Esta imagem fornece uma visão detalhada
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fatores-chave para consideração de implantação
 
 * *Protocolo para conectividade de cluster vVols com ONTAP .*  NFS ou iSCSI são boas escolhas.  Os níveis de desempenho são equivalentes.  Nesta demonstração de solução, usamos iSCSI como um protocolo de armazenamento para conectividade vVols com o cluster de armazenamento ONTAP sublinhado.  Se a infraestrutura VCF for compatível, os protocolos FC/FCoE e NVMe/FC também serão suportados para armazenamentos de dados vVols no NetApp ONTAP.
@@ -138,12 +145,14 @@ image:vcf-orarac-vvol-architecture.png["Esta imagem fornece uma visão detalhada
 
 
 
+[[solution-deployment]]
 == Implantação da solução
 
 As seções a seguir fornecem procedimentos passo a passo para implantação do banco de dados Oracle 19c no VCF com datastores vVols no armazenamento NetApp ONTAP em uma configuração Oracle RAC.
 
 
 
+[[prerequisites-for-deployment]]
 === Pré-requisitos para implantação
 
 [%collapsible%open]
@@ -163,6 +172,7 @@ NOTE: Certifique-se de ter alocado pelo menos 50 GB no volume raiz da VM Oracle 
 ====
 
 
+[[create-storage-capability-profile]]
 === Criar perfil de capacidade de armazenamento
 
 [%collapsible%open]
@@ -202,6 +212,7 @@ image:vcf-ora-vvol-scp-007.png["Captura de tela mostrando uma configuração de 
 ====
 
 
+[[create-and-configure-vvols-datastore]]
 === Criar e configurar o armazenamento de dados vVols
 
 [%collapsible%open]
@@ -256,6 +267,7 @@ image:vcf-orarac-vvol-datastore-007.png["Captura de tela mostrando a configuraç
 ====
 
 
+[[create-vm-storage-policy-based-on-storage-capability-profile]]
 === Crie uma política de armazenamento de VM com base no perfil de capacidade de armazenamento
 
 [%collapsible%open]
@@ -299,6 +311,7 @@ image:vcf-ora-vvol-vm-policy-007.png["Captura de tela mostrando uma configuraç�
 ====
 
 
+[[allocate-disks-to-rac-vms-from-vvols-datastores-and-configure-db-storage]]
 === Alocar discos para VMs RAC de datastores vVols e configurar armazenamento de BD
 
 [%collapsible%open]
@@ -467,6 +480,7 @@ UUID=aff942c4-b224-4b62-807d-6a5c22f7b623 /boot                   xfs     defaul
 ====
 
 
+[[oracle-rac-deployment-in-vcf]]
 === Implantação do Oracle RAC em VCF
 
 [%collapsible%open]
@@ -626,6 +640,7 @@ ansible-playbook -i hosts 0-all_playbook.yml -u admin -e @vars/vars.yml
 ====
 
 
+[[oracle-rac-deployment-validation-in-vcf]]
 === Validação de implantação do Oracle RAC em VCF
 
 [%collapsible%open]
@@ -939,6 +954,7 @@ image:vcf-orarac-vvol-em-001.png["Captura de tela mostrando a configuração do 
 ====
 
 
+[[oracle-rac-database-backup-and-recovery-in-vcf-with-snapcenter]]
 === Backup e recuperação de banco de dados Oracle RAC em VCF com SnapCenter
 
 
@@ -1199,6 +1215,7 @@ Isso conclui a demonstração de backup, restauração e recuperação do SnapCe
 ====
 
 
+[[where-to-find-additional-information]]
 == Onde encontrar informações adicionais
 
 Para saber mais sobre as informações descritas neste documento, revise os seguintes documentos e/ou sites:

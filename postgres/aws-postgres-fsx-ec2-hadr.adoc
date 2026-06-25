@@ -20,6 +20,7 @@ Esta solução fornece uma visão geral e detalhes para implantação de banco d
 
 
 
+[[purpose]]
 == Propósito
 
 O PostgreSQL é um banco de dados de código aberto amplamente utilizado e classificado como o número quatro entre os dez mecanismos de banco de dados mais populares pelalink:https://db-engines.com/en/ranking["Motores DB"^] .  Por um lado, o PostgreSQL deriva sua popularidade de seu modelo de código aberto e sem licença, ao mesmo tempo em que possui recursos sofisticados.  Por outro lado, por ser de código aberto, há escassez de orientações detalhadas sobre implantação de banco de dados de nível de produção na área de alta disponibilidade e recuperação de desastres (HA/DR), especialmente na nuvem pública.  Em geral, pode ser difícil configurar um sistema HA/DR PostgreSQL típico com espera ativa e passiva, replicação de streaming e assim por diante.  Testar o ambiente HA/DR promovendo o site de espera e depois alternando de volta para o principal pode causar interrupções na produção.  Há problemas de desempenho bem documentados no primário quando cargas de trabalho de leitura são implantadas em espera ativa de streaming.
@@ -37,6 +38,7 @@ Esta solução aborda os seguintes casos de uso:
 
 
 
+[[audience]]
 == Público
 
 Esta solução é destinada às seguintes pessoas:
@@ -49,18 +51,21 @@ Esta solução é destinada às seguintes pessoas:
 
 
 
+[[solution-test-and-validation-environment]]
 == Ambiente de teste e validação de soluções
 
 O teste e a validação desta solução foram realizados em um ambiente AWS FSx e EC2 que pode não corresponder ao ambiente de implantação final. Para mais informações, consulte a seção <<Fatores-chave para consideração de implantação>> .
 
 
 
+[[architecture]]
 === Arquitetura
 
 image:aws-postgres-fsx-ec2-architecture.png["Esta imagem fornece uma visão detalhada da organização da solução de nuvem híbrida PostgreSQL, incluindo o lado local e o site da AWS."]
 
 
 
+[[hardware-and-software-components]]
 === Componentes de hardware e software
 
 [cols="33%, 33%, 33%"]
@@ -95,6 +100,7 @@ image:aws-postgres-fsx-ec2-architecture.png["Esta imagem fornece uma visão deta
 |===
 
 
+[[key-factors-for-deployment-consideration]]
 === Fatores-chave para consideração de implantação
 
 * *Backup, restauração e recuperação de banco de dados PostgreSQL.*  Um banco de dados PostgreSQL suporta vários métodos de backup, como um backup lógico usando pg_dump, um backup físico on-line com pg_basebackup ou um comando de backup de sistema operacional de nível inferior e snapshots consistentes no nível de armazenamento.  Esta solução usa snapshots de grupo de consistência do NetApp para backup, restauração e recuperação de dados de banco de dados PostgreSQL e volumes WAL no site em espera.  Os instantâneos de volume do grupo de consistência do NetApp sequenciam E/S conforme são gravados no armazenamento e protegem a integridade dos arquivos de dados do banco de dados.
@@ -108,6 +114,7 @@ image:aws-postgres-fsx-ec2-architecture.png["Esta imagem fornece uma visão deta
 
 
 
+[[solution-deployment]]
 == Implantação de solução
 
 A implantação desta solução pode ser concluída automaticamente usando o kit de ferramentas de automação baseado em NetApp Ansible, seguindo as instruções detalhadas descritas abaixo.
@@ -123,6 +130,7 @@ video::e479b91f-eacd-46bf-bfa1-b01200f0015a[panopto]
 
 
 
+[[prerequisites-for-automated-deployment]]
 === Pré-requisitos para implantação automatizada
 
 A implantação requer os seguintes pré-requisitos.
@@ -155,6 +163,7 @@ ansible-galaxy collection install -r collections/requirements.yml --force --forc
 
 
 
+[[configure-the-hosts-file]]
 === Configurar o arquivo hosts
 
 Insira o IP de gerenciamento do cluster FSx ONTAP primário e os nomes dos hosts das instâncias EC2 no arquivo de hosts.
@@ -180,6 +189,7 @@ psql_01s ansible_ssh_private_key_file=psql_01s.pem
 ....
 
 
+[[configure-the-hostname-yml-file-in-the-hostvars-folder]]
 === Configure o arquivo host_name.yml na pasta host_vars
 
 [source, shell]
@@ -204,6 +214,7 @@ client_address: "172.30.15.0/24"
 ----
 
 
+[[configure-the-global-fsxvars-yml-file-in-the-vars-folder]]
 === Configure o arquivo global fsx_vars.yml na pasta vars
 
 [source, shell]
@@ -291,6 +302,7 @@ redhat_sub_password: "xxxxx"
 ----
 
 
+[[postgresql-deployment-and-hadr-setup]]
 === Implantação do PostgreSQL e configuração de HA/DR
 
 As tarefas a seguir implantam o serviço do servidor de banco de dados PostgreSQL e inicializam o banco de dados no site principal no host do servidor de banco de dados EC2 principal.  Um host de servidor de banco de dados EC2 primário em espera é então configurado no site em espera.  Por fim, a replicação do volume do BD é configurada do cluster FSx do site principal para o cluster FSx do site de espera para recuperação de desastres.
@@ -336,6 +348,7 @@ ansible-playbook -i hosts postgresql_standby_setup.yml -u ec2-user --private-key
 ----
 
 
+[[postgresql-database-snapshot-backup-and-replication-to-standby-site]]
 === Backup e replicação de snapshots de banco de dados PostgreSQL para site standby
 
 O backup e a replicação de snapshots do banco de dados PostgreSQL para o site standby podem ser controlados e executados no controlador Ansible com um intervalo definido pelo usuário.  Validamos que o intervalo pode ser de apenas 5 minutos.  Portanto, no caso de falha no site principal, há 5 minutos de potencial perda de dados se a falha ocorrer logo antes do próximo backup de instantâneo agendado.
@@ -346,6 +359,7 @@ O backup e a replicação de snapshots do banco de dados PostgreSQL para o site 
 ----
 
 
+[[failover-to-standby-site-for-dr]]
 === Failover para o site em espera para DR
 
 Para testar o sistema HA/DR do PostgreSQL como um exercício de DR, execute o failover e a recuperação do banco de dados PostgreSQL na instância primária do EC2 DB em espera no site em espera, executando o seguinte manual.  Em um cenário de DR real, execute o mesmo para um failover real para o site de DR.
@@ -356,6 +370,7 @@ ansible-playbook -i hosts postgresql_failover.yml -u ec2-user --private-key psql
 ----
 
 
+[[resync-replicated-db-volumes-after-failover-test]]
 === Ressincronizar volumes de banco de dados replicados após teste de failover
 
 Execute a ressincronização após o teste de failover para restabelecer a replicação do SnapMirror do volume do banco de dados.
@@ -366,12 +381,14 @@ ansible-playbook -i hosts postgresql_standby_resync.yml -u ec2-user --private-ke
 ----
 
 
+[[failover-from-primary-ec2-db-server-to-standby-ec2-db-server-due-to-ec2-compute-instance-failure]]
 === Failover do servidor de banco de dados EC2 primário para o servidor de banco de dados EC2 em espera devido a falha na instância de computação do EC2
 
 A NetApp recomenda executar failover manual ou usar um cluster de sistema operacional bem estabelecido que pode exigir uma licença.
 
 
 
+[[where-to-find-additional-information]]
 == Onde encontrar informações adicionais
 
 Para saber mais sobre as informações descritas neste documento, revise os seguintes documentos e/ou sites:

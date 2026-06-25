@@ -13,6 +13,7 @@ summary: Crie o banco de dados primário do Oracle no armazenamento iSCSI do Goo
 [role="lead"]
 Crie o banco de dados primário do Oracle no armazenamento iSCSI do Google Cloud NetApp Volumes usando o Assistente de Configuração do Banco de Dados Oracle no modo silencioso. Este procedimento abrange executar  `dbca` para criar o banco de dados de contêiner e o banco de dados plugável em grupos de discos ASM com suporte do GCNV, configurar os destinos de log de arquivamento e adicionar um serviço de aplicativo baseado em funções para failover transparente após a ativação do Data Guard.
 
+[[create-primary-database]]
 .Passos
 Crie o banco de dados de contêiner Oracle e o banco de dados plugável em  `oracdb1` usando  `dbca` no modo silencioso, configure os destinos de log de arquivamento, verifique o registro do Oracle Restart e adicione um serviço de aplicativo baseado em funções para failover transparente do cliente.
 
@@ -92,6 +93,7 @@ Após a ativação do Data Guard Broker,  `orclapp` é executado somente no PRIM
 
 
 
+[[whats-next]]
 == Qual é o próximo passo?
 
 Para configurar a proteção em espera e a prontidão para failover, acesse xref:gcnv-oracle-standby-database.adoc[Crie o banco de dados standby do Oracle] em  `oracdb2`.

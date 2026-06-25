@@ -20,6 +20,7 @@ As seções a seguir fornecem os principais fatores a serem considerados ao migr
 
 
 
+[[ontap-storage-is-available-on-premises]]
 == O armazenamento ONTAP está disponível no local
 
 Se o banco de dados Oracle local estiver em um array de armazenamento ONTAP , será mais fácil configurar a replicação para migração de banco de dados usando a tecnologia NetApp SnapMirror , integrada ao armazenamento ONTAP do AWS FSx.  O processo de migração pode ser orquestrado usando o console NetApp BlueXP .
@@ -39,6 +40,7 @@ O vídeo a seguir demonstra como migrar um banco de dados Oracle local para o AW
 video::c0df32f8-d6d3-4b79-b0bd-b01200f3a2e8[panopto]
 
 
+[[ontap-storage-is-not-available-on-premises]]
 == O armazenamento ONTAP não está disponível no local
 
 Se o banco de dados Oracle local estiver hospedado em um armazenamento de terceiros diferente do ONTAP, a migração do banco de dados será baseada na restauração de uma cópia de backup do banco de dados Oracle.  Você deve reproduzir o log de arquivo para torná-lo atual antes de alternar.
@@ -58,6 +60,7 @@ O AWS S3 pode ser usado como uma área de armazenamento temporário para movimen
 
 
 
+[[migrate-on-premises-oracle-databases-to-aws-fsxec2-using-pdb-relocation-with-maximum-availability]]
 == Migrar bancos de dados Oracle locais para AWS FSx/EC2 usando a realocação de PDB com disponibilidade máxima
 
 Essa abordagem de migração é mais adequada para bancos de dados Oracle que já estão implantados no modelo multilocatário PDB/CDB, e o armazenamento ONTAP não está disponível no local.  O método de realocação de PDB utiliza a tecnologia de clonagem dinâmica do Oracle PDB para mover PDBs entre um CDB de origem e um CDB de destino, minimizando a interrupção do serviço.

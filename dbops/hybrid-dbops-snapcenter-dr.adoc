@@ -18,6 +18,7 @@ As empresas adotaram a nuvem pública como um recurso viável e destino para rec
 
 
 
+[[clone-an-on-premises-oracle-production-db-to-cloud-for-dr]]
 == Clonar um banco de dados de produção Oracle local para a nuvem para recuperação de desastres
 
 . Para validar se a recuperação do clone é executada pelo último log disponível, criamos uma pequena tabela de teste e inserimos uma linha.  Os dados de teste seriam recuperados após uma recuperação completa do último log disponível.
@@ -97,6 +98,7 @@ image:snapctr-ora-dr-016-a.png["Figura mostrando diálogo de entrada/saída ou r
 
 
 
+[[post-dr-clone-validation-and-configuration-for-oracle]]
 == Validação e configuração de clone pós-DR para Oracle
 
 . Valide a última transação de teste que foi liberada, replicada e recuperada no local de DR na nuvem.
@@ -117,6 +119,7 @@ NOTE: A divisão de clones pode incorrer em utilização temporária de espaço 
 
 
 
+[[clone-an-on-premises-sql-production-db-to-cloud-for-dr]]
 == Clonar um banco de dados de produção SQL local para a nuvem para recuperação de desastres
 
 . Da mesma forma, para validar se a recuperação do clone SQL foi executada no último log disponível, criamos uma pequena tabela de teste e inserimos uma linha.  Os dados de teste seriam recuperados após uma recuperação completa do último log disponível.
@@ -162,6 +165,7 @@ image:snapctr-sql-dr-010.png["Figura mostrando diálogo de entrada/saída ou rep
 
 
 
+[[post-dr-clone-validation-and-configuration-for-sql]]
 == Validação e configuração do clone pós-DR para SQL
 
 . Monitore o status do trabalho de clonagem.
@@ -179,6 +183,7 @@ image:snapctr-sql-dr-012.png["Figura mostrando diálogo de entrada/saída ou rep
 
 
 
+[[where-to-go-for-help]]
 == Onde procurar ajuda?
 
 Se precisar de ajuda com esta solução e casos de uso, junte-se a nóslink:https://netapppub.slack.com/archives/C021R4WC0LC["Canal do Slack de suporte da comunidade de automação de soluções da NetApp"] e procure o canal de automação de soluções para postar suas dúvidas ou perguntas.

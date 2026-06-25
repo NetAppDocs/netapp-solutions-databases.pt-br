@@ -15,6 +15,7 @@ Google Cloud NetApp Volumes oferece storage em blocos iSCSI de alto desempenho p
 
 
 
+[[architecture-overview]]
 == Visão geral da arquitetura
 
 Esta arquitetura usa o armazenamento em blocos iSCSI do *Google Cloud NetApp Volumes (GCNV)* para fornecer alta disponibilidade para o *Oracle Database 26ai* no Google Cloud com o *Oracle Data Guard*.
@@ -58,6 +59,7 @@ Use *GCNV replicate, snapshot ou clone* para inicializar o banco de dados em esp
 |===
 
 
+[[zoning]]
 === Zoneamento
 
 Implante um pool GCNV Flex Unified por zona de banco de dados e atribua volumes dedicados a cada host. Use discos de inicialização apenas para o sistema operacional.
@@ -66,6 +68,8 @@ Implante um pool GCNV Flex Unified por zona de banco de dados e atribua volumes 
 
 
 
+[[architecture-reference-diagram]]
+[[reference-diagram]]
 == Diagrama de referência de arquitetura
 
 A arquitetura da solução fornece três caminhos de dados independentes. A replicação de storage e o transporte de redo do Data Guard são caminhos separados.
@@ -80,6 +84,7 @@ image::gcnv-oracle-26ai-ha.png[Arquitetura de referência GCNV]
 
 
 
+[[platform-roles]]
 == Funções da plataforma
 
 A tabela a seguir resume qual camada da plataforma fornece serviços de storage e qual camada fornece sincronização de banco de dados e controle de failover.
@@ -98,6 +103,7 @@ A replicação GCNV executa uma cópia de linha de base e, em seguida, atualiza�
 
 
 
+[[topology-and-storage]]
 == Topologia e armazenamento
 
 Essa topologia coloca as funções de primário, standby e observador em zonas separadas e mapeia cada host de banco de dados para pools GCNV dedicados e volumes iSCSI dedicados.
@@ -133,6 +139,7 @@ Exemplo `n4-highmem-8` nesta solução; cargas de trabalho OLTP normalmente usam
 
 
 
+[[whats-next]]
 == Qual é o próximo passo?
 
 Para escolher o caminho de implantação que corresponda aos seus objetivos de recuperação e disponibilidade, acesse xref:gcnv-oracle-deployment-options.adoc[Saiba mais sobre as opções de implantação do Oracle Database 26ai no Google Cloud NetApp Volumes].
