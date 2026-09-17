@@ -526,7 +526,7 @@ Para saber mais sobre as informações descritas neste documento, revise os segu
 
 * NETAPP ASA: MATRIZ SAN TOTALMENTE FLASH
 +
-link:https://www.netapp.com/data-storage/all-flash-san-storage-array/["https://www.netapp.com/data-storage/all-flash-san-storage-array/"^]
+link:https://www.netapp.com/pdf.html?item=/media/85736-ds-4254-asa.pdf["https://www.netapp.com/pdf.html?item=/media/85736-ds-4254-asa.pdf"^]
 
 * Instalando o Oracle Grid Infrastructure para um servidor autônomo com uma nova instalação de banco de dados
 +

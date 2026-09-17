@@ -186,4 +186,4 @@ image:snapctr-sql-dr-012.png["Figura mostrando diálogo de entrada/saída ou rep
 [[where-to-go-for-help]]
 == Onde procurar ajuda?
 
-Se precisar de ajuda com esta solução e casos de uso, junte-se a nóslink:https://netapppub.slack.com/archives/C021R4WC0LC["Canal do Slack de suporte da comunidade de automação de soluções da NetApp"] e procure o canal de automação de soluções para postar suas dúvidas ou perguntas.
+Se você precisar de ajuda com o kit de ferramentas, visite o link:https://community.netapp.com/["Comunidade NetApp"^] e publique suas perguntas.

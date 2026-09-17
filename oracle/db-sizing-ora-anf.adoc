@@ -93,7 +93,7 @@ Recuperar o kit de ferramentas do repositóriolink:https://netapp.sharepoint.com
 ====
 O kit de ferramentas consiste em um analisador HTML baseado na web e dois scripts SQL para coletar informações do banco de dados Oracle.  A saída é então inserida em um modelo do Excel para gerar diretrizes de dimensionamento de computação e armazenamento para o servidor de banco de dados Oracle.
 
-* Use umlink:https://app.atroposs.com/#/awr-module["Analisador HTML"^] Módulo AWR para recuperar informações de dimensionamento de um banco de dados Oracle atual de um relatório AWR.
+* Utilize um módulo AWR de análise HTML para recuperar informações de dimensionamento de um banco de dados Oracle atual a partir de um relatório AWR.
 * Execute ora_db_data_szie.sql como um DBA para recuperar o tamanho físico do arquivo de dados Oracle do banco de dados.
 * Execute ora_db_logs_size.sql como um DBA para recuperar o tamanho dos logs arquivados do Oracle com a janela de retenção de logs arquivados desejada (dias).
 * Insira as informações de dimensionamento obtidas acima no arquivo de modelo do Excel oracle_db_sizing_template_anf.xlsx para criar um guia de dimensionamento sobre computação e armazenamento para o servidor Oracle DB.
