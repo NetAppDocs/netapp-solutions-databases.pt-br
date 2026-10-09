@@ -153,10 +153,3 @@ image:snapctr-sql-clone-010.png["Figura mostrando diálogo de entrada/saída ou 
 . Elimine bancos de dados clonados e limpe o ambiente do servidor de banco de dados na nuvem.  Em seguida, siga os procedimentos anteriores para clonar um novo banco de dados com dados atualizados.  Leva apenas alguns minutos para clonar um novo banco de dados.
 . Desligue o banco de dados clone e execute um comando de atualização do clone usando a CLI.  Consulte a seguinte documentação do SnapCenter para obter detalhes:link:https://docs.netapp.com/us-en/snapcenter/protect-sco/task_refresh_a_clone.html["Atualizar um clone"^] .
 
-
-
-
-[[where-to-go-for-help]]
-== Onde procurar ajuda?
-
-Se precisar de ajuda com esta solução e casos de uso, junte-se alink:https://netapppub.slack.com/archives/C021R4WC0LC["Canal do Slack de suporte da comunidade de automação de soluções da NetApp"] e procure o canal de automação de soluções para postar suas dúvidas ou perguntas.
