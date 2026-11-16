@@ -1,0 +1,115 @@
+---
+sidebar: sidebar 
+permalink: mssql/sql-smb3-aff-overview.html 
+keywords: Microsoft SQL server, SMB 3, AFF, ONTAP, continuous availability 
+summary: O SQL Server 2025 pode armazenar bancos de dados em compartilhamentos SMB 3 de disponibilidade contínua em um sistema AFF da NetApp que executa o ONTAP. Saiba mais sobre os benefícios, os componentes da solução, os princípios de design e como a disponibilidade contínua mantém os bancos de dados online durante um failover da controladora. 
+---
+= Saiba mais sobre o SQL Server 2025 no NetApp AFF com disponibilidade contínua do SMB 3
+:allow-uri-read: 
+:icons: font
+:experimental: 
+:nofooter: 
+:source-highlighter: highlight.js
+:svm: a50-sql
+:host: sql-1
+:svc-account: SAPCC\sql1admin
+:imagesdir: ../media/
+
+
+[role="lead"]
+O SQL Server 2025 pode armazenar bancos de dados em compartilhamentos SMB 3 continuamente disponíveis (CA) em um sistema AFF da NetApp que executa o ONTAP. Saiba mais sobre os benefícios, os componentes da solução e os princípios de design dessa configuração, e como a disponibilidade contínua mantém os bancos de dados online durante um failover de controlador.
+
+Microsoft SQL Server oferece suporte à colocação de arquivos de banco de dados em compartilhamentos de arquivos SMB desde o SQL Server 2012. Com os compartilhamentos SMB 3 continuamente disponíveis (CA), um compartilhamento de arquivos é uma opção de armazenamento compatível para bancos de dados do SQL Server e uma alternativa ao armazenamento em bloco (LUNs iSCSI ou FCP).
+
+O ONTAP em sistemas AFF all-flash implementa o SMB 3 nativamente. Combinado com o Microsoft SQL Server 2025 e o Windows Server 2025, isso fornece uma arquitetura de storage tolerante a falhas que se integra à proteção de dados da NetApp.
+
+Para implantar esta configuração, consulte link:sql-smb3-aff.html["Implante o SQL Server 2025 no NetApp AFF usando compartilhamentos SMB 3 continuamente disponíveis"].
+
+
+
+[[benefits-of-sql-server-on-smb-3-with-netapp-ontap]]
+[[why]]
+== Benefícios do SQL Server no SMB 3 com o NetApp ONTAP
+
+[cols="1,3"]
+|===
+| Benefício | Descrição 
+
+
+| Provisionamento simples | Não há LUNs, igroups, MPIO, inicialização de disco ou letras de unidade para gerenciar. O local de um arquivo de banco de dados é apenas um caminho UNC, como  `+\\a50-sql\sql1_data+`. 
+
+
+| Gerenciamento de capacidade | Você aumenta (ou diminui) um volume online no ONTAP, e o SQL Server reconhece a nova capacidade imediatamente. Nenhuma operação de disco ou partição do Windows é necessária, e o autogrow pode fazer isso automaticamente. 
+
+
+| Operações não disruptivas | Os compartilhamentos CA mantêm o SQL Server em execução durante o takeover/giveback do ONTAP, as atualizações não disruptivas (NDU), as migrações de LIF e as movimentações de volume. 
+
+
+| Desempenho e resiliência | O SMB multicanal distribui a E/S por vários caminhos de rede e NICs, sobrevivendo à perda de um único caminho. Os compartilhamentos SMB também são compatíveis com instâncias de cluster de failover (FCI) do SQL Server. 
+
+
+| Eficiência de storage | A deduplicação inline, a compressão e a compactação, juntamente com thin provisioning, reduzem a capacidade física utilizada pelos bancos de dados e backups. 
+
+
+| Proteção de dados integrada | Os snapshots do ONTAP, o SnapRestore, o FlexClone e o SnapMirror, orquestrados pelo NetApp SnapCenter, fornecem backups em segundos, restaurações em minutos e clones instantâneos de banco de dados. 
+
+
+| Flexibilidade | Bancos de dados podem ser movidos entre hosts simplesmente conectando-os a outro servidor, sem a necessidade de remapear o armazenamento. A mesma SVM também pode servir diretórios pessoais, serviços de arquivos ou outros aplicativos. 
+|===
+
+
+[[solution-components]]
+[[architecture]]
+== Componentes da solução
+
+A solução consiste nos seguintes componentes:
+
+[cols="1,3"]
+|===
+| Componente | Papel 
+
+
+| Host do Windows Server 2025 (`{host}`) | Executa o SQL Server 2025. Os binários do SQL Server e os bancos de dados do sistema estão no disco local; todos os bancos de dados de usuário, logs, TempDB e backups são acessados via SMB 3. 
+
+
+| O SQL Server 2025 | Mecanismo de banco de dados, executado em uma conta de serviço de domínio (`{svc-account}`) que tem acesso aos compartilhamentos SMB. 
+
+
+| O Active Directory e DNS | Autentica a conta de serviço do SQL Server e o servidor CIFS (Kerberos) e fornece resolução de nomes e sincronização de tempo. 
+
+
+| Par de HA do NetApp AFF A50 | Dois controladores com armazenamento NVMe compartilhado. Se um controlador falhar ou for atualizado, o outro assume o controle do armazenamento e das interfaces de rede. 
+
+
+| SVM `{svm}` | Um servidor CIFS dedicado, ingressado no Active Directory, com uma LIF de dados SMB por nó, hospedando quatro volumes com compartilhamentos de CA. 
+|===
+image::sql25_smb_bp_001.svg[Arquitetura da solução: SQL Server 2025 em compartilhamentos SMB 3 CA com o NetApp AFF]
+
+
+
+[[design-principles]]
+[[design]]
+== Princípios de design
+
+O projeto segue as melhores práticas da NetApp para SQL Server sobre SMB:
+
+* *Volumes separados por tipo de arquivo.* Dados, log de transações, TempDB e backups são colocados em volumes e compartilhamentos FlexVol separados. Cada volume pode ter seu próprio tamanho, QoS, eficiência, snapshot e configurações de replicação. O TempDB é excluído dos backups.
+* *Volumes distribuídos entre os dois nós.* Os volumes de dados e backup estão no nó 1, e os volumes de log e TempDB estão no nó 2, para que ambos os controladores executem trabalho útil.
+* *Um LIF de dados SMB por nó.* O host sempre tem um caminho direto para o nó que possui um volume, e o SMB multicanal pode usar ambos os caminhos.
+* *Estilo de segurança NTFS e compartilhamentos CA.* Eles são obrigatórios para o Microsoft SQL Server sobre SMB no ONTAP.
+* *Não há snapshots do ONTAP agendados nos volumes do banco de dados.* Os backups devem ser consistentes com a aplicação; eles são criados por SnapCenter.
+
+
+image::sql25_smb_bp_002.svg[Layout de armazenamento: arquivos do SQL Server para compartilhamentos SMB]
+
+
+
+[[how-continuous-availability-works]]
+[[ca]]
+== Como a disponibilidade contínua funciona
+
+Em um compartilhamento SMB padrão, o failover da controladora fecha os identificadores de arquivo abertos. O SQL Server então marca os bancos de dados afetados como suspeitos, e eles precisam ser recuperados manualmente.
+
+Com um compartilhamento CA, o ONTAP mantém o estado dos arquivos abertos (handles persistentes) espelhado no parceiro de HA. Durante um takeover, a LIF SMB do nó com falha migra para o parceiro. O cliente SMB 3 no host do SQL Server se reconecta automaticamente e recupera seus handles. O SQL Server observa apenas uma breve pausa de E/S de alguns segundos; os bancos de dados permanecem online e nenhuma transação é perdida. O mesmo se aplica a eventos planejados, como atualizações do ONTAP, giveback, migrações de LIF e movimentações de volume.
+
+image::sql25_smb_bp_003.svg[Como a disponibilidade contínua do SMB 3 protege o SQL Server]

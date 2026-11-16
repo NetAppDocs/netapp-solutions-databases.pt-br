@@ -6239,4 +6239,342 @@
   <block id="052b909238ebf4917da28464c5adb557" category="list-text">Utilize um módulo AWR de análise HTML para recuperar informações de dimensionamento de um banco de dados Oracle atual a partir de um relatório AWR.</block>
   <block id="a6a77e0f909108a38e794073d621e60b" category="paragraph"><block ref="a6a77e0f909108a38e794073d621e60b" category="inline-link-macro-rx"></block></block>
   <block id="e9b486ce2311e4e8df41ca775bcfeb34" category="list-text">*Requisitos de software do Oracle.* Em geral, um banco de dados standby físico deve ter a mesma versão do Database Home que o banco de dados primário, incluindo exceções de conjunto de patches (PSEs), atualizações críticas de patches (CPUs) e atualizações de conjunto de patches (PSUs), a menos que um processo de aplicação de patch do Oracle Data Guard Standby-First esteja em andamento (conforme descrito na nota 1265700.1 do My Oracle Support em <block ref="0ab5bd35a1fa5e1394476ebbb9c4d982" category="inline-link-macro-rx"></block></block>
+  <block id="4b22b6713bb327245f453cb82c306f34" category="section-title">GitHub link do repositório:</block>
+  <block id="1860e795946d4510c5099a85dbd81e87" category="inline-link">Repositório de automação do ciclo de vida de clone do Oracle</block>
+  <block id="8ffba5bb004be7f3569aa4602f05a582" category="paragraph">Para obter informações detalhadas e acesso ao repositório, visite:<block ref="b50d6e61ec5dc972af820c451e37af25" category="inline-link-rx"></block></block>
+  <block id="9a5f03516beadf98e613ee0c64314729" category="summary">O SQL Server 2025 pode armazenar bancos de dados em compartilhamentos SMB 3 de disponibilidade contínua em um sistema AFF da NetApp que executa o ONTAP. Saiba mais sobre os benefícios, os componentes da solução, os princípios de design e como a disponibilidade contínua mantém os bancos de dados online durante um failover da controladora.</block>
+  <block id="e5e780b2bd6b887822c1f388ad7b850d" category="doc">Saiba mais sobre o SQL Server 2025 no NetApp AFF com disponibilidade contínua do SMB 3</block>
+  <block id="d9d14c7de78ce4c3f8a34d01c516ed2c" category="paragraph">O SQL Server 2025 pode armazenar bancos de dados em compartilhamentos SMB 3 continuamente disponíveis (CA) em um sistema AFF da NetApp que executa o ONTAP. Saiba mais sobre os benefícios, os componentes da solução e os princípios de design dessa configuração, e como a disponibilidade contínua mantém os bancos de dados online durante um failover de controlador.</block>
+  <block id="0b01ab2accee4e5bafd862d0209a4b38" category="paragraph">Microsoft SQL Server oferece suporte à colocação de arquivos de banco de dados em compartilhamentos de arquivos SMB desde o SQL Server 2012. Com os compartilhamentos SMB 3 continuamente disponíveis (CA), um compartilhamento de arquivos é uma opção de armazenamento compatível para bancos de dados do SQL Server e uma alternativa ao armazenamento em bloco (LUNs iSCSI ou FCP).</block>
+  <block id="89737037979968a25959f2fe669b7d1a" category="paragraph">O ONTAP em sistemas AFF all-flash implementa o SMB 3 nativamente. Combinado com o Microsoft SQL Server 2025 e o Windows Server 2025, isso fornece uma arquitetura de storage tolerante a falhas que se integra à proteção de dados da NetApp.</block>
+  <block id="a3a5b907c8c58b796b958b85cdfed68d" category="inline-link-macro">Implante o SQL Server 2025 no NetApp AFF usando compartilhamentos SMB 3 continuamente disponíveis</block>
+  <block id="cd8a021f67336adbc723f5a9fc31355f" category="paragraph">Para implantar esta configuração, consulte <block ref="fc7276a57dd2b28893b3b90e3b5d3961" category="inline-link-macro-rx"></block>.</block>
+  <block id="ac054c35a6d0287b19b3751ee11f099d" category="section-title">Benefícios do SQL Server no SMB 3 com o NetApp ONTAP</block>
+  <block id="d0b37cb641df70f32a642387802f2cee" category="cell">Benefício</block>
+  <block id="18895318a93afa4f6fba5259b68ea39e" category="cell">Provisionamento simples</block>
+  <block id="265d023c69c5bd2102cd8d259c0e6806" category="cell">Não há LUNs, igroups, MPIO, inicialização de disco ou letras de unidade para gerenciar. O local de um arquivo de banco de dados é apenas um caminho UNC, como <block ref="149d64d77682ce5c0d9d11032ef638a1" prefix=" " category="inline-code"></block>.</block>
+  <block id="551046a95f0679cbc1f95351ef52e4e0" category="cell">Gerenciamento de capacidade</block>
+  <block id="b80b19da72fc2cf19378bc255f001e58" category="cell">Você aumenta (ou diminui) um volume online no ONTAP, e o SQL Server reconhece a nova capacidade imediatamente. Nenhuma operação de disco ou partição do Windows é necessária, e o autogrow pode fazer isso automaticamente.</block>
+  <block id="6cf72c001b2e1894f097105e8bb48949" category="cell">Operações não disruptivas</block>
+  <block id="6ba1736697b01c423adbdc1e2533008d" category="cell">Os compartilhamentos CA mantêm o SQL Server em execução durante o takeover/giveback do ONTAP, as atualizações não disruptivas (NDU), as migrações de LIF e as movimentações de volume.</block>
+  <block id="391dc675ec3d853200129b799ed5923e" category="cell">Desempenho e resiliência</block>
+  <block id="da4d48c2d75d376f6752c154de11353b" category="cell">O SMB multicanal distribui a E/S por vários caminhos de rede e NICs, sobrevivendo à perda de um único caminho. Os compartilhamentos SMB também são compatíveis com instâncias de cluster de failover (FCI) do SQL Server.</block>
+  <block id="fd18465573ec21a6218982055981f6b1" category="cell">Eficiência de storage</block>
+  <block id="e90342eadcdbbde63477faa85e7759f3" category="cell">A deduplicação inline, a compressão e a compactação, juntamente com thin provisioning, reduzem a capacidade física utilizada pelos bancos de dados e backups.</block>
+  <block id="e9552b607b183029e792a5ae3c72820f" category="cell">Proteção de dados integrada</block>
+  <block id="72bf6e4cd7f88ed4ad150bfa8e586930" category="cell">Os snapshots do ONTAP, o SnapRestore, o FlexClone e o SnapMirror, orquestrados pelo NetApp SnapCenter, fornecem backups em segundos, restaurações em minutos e clones instantâneos de banco de dados.</block>
+  <block id="44cc246b0c3bc5602ca81ab19e6a364f" category="cell">Flexibilidade</block>
+  <block id="35558d3f65b3d3fc51d1c7623d42c263" category="cell">Bancos de dados podem ser movidos entre hosts simplesmente conectando-os a outro servidor, sem a necessidade de remapear o armazenamento. A mesma SVM também pode servir diretórios pessoais, serviços de arquivos ou outros aplicativos.</block>
+  <block id="7e897f23ed71aef1c0a8acf1ae54e9e4" category="section-title">Componentes da solução</block>
+  <block id="49d99fd717c96e57811b6b6c56491963" category="paragraph">A solução consiste nos seguintes componentes:</block>
+  <block id="3a816644acd03ba2f8a79845d5ad8bd5" category="cell">Host do Windows Server 2025 <block ref="a510313d4617c90ad449cc16a56aeb37" prefix="(" category="inline-code"></block>)</block>
+  <block id="313cc080144b10caa2deed5f73e71c75" category="cell">Executa o SQL Server 2025. Os binários do SQL Server e os bancos de dados do sistema estão no disco local; todos os bancos de dados de usuário, logs, TempDB e backups são acessados via SMB 3.</block>
+  <block id="3fba0171e458258e875a2f8013e395b8" category="cell">O SQL Server 2025</block>
+  <block id="b56bc596be97ab2da6a23b22670902e0" category="cell">Mecanismo de banco de dados, executado em uma conta de serviço de domínio <block ref="68a05d2ca4eec9996eca00ec84658ccc" prefix="(" category="inline-code"></block>) que tem acesso aos compartilhamentos SMB.</block>
+  <block id="b77bcd4c1297bbaed9c783abcd7b3d8e" category="cell">O Active Directory e DNS</block>
+  <block id="ef0457e528e7716f7ebc67e88dee79d3" category="cell">Autentica a conta de serviço do SQL Server e o servidor CIFS (Kerberos) e fornece resolução de nomes e sincronização de tempo.</block>
+  <block id="4e42c2b62d361a47904ba59846a2b60e" category="cell">Par de HA do NetApp AFF A50</block>
+  <block id="0073b694950f90ca339aa2b85e5cf7bc" category="cell">Dois controladores com armazenamento NVMe compartilhado. Se um controlador falhar ou for atualizado, o outro assume o controle do armazenamento e das interfaces de rede.</block>
+  <block id="5f78e17bf5deb8db6337c337cf08be69" category="cell">SVM<block ref="0f9995c41e025956b46b86899a2f358e" prefix=" " category="inline-code"></block></block>
+  <block id="2d5e9fc1b4ea3c97952407175bcdb159" category="cell">Um servidor CIFS dedicado, ingressado no Active Directory, com uma LIF de dados SMB por nó, hospedando quatro volumes com compartilhamentos de CA.</block>
+  <block id="336e80272fe94c05dbc190113fce29de" category="image-alt">Arquitetura da solução: SQL Server 2025 em compartilhamentos SMB 3 CA com o NetApp AFF</block>
+  <block id="af8e7c7ff2867c484ab84dabd6c092a6" category="section-title">Princípios de design</block>
+  <block id="932a15a54f761577687e450f88417913" category="paragraph">O projeto segue as melhores práticas da NetApp para SQL Server sobre SMB:</block>
+  <block id="a40be14e756eec9252e3b8a60dbed28f" category="list-text">*Volumes separados por tipo de arquivo.* Dados, log de transações, TempDB e backups são colocados em volumes e compartilhamentos FlexVol separados. Cada volume pode ter seu próprio tamanho, QoS, eficiência, snapshot e configurações de replicação. O TempDB é excluído dos backups.</block>
+  <block id="3980b06e4590c5b9667d0c270afc6995" category="list-text">*Volumes distribuídos entre os dois nós.* Os volumes de dados e backup estão no nó 1, e os volumes de log e TempDB estão no nó 2, para que ambos os controladores executem trabalho útil.</block>
+  <block id="53fabca85a65e640b6dddf289f841439" category="list-text">*Um LIF de dados SMB por nó.* O host sempre tem um caminho direto para o nó que possui um volume, e o SMB multicanal pode usar ambos os caminhos.</block>
+  <block id="49b3d7900ce1d0dd66d25f200fd80432" category="list-text">*Estilo de segurança NTFS e compartilhamentos CA.* Eles são obrigatórios para o Microsoft SQL Server sobre SMB no ONTAP.</block>
+  <block id="d0fc83f64785f82356e6e4749cb84b2d" category="list-text">*Não há snapshots do ONTAP agendados nos volumes do banco de dados.* Os backups devem ser consistentes com a aplicação; eles são criados por SnapCenter.</block>
+  <block id="5dcc66366da879bad801ba4a027f06d2" category="image-alt">Layout de armazenamento: arquivos do SQL Server para compartilhamentos SMB</block>
+  <block id="1d981891cdbcff4fa149b90303b02f8b" category="section-title">Como a disponibilidade contínua funciona</block>
+  <block id="a0b539c0ef7a8f8540d1f81601e6279a" category="paragraph">Em um compartilhamento SMB padrão, o failover da controladora fecha os identificadores de arquivo abertos. O SQL Server então marca os bancos de dados afetados como suspeitos, e eles precisam ser recuperados manualmente.</block>
+  <block id="9a9611a2fc2b0e3111b95798abee853b" category="paragraph">Com um compartilhamento CA, o ONTAP mantém o estado dos arquivos abertos (handles persistentes) espelhado no parceiro de HA. Durante um takeover, a LIF SMB do nó com falha migra para o parceiro. O cliente SMB 3 no host do SQL Server se reconecta automaticamente e recupera seus handles. O SQL Server observa apenas uma breve pausa de E/S de alguns segundos; os bancos de dados permanecem online e nenhuma transação é perdida. O mesmo se aplica a eventos planejados, como atualizações do ONTAP, giveback, migrações de LIF e movimentações de volume.</block>
+  <block id="68a7fec81dacdbb2eb199d187d47c01d" category="image-alt">Como a disponibilidade contínua do SMB 3 protege o SQL Server</block>
+  <block id="b1bdda888100157c9145c80c4415c635" category="summary">Implante o SQL Server 2025 no Windows Server 2025 com bancos de dados de usuário, logs de transações, TempDB e backups em compartilhamentos SMB 3 com disponibilidade contínua em um sistema AFF da NetApp. Este procedimento inclui a configuração da SVM, dos volumes e dos compartilhamentos do ONTAP, a instalação do SQL Server e a proteção dos bancos de dados com o SnapCenter.</block>
+  <block id="5d113f2038d289f391614c39043629e8" category="section-title">Escopo</block>
+  <block id="ef8f344fc12b771b420c627513b85bab" category="paragraph">Este procedimento implementa uma instância independente do SQL Server 2025 em um único host do Windows Server 2025, com bancos de dados de usuário, logs de transação, TempDB e backups em compartilhamentos SMB 3 com disponibilidade contínua (CA). O mesmo design de storage se aplica a instâncias de cluster de failover (FCI) do SQL Server e a grupos de disponibilidade Always On, mas a configuração específica do cluster não é abordada. O ajuste e o dimensionamento do SQL Server também estão fora do escopo. Para conhecer os benefícios, os componentes da solução, os princípios de design e uma explicação de como a disponibilidade contínua funciona, consulte <block ref="7c0cf893e1efe2282bb825673eeea746" category="inline-link-macro-rx"></block>.</block>
+  <block id="8d241ce2b8937cc22e15c547dc425518" category="paragraph">Este procedimento destina-se a:</block>
+  <block id="5e47e0a7a5cfbcef84a2777fe2d80790" category="list-text">*Administradores de armazenamento*, que configuram o cluster do ONTAP, a SVM, os volumes e os compartilhamentos SMB.</block>
+  <block id="7faed7098c1fcd94f33df1603c74e805" category="list-text">*Administradores do Windows e do Active Directory*, que preparam o host do Windows Server 2025, as contas de serviço e a rede.</block>
+  <block id="ef474691dd870b1632abdede79b51cf4" category="list-text">*Administradores de banco de dados*, que instalam e configuram o SQL Server 2025 e configuram backup e recuperação.</block>
+  <block id="6b1bc64bf98d1bba3f5c5fdaa97f95f4" category="paragraph">Pressupõe-se conhecimento básico de administração do ONTAP System Manager, do Windows Server e do SQL Server.</block>
+  <block id="5826faa3df11940cfda107bad27a7e9f" category="section-title">Ambiente de laboratório</block>
+  <block id="20104e865bc28cf00af9dce757890dfe" category="paragraph">As capturas de tela deste procedimento foram feitas no seguinte ambiente de laboratório. Substitua os valores pelos valores do seu ambiente.</block>
+  <block id="da64350834b32699a6df3ee588233a2e" category="cell">Valor utilizado no laboratório</block>
+  <block id="f31303ddb8ada38aed08c2bb8f9d8e6c" category="cell">Sistema de storage</block>
+  <block id="6d3ac96178be08197d970d844e47514f" category="cell">NetApp AFF A50 par de HA, cluster<block ref="61763985ee975379cf39f9e8e90af6ef" prefix=" " category="inline-code"></block>, ONTAP 9.19.1</block>
+  <block id="0b7e67b6cdcf0432b624d53588d520fb" category="cell">SVM</block>
+  <block id="d836e17a3a5f0fa376456f5fb98e46fa" category="cell"><block ref="0f9995c41e025956b46b86899a2f358e" prefix="" category="inline-code"></block> (nome do servidor CIFS<block ref="0bb9c007677adbe4eb12485d8fb23fd3" prefix=" " category="inline-code"></block>)</block>
+  <block id="2ca07bcf8bea9e1850eded715d3d9716" category="cell">LIFs de dados SMB</block>
+  <block id="31a6bdc2aa4914bcd75e8ea4123831ea" category="cell">192.168.175.138 (nó 1), 192.168.175.139 (nó 2)</block>
+  <block id="3deb1ebd9067e67bcf490b1a279d0679" category="cell">Domínio do Active Directory</block>
+  <block id="cc21aa49d8c3196d0345da14abd9f2dd" category="cell"><block ref="c189a9486546635ae44be80d16fbc48a" prefix="" category="inline-code"></block> <block ref="904d63a2d91fdd05d4f9e9540698a03a" prefix="(" category="inline-code"></block>)</block>
+  <block id="d1395d300c3eb2d6389098837ce303ae" category="cell">Host do SQL Server</block>
+  <block id="63aec1c121b5ba11b8e9778e3b960263" category="cell"><block ref="c1432b9a6e4c474447e47c933fe60a4b" prefix="" category="inline-code"></block>, o Windows Server 2025 Datacenter (Desktop Experience)</block>
+  <block id="a71f76c3256e4c206a4841d8eb0fed35" category="cell">Servidor SQL</block>
+  <block id="c8234c70f3676e94bd712d989dd4b854" category="cell">SQL Server 2025 Enterprise Edition (17.0.1000.7), instância padrão<block ref="1170cb78c9cb5739ad3aa617ce7bb623" prefix=" " category="inline-code"></block></block>
+  <block id="a32bbc83ddc50a2e32cc3fd8dc55de6b" category="cell">Conta de serviço do SQL Server</block>
+  <block id="297b7ccb68f65743fb302ed19bfafa99" category="cell"><block ref="68a05d2ca4eec9996eca00ec84658ccc" prefix="" category="inline-code"></block> (conta de domínio)</block>
+  <block id="751d1b8e2bac264b0f00d895bae3e7c2" category="cell">Volume / compartilhamento</block>
+  <block id="20b8de33e0786d066905c97ba57538b5" category="cell">Caminho UNC</block>
+  <block id="f15c1cae7882448b3fb0404682e17e61" category="cell">Conteúdo</block>
+  <block id="80b2d62488fe4f6404dfe743ccc3ef25" category="cell"><block ref="1db0e2a92e9428ed5a57e01255595054" prefix="" category="inline-code"></block></block>
+  <block id="a4d507be1fa6eb57912137f10a4d585f" category="cell">1024 GiB</block>
+  <block id="99c5ac0bc281c51248ba95d85d43fcfb" category="cell"><block ref="149d64d77682ce5c0d9d11032ef638a1" prefix="" category="inline-code"></block></block>
+  <block id="af594d5a403d53eca8b7563fe96df950" category="cell">Arquivos de dados do banco de dados do usuário <block ref="937f38432beb92fdba3d47780720bdf7" prefix="(" category="inline-code"></block>,<block ref="4442d437b1e8cc735e4bd36be19ff09e" prefix=" " category="inline-code"></block>)</block>
+  <block id="55bf3b1f00f8b9ec0f03d5bcb49d57c4" category="cell"><block ref="3149f7cfc8b673bf880af3bdebe8f7f5" prefix="" category="inline-code"></block></block>
+  <block id="29cc74b59b2010a3083f619aeef4bbbe" category="cell">512 GiB</block>
+  <block id="a57863f16dc58f2f3e72858ca3084ba3" category="cell"><block ref="f87bd90246cc2d4816d4ea7f54705a8b" prefix="" category="inline-code"></block></block>
+  <block id="8410627bc41cc6be8848fc422d4788dd" category="cell">Arquivos de log de transações do banco de dados do usuário <block ref="cb15b9539ae0d984ff8740c68b52561c" prefix="(" category="inline-code"></block>)</block>
+  <block id="d12e969b8ad71665e393393f6e802652" category="cell"><block ref="ecd1cf5febfdccaf7a3f8d1731f7f412" prefix="" category="inline-code"></block></block>
+  <block id="5930fa6915753c61e8ef266f7efef7f6" category="cell">500 GiB</block>
+  <block id="18245c4cd990c77f6f65b856caa7a69a" category="cell"><block ref="7f78c2478ed19c69cf2993e5c9543490" prefix="" category="inline-code"></block></block>
+  <block id="0810c2f9d0eb5f0a4bb0fd9f7f612eca" category="cell">Arquivos de dados e de log do TempDB</block>
+  <block id="26d4564cdd30133a3f1ae7852fe74ba7" category="cell"><block ref="dff642c9077793457a5a71aa6310a28e" prefix="" category="inline-code"></block></block>
+  <block id="8c2bef1020b23f0ad4f95df14d04d267" category="cell">2000 GiB</block>
+  <block id="1384ad80b9792cb2d51be13ba1c56d1f" category="cell"><block ref="e55df7df1a05baf82c865c1c433afbf4" prefix="" category="inline-code"></block></block>
+  <block id="59a7b5ffbe4af3ed1cfe4a3e81cd4e49" category="cell">Arquivos de backup nativos do SQL Server <block ref="5030a024be59c18a2cddf887ae389093" prefix="(" category="inline-code"></block>,<block ref="d19cf29da96e6d78382d934869ac10da" prefix=" " category="inline-code"></block>)</block>
+  <block id="3ef59b14417b68a4cf157d89af34ba58" category="admonition">Use volumes separados para dados, log, TempDB e backups. Isso permite aplicar diferentes configurações de QoS, snapshot, eficiência e replicação por volume. Isso também mantém o TempDB, que muda constantemente, fora dos snapshots dos seus bancos de dados de usuário.</block>
+  <block id="b5e8ccee5a825ede8bda8facb6a5dfce" category="paragraph">Certifique-se de atender aos seguintes requisitos antes de começar:</block>
+  <block id="7b02ea300aef2e0bff0d7f6111053284" category="list-title">NetApp ONTAP</block>
+  <block id="627e40d81aad3243f5904493e5ba94bf" category="list-text">O par de HA AFF está instalado, e o cluster está configurado e saudável.</block>
+  <block id="a342fd77ba981c355c6ee54fac7058eb" category="list-text">A licença CIFS (SMB) está instalada. Ela está incluída no ONTAP One.</block>
+  <block id="244133f234b917d24efa3b2531520755" category="list-text">Existe pelo menos um agregado de dados (camada local) em cada nó.</block>
+  <block id="5854ddbf7c26defb93a843f6534af72d" category="list-text">O horário é sincronizado entre o cluster e o Active Directory por meio do NTP. O desvio máximo permitido no relógio Kerberos é de 5 minutos.</block>
+  <block id="707ea9d9ed45b657a9cb516ad4462880" category="list-text">As portas de rede de dados, o domínio de broadcast e, opcionalmente, as VLANs para as LIFs SMB estão configurados.</block>
+  <block id="3d658e33d64b512b08cbb66bcfb5db1a" category="list-text">Um domínio do Active Directory está disponível, e os servidores DNS podem ser acessados a partir das LIFs de dados do SVM.</block>
+  <block id="e644a7b2dfd25ec95f8f84be9de456df" category="list-text">Você possui uma conta com permissão para criar objetos de computador na Unidade Organizacional (OU) de destino, para o servidor CIFS.</block>
+  <block id="068c0a7128a470025af0784228561505" category="list-text">Uma conta de usuário de domínio dedicada como conta de serviço está disponível para os serviços do SQL Server Database Engine e do SQL Server Agent.</block>
+  <block id="f1e7bb099e6f65501776a2f351b2418e" category="admonition">O SQL Server deve ser executado em uma *conta de domínio* quando seus arquivos estiverem em um compartilhamento SMB. Contas virtuais internas <block ref="a452a9912d72fd3e307deb581b4c20b8" prefix="(" category="inline-code"></block>) e contas locais não podem receber permissão para acessar um compartilhamento de arquivos remoto.</block>
+  <block id="5c7326ad4d7ecd77c19e67acea1928f1" category="list-text">Windows Server 2025 (Desktop Experience) está instalado, atualizado e integrado ao domínio.</block>
+  <block id="afeeb60b151d0ba7e2f7d4cefce81923" category="list-text">A mídia de instalação do SQL Server 2025 (ISO) e uma chave de produto válida (ou uma edição gratuita) estão disponíveis.</block>
+  <block id="315cdd78aef95d9ddd6c4a5ab768ad8f" category="list-title">Requisitos e restrições de SMB para o SQL Server no ONTAP</block>
+  <block id="16b88d015499e2456045a862adbfe5fb" category="list-text">O SMB 3.0 ou posterior deve estar habilitado na SVM.</block>
+  <block id="7589e290f105ce3231ad18c1c4af4ae6" category="list-text">Todos os volumes que hospedam compartilhamentos CA devem usar o estilo de segurança *NTFS* e devem ter sido NTFS desde o início.</block>
+  <block id="b9d26e1991dc731d52425dbc11853be6" category="list-text">SMB Direct (RDMA) não é suportado.</block>
+  <block id="9850630cac7280a58b6e5304c00c3519" category="list-text">O ReFS não é suportado. O ONTAP (WAFL) fornece o sistema de arquivos para os compartilhamentos.</block>
+  <block id="4948b5e6210b0191c89fdc71942759a8" category="section-title">Etapa 1: preparar o cluster ONTAP</block>
+  <block id="94863856140064fa5abe15b25a8a0d4b" category="paragraph">Conecte-se ao ONTAP System Manager e verifique se o horário do cluster está sincronizado com o Active Directory. A autenticação Kerberos para os compartilhamentos SMB falha se a diferença de horário exceder 5 minutos.</block>
+  <block id="65aa69526d96b1872209be2d3a2f1e46" category="list-text">Abra um navegador da web e conecte-se ao ONTAP System Manager em<block ref="84444c635ea3dde5d6105192639767f8" prefix=" " category="inline-code"></block>. Faça login com a conta de administrador do cluster.</block>
+  <block id="6015ee0c3c4dbc37f534783a65239e72" category="example-title">Mostrar exemplo</block>
+  <block id="f1c6dde9997293839a61f615ce7f7bfb" category="inline-image-macro">Login no ONTAP System Manager</block>
+  <block id="bbf89722f66b235b42009d72f7658eea" category="paragraph"><block ref="bbf89722f66b235b42009d72f7658eea" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="6c94c298918cd36985f5c3b67f0db2eb" category="list-text">O *Dashboard* é o ponto de entrada para configurações adicionais no System Manager.</block>
+  <block id="cded4e4cf669674474c088dcb56821ef" category="inline-image-macro">Painel do System Manager</block>
+  <block id="160db2acc304623c3a14e52afea708cf" category="paragraph"><block ref="160db2acc304623c3a14e52afea708cf" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="aaf1fe9a71dbe92bd6acfcd4d17cd17b" category="list-text">Se o NTP ainda não estiver configurado, adicione seus controladores de domínio ou os servidores NTP corporativos usando a CLI (SSH para a LIF de gerenciamento do cluster):</block>
+  <block id="7e8376531e9c87e2b9f075d85b37dea9" category="section-title">Etapa 2: criar e configurar a máquina virtual de storage (SVM)</block>
+  <block id="cfbdc9acb744a212a3cc5b53301d3013" category="paragraph">Use uma SVM dedicada para o SQL Server. A SVM ingressa no Active Directory como um servidor CIFS e fornece uma LIF de dados SMB em cada nó do par de HA.</block>
+  <block id="5171043e35bc60ef2f54ce82259cc7e3" category="list-text">Crie a SVM com System Manager ou a CLI:</block>
+  <block id="26ed02718973e705cd69ee6e109400e0" category="open-title">System Manager</block>
+  <block id="3313ef0aaad8486923b1c53c879820a0" category="list-text">No System Manager, acesse o menu:Cluster[VMs de armazenamento] e clique em *+ Adicionar*.</block>
+  <block id="64c00d986acaa21ec67860f957175d8c" category="inline-image-macro">Cluster &amp;gt; VMs de armazenamento &amp;gt; Adicionar</block>
+  <block id="04d079067d040ee2cd619805c136f79f" category="paragraph"><block ref="bdcd5b7d8faf0576c9df0bab6eaab207" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="aeef53ceb6c4667b68bf7fab99455c5a" category="list-text">Insira o *nome da VM de armazenamento*<block ref="33e5c7c8ea835e97413729f5fd65e1fe" prefix=" " category="inline-code"></block>. Em *Protocolo de acesso*, selecione a guia *SMB/CIFS, NFS, S3* e selecione *Habilitar SMB/CIFS*.</block>
+  <block id="c41ce183e71fcd563ab9ec04d0dcf5db" category="inline-image-macro">Adicionar VM de storage: nome e protocolo</block>
+  <block id="e61b31a520943f7b9341698dffdaf452" category="paragraph"><block ref="e61b31a520943f7b9341698dffdaf452" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="702be0585cb536ce2216013d0d25afb5" category="admonition">O nome da VM de storage é o nome SMB do servidor CIFS.</block>
+  <block id="20134bbb7612fe6b503b380d8bae40c8" category="list-text">Insira as informações do Active Directory (domínio, nome e senha do administrador e OU) e as informações de DNS (domínio DNS e servidores de nomes).</block>
+  <block id="15fb97d81ad13039a5aabdb742a3a3a9" category="list-text">Em *interface de rede*, configure uma LIF de dados em *cada* nó.</block>
+  <block id="2610087a23934e1a1d3d28994413b61d" category="admonition">Uma LIF por nó fornece ao SQL Server um caminho direto (local) para cada nó, sendo um pré-requisito para o SMB multicanal e para failover sem interrupções. Utilize portas de 25 GbE ou mais rápidas e o mesmo MTU de ponta a ponta.</block>
+  <block id="68fea58560e0d9f013a0e2340634ed22" category="inline-link">Mapeie o servidor SMB para o servidor DNS</block>
+  <block id="f80453b762c1f113d773a6d79f2dd53b" category="admonition">Você deve registrar essas interfaces de rede em seu servidor DNS. Para obter detalhes, consulte<block ref="144d71c862444f6add3319b6cc614a9a" category="inline-link-rx"></block>.</block>
+  <block id="870388a2bbcf4f86c6587b838d6a6ace" category="list-text">Clique em *Salvar*. O System Manager cria a SVM, o volume raiz, as LIFs e a configuração de DNS, e integra o servidor CIFS ao domínio.</block>
+  <block id="f8d13b6f175b2260a51cafe536870105" category="list-text">Verifique o volume raiz da SVM <block ref="9d591eedb67e390a4ec3d89d1cda8c2a" prefix="(" category="inline-code"></block> no laboratório). Ele deve usar o estilo de segurança *NTFS*, caso contrário os compartilhamentos SMB não funcionarão. Vá para menu:Storage[Volumes], selecione o volume raiz e clique em *Edit* para revisar suas configurações.</block>
+  <block id="760b4751ccfbdf15ae55a658dc5d3b74" category="inline-image-macro">Editar o volume raiz da SVM a50_sql_root</block>
+  <block id="0b6b762616e0749dfca25a354aba53dc" category="paragraph"><block ref="0b6b762616e0749dfca25a354aba53dc" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="de134183bea5df515a6756a539ce6f18" category="open-title">ONTAP CLI</block>
+  <block id="b3333c7881dd0990c6c2bc1c1f440cbb" category="paragraph">Os comandos a seguir criam a mesma configuração a partir da CLI. Substitua os valores de espaço reservado entre sinais de maior e menor.</block>
+  <block id="ea8ed4ec68f498f8ad0c1481c5600f79" category="list-text">[[svm-smb-options,Configure as opções do servidor SMB]]Configure as opções do servidor SMB. Verifique se as opções de SMB necessárias para o SQL Server estão habilitadas na SVM:</block>
+  <block id="054b4f3ea543c990f6b125f41af6ebf7" category="cell">Opção</block>
+  <block id="98416cbb3dc66140de169deef7ec1c00" category="cell"><block ref="d0310102abc6faade95d051b98f3aa65" prefix="" category="inline-code"></block></block>
+  <block id="d1e2d4146dab334ccd5ac26aa1ddd7e5" category="cell">O SMB 3.x é necessário para compartilhamentos com disponibilidade contínua.</block>
+  <block id="f3b1f6bc05e3c2b2d9fa7ef241a31a05" category="cell"><block ref="327247320f3cbad8448f6ca2eba9a795" prefix="" category="inline-code"></block></block>
+  <block id="75641591c50c62f1c95eaf3f38994824" category="cell">O SMB multicanal usa várias conexões TCP e caminhos de rede para maior taxa de transferência e resiliência.</block>
+  <block id="aeb84397335ef2f1fdc7588a28163d3a" category="cell"><block ref="9688911e12f5f59a201d24665755d4d4" prefix="" category="inline-code"></block></block>
+  <block id="85ddf3b3a028da797bb5de2e141b949b" category="cell">Permite leituras e gravações SMB de até 1 MB.</block>
+  <block id="bbee5ba1457fc21c5322a5b0b1c57047" category="cell"><block ref="c8cbfd2f50fdbf173bee03e53cde192a" prefix="" category="inline-code"></block></block>
+  <block id="6378a9769b09cbab09618215154b5fc1" category="cell">Descarregamento de cópia ODX; as cópias são executadas dentro do sistema de storage.</block>
+  <block id="ee0140fadcea9addc67ff35509586f71" category="cell"><block ref="89765fb606bbbc2f6d95780f72d0d705" prefix="" category="inline-code"></block></block>
+  <block id="3c09f75d70ce7f8a11dafc70018d038e" category="cell">VSS remoto para compartilhamentos SMB. Necessário para aplicativos de backup que usam VSS para compartilhamentos SMB.</block>
+  <block id="8fe21c7b70ae107b4ebdd3aa0d58ef48" category="list-text">Verifique se o servidor CIFS está registrado no DNS e se pode ser resolvido a partir do host do SQL Server:</block>
+  <block id="662a2b906ebff637e132ebce3c457d65" category="section-title">Etapa 3: crie os volumes do SQL Server e os compartilhamentos SMB</block>
+  <block id="833c594bf0a70d2f0fe2e24ec9727ad4" category="paragraph">Crie um volume e um compartilhamento SMB para cada tipo de arquivo. O System Manager cria o compartilhamento juntamente com o volume.</block>
+  <block id="95db233edfb9fce2d38c4c32abe98ba4" category="list-text">No System Manager, expanda *Armazenamento* e clique em *Volumes*.</block>
+  <block id="b1bfbc37acc9c35f0e80b1d016a69f40" category="inline-image-macro">Menu de armazenamento no System Manager</block>
+  <block id="22b8104bbd037b14c93f60516bac0973" category="paragraph"><block ref="22b8104bbd037b14c93f60516bac0973" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="1e20e8d9ae1150c0be8fc409c81da6b0" category="list-text">A lista de volumes é aberta. Clique em *+ Adicionar*.</block>
+  <block id="e7daf78da370cd4be942c31be0b7b2f9" category="inline-image-macro">Página de volumes com filtro</block>
+  <block id="da4e63ea38a60b30306ba0512a49653d" category="paragraph"><block ref="da4e63ea38a60b30306ba0512a49653d" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="79b53be8863ba049dc8d9fb4b362a9b8" category="list-text">Crie o<block ref="1db0e2a92e9428ed5a57e01255595054" prefix=" " category="inline-code"></block> volume e seu compartilhamento SMB para os arquivos de dados do banco de dados do usuário.</block>
+  <block id="0ccdb410379d450e42eeea8d0edbbdf5" category="list-text">Na caixa de diálogo *Adicionar volume*, insira os seguintes valores:</block>
+  <block id="ed7fc4d75156b21cb2059f57b0b9356d" category="list-text">*Nome*:<block ref="1db0e2a92e9428ed5a57e01255595054" prefix=" " category="inline-code"></block></block>
+  <block id="1c2d1314be765336a9bb09f581203fd0" category="list-text">*VM de storage*:<block ref="33e5c7c8ea835e97413729f5fd65e1fe" prefix=" " category="inline-code"></block></block>
+  <block id="2e9c9da433717e3904b631c17a098e1d" category="list-text">*Capacidade*:<block ref="a4d507be1fa6eb57912137f10a4d585f" prefix=" " category="inline-code"></block></block>
+  <block id="f32838a8c552a77ff5623e82dd018b3d" category="list-text">*Nível de serviço de desempenho*: *Personalizado*, *Atribuir grupo de política de QoS*: *Existente* &gt;<block ref="334c4a4c42fdb79d7ebc3e73b517e6f8" prefix=" " category="inline-code"></block></block>
+  <block id="ef796e380e6d5499f8eb2466ca8c2e14" category="list-text">*Permissões de acesso*: selecione *Compartilhar via SMB/CIFS*. Nome do compartilhamento<block ref="1db0e2a92e9428ed5a57e01255595054" prefix=" " category="inline-code"></block>, conceda acesso ao(s) usuário(s)<block ref="f9ae5e5c44e59f94680af569879f704a" prefix=" " category="inline-code"></block>, permissão *Controle total*.</block>
+  <block id="569ed61f1e2cfb2cfd75db609e5c1b3d" category="list-text">*Proteção*: deixe *Ativar snapshots (local)* desmarcado. Os backups consistentes com a aplicação são criados pelo NetApp SnapCenter.</block>
+  <block id="4cc186df234138a57b2e8c5d8e5f7f8d" category="paragraph">Clique em *Salvar*.</block>
+  <block id="3de97c3b26b1ae011bf44baba4c8d59b" category="inline-image-macro">Adicionar volume sql1_data,width=450</block>
+  <block id="2a9e3cd6688299a4bb67c67224a554d6" category="paragraph"><block ref="2a9e3cd6688299a4bb67c67224a554d6" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="04ae62dcfe1f309012a05553519745f7" category="list-text">O volume foi criado e aparece como *Online*. Expanda a linha do volume para revisar os detalhes: estilo de segurança NTFS, caminhos de acesso SMB por ambas as LIFs <block ref="3f8d22655adbdcb90e86f5ec38a57d04" prefix="(" category="inline-code"></block> e<block ref="402aba1a12bafa59ebc8956ff737144b" prefix=" " category="inline-code"></block>) e o grupo de política de QoS.</block>
+  <block id="8b8a10fe45ae303408c1dcf8fb8af224" category="inline-image-macro">Volume sql1_data criado com compartilhamento SMB</block>
+  <block id="96ba6fdc67411a5918569c82d1974ee8" category="paragraph"><block ref="96ba6fdc67411a5918569c82d1974ee8" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="9c34d2a185a74279d135d6d1bda3ebd3" category="list-text">Repita os passos para os volumes de log, TempDB e backup com os tamanhos e nomes listados em <block ref="aaa1c396c737a3dbcedf45725a6e0bc3" category="inline-xref-macro-rx"></block>.</block>
+  <block id="349fbb4ba5acb5249e10fce44a8894fd" category="inline-image-macro">Todos os quatro volumes do SQL Server online,width=800</block>
+  <block id="cc6cb6e33dd81500f953f08a723f7467" category="paragraph"><block ref="cc6cb6e33dd81500f953f08a723f7467" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="3220af5b2f097beca983a8a6b0a1173d" category="admonition">Para simplificar, o laboratório concede *Everyone / Full control* no nível de compartilhamento. Em produção, restrinja a ACL de compartilhamento à conta de serviço do SQL Server, à conta do SQL Server Agent e ao grupo de administração de DBA, por exemplo:</block>
+  <block id="1c89513fce46acc4f71824bbdbb0f436" category="list-text">Repita os comandos para <block ref="3149f7cfc8b673bf880af3bdebe8f7f5" prefix=" " category="inline-code"></block>, <block ref="ecd1cf5febfdccaf7a3f8d1731f7f412" prefix=" " category="inline-code"></block> e <block ref="dff642c9077793457a5a71aa6310a28e" prefix=" " category="inline-code"></block>. A conta de serviço também precisa de *Controle Total* nas permissões NTFS da raiz do compartilhamento. O SQL Server Setup verifica isso, conforme mostrado em <block ref="fc33475c0e42af2287e091f8b3a95a8e" category="inline-xref-macro-rx"></block>.</block>
+  <block id="e3670c3bedd5b98398a2e78d03faa13b" category="section-title">Passo 4: ajuste as configurações do volume</block>
+  <block id="4564d864fb5c2928996ae9d1bb342bb6" category="paragraph">Revise e ajuste as configurações de espaço e de Snapshot de cada volume do SQL Server.</block>
+  <block id="f743feb23e482b741c2d27d69e1c7dad" category="list-text">Na lista de volumes, passe o cursor sobre o volume desejado e clique no ícone de lápis (*Editar*).</block>
+  <block id="69086bf2d51e62008b9f442c26975025" category="inline-image-macro">Ícone de edição na lista de volumes</block>
+  <block id="92ec2b013f9f9fdec49b42cdd9e43b51" category="paragraph"><block ref="92ec2b013f9f9fdec49b42cdd9e43b51" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="e06ff37c0524d49d3582a97eed91693b" category="list-text">Configure o volume da seguinte forma (mostrado para<block ref="1db0e2a92e9428ed5a57e01255595054" prefix=" " category="inline-code"></block>):</block>
+  <block id="f41920dd9f554d60bbd0f3b28ec44eac" category="list-text">*Habilitar thin provisioning*: selecionado</block>
+  <block id="e31c9a9a35a56b03e669ca17fc56a8c3" category="list-text">*Redimensionar automaticamente*: selecionado, *Modo de crescimento automático*: *Crescer*, *Tamanho máximo*: por exemplo<block ref="a48298ae429813776038785b3bc57e24" prefix=" " category="inline-code"></block> (cerca de 125–130 % do tamanho do volume)</block>
+  <block id="1fcd93cf125cc9a73c8daecf349ece95" category="list-text">*Habilitar reserva fracionária (100%)*: desmarcado</block>
+  <block id="0dd0b5f20877c8e5fcf3b32a226f6e46" category="list-text">*Tipo de segurança*:<block ref="bead6bebc11dade4ccad97fa037b72a6" prefix=" " category="inline-code"></block></block>
+  <block id="c387a4387bc3c1be71901787cffc8336" category="list-text">*reserva do Snapshot %*:<block ref="e4da3b7fbbce2345d7772b0674a318d5" prefix=" " category="inline-code"></block> <block ref="cfcd208495d565ef66e7dff9f98764da" prefix="(" category="inline-code"></block> para<block ref="ecd1cf5febfdccaf7a3f8d1731f7f412" prefix=" " category="inline-code"></block>)</block>
+  <block id="2fb2bd83802e486a5b59ba5ff6a12a39" category="list-text">*Agendar snapshots*: desmarcado. Snapshots que não são consistentes com a aplicação não têm utilidade para o SQL Server; use o NetApp SnapCenter em vez disso.</block>
+  <block id="a8e7ba92ead6bd5a56abb5430fe0ba56" category="list-text">*Exibir o diretório de snapshots para os clientes*: opcional (o laboratório o deixou selecionado; desmarcá-lo oculta<block ref="26bef40a7b3e14ad93e80f8f4be79090" prefix=" " category="inline-code"></block> do compartilhamento)</block>
+  <block id="f8013fcad1f7db2cbf2422e638bf6345" category="paragraph">Clique em *Salvar* e repita para<block ref="3149f7cfc8b673bf880af3bdebe8f7f5" prefix=" " category="inline-code"></block>,<block ref="ecd1cf5febfdccaf7a3f8d1731f7f412" prefix=" " category="inline-code"></block> e<block ref="dff642c9077793457a5a71aa6310a28e" prefix=" " category="inline-code"></block>.</block>
+  <block id="d96144930d10a358a3f6d8d1ebec983a" category="inline-image-macro">Editar configurações do volume sql1_data,width=450</block>
+  <block id="07fe37b06b2179694fce52c27435b077" category="paragraph"><block ref="07fe37b06b2179694fce52c27435b077" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="d60d886b3e43905f38fd57e381c1024b" category="admonition">Mantenha a eficiência de storage (desduplicação, compressão, compactação) ativada no AFF. É inline e não tem impacto mensurável no desempenho do SQL Server.</block>
+  <block id="165cc8849c0c21cfdb8ab6a7493a2165" category="section-title">Etapa 5: habilite disponibilidade contínua nos compartilhamentos SMB</block>
+  <block id="bcc415c28b6fc789de21f8b8bac37406" category="paragraph">A disponibilidade contínua é a configuração mais importante para o SQL Server em SMB. Sem ela, o SQL Server perde seus identificadores de arquivo abertos durante um takeover do ONTAP ou uma migração de LIF, e os bancos de dados entram em estado suspeito.</block>
+  <block id="d3a3f939276a99ffd9dc6d5ce892c3d7" category="list-text">Habilite a disponibilidade contínua nos compartilhamentos SMB com o System Manager ou a CLI:</block>
+  <block id="eee17ca86880c95e322945df37755514" category="list-text">Acesse o menu:armazenamento[Compartilhamentos SMB]. A lista mostra os quatro novos compartilhamentos e os compartilhamentos administrativos padrão<block ref="4528b86031e1415225ea3bb6ce07f003" prefix=" " category="inline-code"></block> e<block ref="928dca04b007296cb60df76fa4eb8b9b" prefix=" " category="inline-code"></block>.</block>
+  <block id="9fb5277ecc7b46ef578bd4e2a30a489a" category="image-alt">Lista de compartilhamentos SMB</block>
+  <block id="36bdd2f7d17ee6c0eb9fbb6aa02da1ba" category="list-text">Clique no ícone Mais (*⋮*) ao lado do compartilhamento<block ref="1db0e2a92e9428ed5a57e01255595054" prefix=" " category="inline-code"></block> e selecione Editar.</block>
+  <block id="bff630895e5d8d34ba378f9893f9b0b6" category="image-alt">Compartilhar menu de contexto com Edit</block>
+  <block id="5705c0539334e4f4105884a497b3ef20" category="list-text">Em *Propriedades de compartilhamento*, defina o seguinte:</block>
+  <block id="7ee10037ea214e89c361ec41a7b9f389" category="list-text">*Ativar disponibilidade contínua*: *selecionado*</block>
+  <block id="ec65102afa94217deaca5a9827b47120" category="list-text">*Permitir que os clientes acessem o diretório de snapshots*: desmarcado</block>
+  <block id="080b92be4698864cf03886d82020dc64" category="list-text">*Criptografar dados ao acessar este compartilhamento*: desmarcada (opcional, dependendo dos seus requisitos de segurança)</block>
+  <block id="b6cd5271135b514e608b2a794dbb647d" category="list-text">*Habilitar oplocks*: selecionado</block>
+  <block id="b1a7684d83c1bd6b14e6306d5029ec17" category="list-text">*Ativar notificação de alteração*: selecionado</block>
+  <block id="47e7da190b7deeb4b2541b71afe44bbd" category="list-text">*Habilitar enumeração baseada em acesso (ABE)*: desmarcado</block>
+  <block id="78044c8c0ed70821d8affd44d10d49cd" category="image-alt">Editar compartilhamento com disponibilidade contínua ativada</block>
+  <block id="03af6f28baab88f62a1a7a0744338fbc" category="list-text">Repita esses passos para<block ref="3149f7cfc8b673bf880af3bdebe8f7f5" prefix=" " category="inline-code"></block>,<block ref="ecd1cf5febfdccaf7a3f8d1731f7f412" prefix=" " category="inline-code"></block> e<block ref="dff642c9077793457a5a71aa6310a28e" prefix=" " category="inline-code"></block>.</block>
+  <block id="74b449afbfaf83129a806b0e1c54aef5" category="section-title">Etapa 6: preparar o Windows Server 2025</block>
+  <block id="39d7ca3e8b832275ed4e2138afb06164" category="paragraph">Execute os seguintes passos no host do SQL Server<block ref="a510313d4617c90ad449cc16a56aeb37" prefix=" " category="inline-code"></block> como administrador de domínio.</block>
+  <block id="9cca099a8274501622e35ecadf2bcbbd" category="list-text">Verifique se o servidor está ingressado no domínio e se o servidor CIFS pode ter o nome resolvido (consulte <block ref="54ffcd46dfdc8b9388da9607f93de1c5" category="inline-xref-macro-rx"></block>).</block>
+  <block id="0f954c812e2fc65d443422daffe3a836" category="list-text">Certifique-se de que a conta de serviço do SQL Server exista no Active Directory, por exemplo<block ref="8fdd80def5dfdac5b2f7a36dfaed7589" prefix=" " category="inline-code"></block>. Use a mesma conta para o Mecanismo de Banco de Dados e para o SQL Server Agent, ou use uma conta separada para cada um. Independentemente da sua escolha, conceda a cada conta acesso a todos os quatro compartilhamentos.</block>
+  <block id="e8d1133f64856e36e50a50e327d6d258" category="list-text">Testar o acesso aos compartilhamentos no contexto de segurança da conta de serviço:</block>
+  <block id="f1d0e1b1d1f79bae98429d1157e58fae" category="list-text">Abra a porta do SQL Server no firewall do Windows:</block>
+  <block id="5810a27850468d287bd61aa86d9261f2" category="list-text">Verifique a conexão SMB com a SVM. O dialeto deve ser 3.x e<block ref="1ae409c893484f52b1a38a2bc32435eb" prefix=" " category="inline-code"></block> deve ser<block ref="f827cf462f62848df37c5e1e94a4da74" prefix=" " category="inline-code"></block>:</block>
+  <block id="bafea0b552ad7163fbd3e7ec6ff0f028" category="admonition">Por padrão, o Windows Server 2025 exige assinatura SMB para todas as conexões SMB de saída. O ONTAP oferece suporte à assinatura SMB e a negocia automaticamente. A assinatura adiciona sobrecarga de CPU em ambas as extremidades, portanto, inclua-a em seus testes de desempenho. Não desative a assinatura sem uma revisão de segurança.</block>
+  <block id="c8f00cca5093dd948ab29536a021218e" category="section-title">Etapa 7: instalar o SQL Server 2025</block>
+  <block id="e4c1692804059eb2f53147fef57dbfc7" category="paragraph">Instale o SQL Server 2025 no host do Windows Server usando o assistente de instalação. Instale os binários e os bancos de dados do sistema no disco local e aponte o banco de dados do usuário, o log de transações, o TempDB e os locais de backup para os compartilhamentos SMB que você criou.</block>
+  <block id="ed8701cf3c16df3bdcffb619bb7d7a96" category="list-text">Inicie a instalação autônoma a partir do SQL Server Installation Center.</block>
+  <block id="1e1889dfa5357174e52435c2578b6a7a" category="list-text">Monte a imagem ISO do SQL Server 2025. No Explorador de Arquivos, abra a unidade de DVD <block ref="d844853b604c0c55996b9c26d035662b" prefix="(" category="inline-code"></block> no laboratório) e clique duas vezes em *setup*.</block>
+  <block id="2cc70602bb6ae73d818ae4c85c8cc8ef" category="inline-image-macro">Iniciando a instalação do SQL Server 2025</block>
+  <block id="03481ccfce337454cb974e890c4631df" category="paragraph"><block ref="03481ccfce337454cb974e890c4631df" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="a629bc12c7fb2cc588bae5d2d4b12d32" category="list-text">O *SQL Server Installation Center* é aberto. Selecione *Installation* no painel esquerdo e clique em *New SQL Server standalone installation or add features to an existing installation*.</block>
+  <block id="214939bd1a806f1f868014c4610096ee" category="inline-image-macro">Centro de Instalação do SQL Server,largura=600</block>
+  <block id="474dbb3f18dc499ec2a89ef5fe9d8826" category="paragraph"><block ref="474dbb3f18dc499ec2a89ef5fe9d8826" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="bc7b91bde7c413de7245780148d1e7b1" category="inline-image-macro">A instalação autônoma está sendo iniciada,width=600</block>
+  <block id="85c92c9cea1f407d9c59b43a19c88162" category="paragraph"><block ref="85c92c9cea1f407d9c59b43a19c88162" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="ea5e9a4444ec02d95bf24803e2ee2c9a" category="list-text">Selecione a edição do SQL Server, aceite os termos da licença e deixe o programa de instalação verificar se há atualizações do produto.</block>
+  <block id="e3ac17dec0780538c7c8ce3a62a7af67" category="list-text">Na página *Edição*, selecione *Inserir a chave do produto* e insira sua chave do produto ou selecione uma edição gratuita (Avaliação, Desenvolvedor Empresarial, Desenvolvedor Padrão ou Express). Selecione o tipo de licença que se aplica a você (*Eu tenho apenas uma licença do SQL Server* no laboratório) e clique em *Avançar*.</block>
+  <block id="167deecf12040ee6c01d331ab12c87a5" category="inline-image-macro">Página de edição,largura=600</block>
+  <block id="1bc7d59d6d32d8394fca952a95498817" category="paragraph"><block ref="1bc7d59d6d32d8394fca952a95498817" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="28a5b0e06f81ca1680cba2c0a2535c23" category="list-text">Na página *Termos da Licença*, leia os termos, selecione *Aceito os termos da licença e a Declaração de Privacidade* e clique em *Avançar*.</block>
+  <block id="06b9bd95a8a011cdb86681ed812337a5" category="inline-image-macro">Página de termos de licença,width=600</block>
+  <block id="dd28ba288de0804271856174b5d6303a" category="paragraph"><block ref="dd28ba288de0804271856174b5d6303a" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="4f617b57af63848a8161374593a405f5" category="list-text">Na página *Microsoft Update*, selecione *Usar o Microsoft Update para verificar se há atualizações (recomendado)* e clique em *Avançar*. A instalação então executa as verificações *Regras Globais*, *Atualizações de Produto*, *Instalar Arquivos de Instalação* e *Regras de Instalação*.</block>
+  <block id="c12aac395d1947c322f2aa873da66ae3" category="inline-image-macro">Página do Microsoft Update,largura=600</block>
+  <block id="9e4fe9b5931a60e587532c84e55d1dd7" category="paragraph"><block ref="9e4fe9b5931a60e587532c84e55d1dd7" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="d9e379632d082a3f70cbc11847d30cb2" category="list-text">Selecione os recursos do SQL Server e a instância a instalar. Os binários permanecem no disco local; somente os arquivos de banco de dados são colocados nos compartilhamentos SMB.</block>
+  <block id="40fd3e5cc022bb29b2577bd0435cb3fb" category="list-text">Na página *Seleção de Recursos*, selecione *Serviços do Mecanismo de Banco de Dados* e quaisquer recursos adicionais de que você precisa (o laboratório também selecionou *Replicação do SQL Server*). Deixe o *Diretório raiz da instância* e o *Diretório de recursos compartilhados* no disco local<block ref="d7aa32b0c582222819b91c8e0ccca765" prefix=" " category="inline-code"></block>. Os binários são instalados localmente; somente os arquivos do banco de dados vão para os compartilhamentos SMB.</block>
+  <block id="a473f23f0ec47e728c1b8a7d43637b33" category="inline-image-macro">Página de seleção de recursos,largura=600</block>
+  <block id="ae47a837ff85ff42cf23907058a835a4" category="paragraph"><block ref="ae47a837ff85ff42cf23907058a835a4" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="392fdfbfb2eadf1bc8915dbd12181edc" category="list-text">Na página *Configuração da Instância*, selecione *Instância padrão* <block ref="1170cb78c9cb5739ad3aa617ce7bb623" prefix="(" category="inline-code"></block>), ou insira uma instância nomeada e clique em *Avançar*.</block>
+  <block id="0dee2d904bcd13e2149a6682f56b00f5" category="inline-image-macro">Página de configuração da instância,largura=600</block>
+  <block id="93566dbda23ad69ac8c963392f06dd16" category="paragraph"><block ref="93566dbda23ad69ac8c963392f06dd16" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="814dbeb24b0de6eb90418363e1ce837c" category="list-text">Configure os serviços SQL Server Database Engine e SQL Server Agent para serem executados com uma conta de domínio que tenha acesso aos compartilhamentos SMB.</block>
+  <block id="8c44cea119c12004a893f07fd5d7001f" category="list-text">Na página *Configuração do Servidor*, guia *Contas de Serviço*, insira a conta de domínio e a senha para o *SQL Server Agent* e o *SQL Server Database Engine* e defina o *Tipo de Inicialização* como *Automático*.</block>
+  <block id="bd66c337b726f52f3f65309a96721b46" category="admonition">Use a conta de domínio que tenha controle total sobre os compartilhamentos SMB. A captura de tela mostra duas grafias diferentes <block ref="105651877cc71e5698501e9e6011a546" prefix="(" category="inline-code"></block> e<block ref="8fdd80def5dfdac5b2f7a36dfaed7589" prefix=" " category="inline-code"></block>). Certifique-se de que todas as contas que você inserir existam no Active Directory e tenham acesso a todos os quatro compartilhamentos.</block>
+  <block id="12c5ac51f1fbbae2fb0832e3f7f6dd74" category="admonition">Selecione *Conceder privilégio de Executar Tarefa de Manutenção de Volume ao Serviço do Mecanismo de Banco de Dados do SQL Server*. Isso permite a inicialização instantânea de arquivos, o que acelera consideravelmente a criação de bancos de dados, o crescimento de arquivos e as restaurações.</block>
+  <block id="f8e4f77c2c2494799e34cb12e41396b1" category="inline-image-macro">Configuração do servidor: contas de serviço,width=600</block>
+  <block id="7453169fd52da8f17aa8f175c808aa31" category="paragraph"><block ref="7453169fd52da8f17aa8f175c808aa31" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="bbcdeab8f93adae0bf0275256787a0cd" category="list-text">Defina o modo de autenticação e os administradores do SQL Server e insira os caminhos UNC dos compartilhamentos SMB para o banco de dados do usuário, o log de transações, o backup e os arquivos TempDB.</block>
+  <block id="756b589e1d50b5dd1f72688b48d9d810" category="list-text">Na página *Configuração do Mecanismo de Banco de Dados*, na guia *Configuração do Servidor*, selecione o modo de autenticação. O laboratório usa o *Modo Misto* com uma senha forte para a<block ref="c12e01f2a13ff5587e1e9e4aedb8242d" prefix=" " category="inline-code"></block> conta. Clique em *Adicionar Usuário Atual* e *Adicionar...* para adicionar os administradores do SQL Server (usuários ou, de preferência, um grupo do Active Directory).</block>
+  <block id="93833992b9d158a328fbab9fd341340b" category="admonition">Use o *modo de autenticação do Windows* a menos que os aplicativos exijam logins do SQL Server.</block>
+  <block id="1d75678f7061b55f0c114b670ff5bac0" category="inline-image-macro">Configuração do mecanismo de banco de dados: autenticação,width=600</block>
+  <block id="d449ad80aaf89fdfb843c90527d9eacd" category="paragraph"><block ref="d449ad80aaf89fdfb843c90527d9eacd" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="92ee1c2f5f07c3ebff64276b2007412b" category="list-text">Na guia *Diretórios de Dados*, insira os caminhos UNC dos compartilhamentos SMB:</block>
+  <block id="689202409e48743b914713f96d93947c" category="cell">Valor</block>
+  <block id="7b6aad253ce0f18cea130bfa3926e135" category="cell">Diretório raiz de dados</block>
+  <block id="fefd60a5c00c185f702a113bf86568fc" category="cell"><block ref="de4dfe2a9345a1c4e6e7dce2317df7fc" prefix="" category="inline-code"></block> (local; os bancos de dados do sistema permanecem em<block ref="d7aa32b0c582222819b91c8e0ccca765" prefix=" " category="inline-code"></block>)</block>
+  <block id="e9323b8efe31299dc87d987f766b68dd" category="cell">Diretório do banco de dados de usuários</block>
+  <block id="8a8a4ef9a4168378d78882e0d56a4403" category="cell">Diretório de logs do banco de dados de usuários</block>
+  <block id="a5911ec1963f4a94f8cff60f2fa0c932" category="cell">Diretório de backup</block>
+  <block id="00a942700279fb047607e28b930ab753" category="admonition">Para colocar os bancos de dados do sistema <block ref="eb0a191797624dd3a48fa681d3061212" prefix="(" category="inline-code"></block>,<block ref="20f35e630daf44dbfa4c3f68f5399d8c" prefix=" " category="inline-code"></block>,<block ref="fe2552ce114315ff0ef9ad5b1de6e028" prefix=" " category="inline-code"></block>) também no compartilhamento SMB, defina *Diretório raiz de dados* como um caminho UNC. Crie um novo volume e compartilhamento para os bancos de dados do sistema, se desejar.</block>
+  <block id="61731ddf06e3e9da4c702d735317344a" category="admonition">Você precisa usar os caminhos UNC para os diretórios pois unidades mapeadas não são suportadas.</block>
+  <block id="09c993880bdb53008d55a01821067a2e" category="inline-image-macro">Diretórios de dados com caminhos UNC,width=600</block>
+  <block id="f26bea966c595c90873e52e254bfcd69" category="paragraph"><block ref="f26bea966c595c90873e52e254bfcd69" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="1a8489a3eedf99f2f8d244328f584c2f" category="list-text">Na aba *TempDB*, selecione o diretório de dados local padrão e clique em *Remover*.</block>
+  <block id="b6b0d91ae329af6b2cc24601097e73b8" category="inline-image-macro">Aba TempDB - remover diretório padrão,largura=600</block>
+  <block id="0af4c7c4f0be58ca76dea7e6a5a2cb47" category="paragraph"><block ref="0af4c7c4f0be58ca76dea7e6a5a2cb47" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="5e2b7766bfdd41e8fbd54b28ba480dcd" category="list-text">Clique em *Adicionar...*. Na caixa de diálogo *Procurar pasta*, digite o caminho UNC<block ref="e5ad669accfc5fad5d5351cb17071d51" prefix=" " category="inline-code"></block> no campo *Pasta* e clique em *OK*.</block>
+  <block id="e80bf151818a95a3af440a0ccacab835" category="inline-image-macro">Aba TempDB: procure a pasta com caminho UNC,width=600</block>
+  <block id="5eee14abffcdc83c70f25522952b83ec" category="paragraph"><block ref="5eee14abffcdc83c70f25522952b83ec" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="e09035113f6e9610f052bce03a6da9fc" category="list-text">Defina o *Diretório de log* para o mesmo compartilhamento (clique em *...*). O laboratório usa<block ref="e5ad669accfc5fad5d5351cb17071d51" prefix=" " category="inline-code"></block> para os arquivos de dados do TempDB e o arquivo de log do TempDB. Os avisos em amarelo, que indicam que um servidor de arquivos foi especificado como diretório de dados, são esperados.</block>
+  <block id="6bf3c916f7672acd02a151ba3bb82e8e" category="admonition">Use um arquivo de dados TempDB por núcleo lógico da CPU, até 8 arquivos. Defina os tamanhos iniciais para o conjunto de trabalho esperado do TempDB, para que o TempDB não precise crescer durante a operação. Todos os arquivos de dados devem ter o mesmo tamanho e crescimento automático.</block>
+  <block id="aef3dfb715196d18e9f49b37ceb10254" category="admonition">Você precisa usar uma pasta para os arquivos de dados e de log do TempDB, caso contrário a instalação falhará.</block>
+  <block id="a18f9256da81d36bd1e4eb1c95f17ad4" category="inline-image-macro">TempDB configurado em compartilhamento SMB com avisos,width=600</block>
+  <block id="16b53729297ec82917a1ed7afed11a28" category="paragraph"><block ref="16b53729297ec82917a1ed7afed11a28" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="cc7c78412db2f7f29a762deca21521d3" category="list-text">Configure as guias *MaxDOP* e *Memory* de acordo com o seu dimensionamento (os valores padrão recomendados são um bom ponto de partida) e clique em *Avançar*.</block>
+  <block id="203c5daf345182c13b5017d6e8c54229" category="list-text">[[sql-dbengine,Etapa 7]]Para cada caminho UNC, a Instalação exibe uma caixa de diálogo solicitando que você verifique se a conta de serviço do SQL Server tem permissões de compartilhamento de Controle total no servidor de arquivos. Depois de verificar as permissões (consulte <block ref="d6183de85c3f115f0767ca60cce492f6" category="inline-xref-macro-rx"></block> e <block ref="3138e9523a710fd0af3072d59ae7151b" category="inline-xref-macro-rx"></block>), clique em *Sim*.</block>
+  <block id="5b425ccfb112747bf37dae5c4fee2ac9" category="inline-image-macro">Diálogo de confirmação de permissão do servidor de arquivos,width=600</block>
+  <block id="0a0858f3c075c7d0a4281eb045fb1403" category="paragraph"><block ref="0a0858f3c075c7d0a4281eb045fb1403" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="7dd21c7f81e4b8b03cd5a82db1b0fc8d" category="list-text">Revise o resumo da instalação, execute a instalação e confirme que todos os recursos foram instalados com sucesso.</block>
+  <block id="5c7003107ee5ebb4bf3de11ef071c925" category="list-text">Na página *Pronto para instalar*, revise o resumo e clique em *Instalar*.</block>
+  <block id="029389de93741986dedd4b908bf5997f" category="admonition">Copie o<block ref="55be1f644703e9352fe2208f4c3d0d2c" prefix=" " category="inline-code"></block> mostrado em *Caminho do arquivo de configuração*. Você pode usá-lo para instalações sem supervisão de hosts adicionais do SQL Server <block ref="6b04d268102a0f1ca0abfc09d6f2d4a3" prefix="(" category="inline-code"></block>.</block>
+  <block id="1c053d519767cb59a39522c02aa49026" category="inline-image-macro">Resumo pronto para instalar,width=600</block>
+  <block id="0ac10d967ff919321cbe5c6499cafff7" category="paragraph"><block ref="0ac10d967ff919321cbe5c6499cafff7" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="fda4178ea03d62057353474ad75a1337" category="list-text">Aguarde enquanto a instalação é executada.</block>
+  <block id="758f254e22ea60cefbd01dbc5ee239c8" category="inline-image-macro">Progresso da instalação,largura=600</block>
+  <block id="ad5bdadacd8356ecfb82abb4b75f0e18" category="paragraph"><block ref="ad5bdadacd8356ecfb82abb4b75f0e18" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="97aa59666f96514fe0bd768ece4c9f3b" category="list-text">Quando a instalação estiver concluída, verifique se todos os recursos exibem *Concluído com sucesso* e clique em *Fechar*.</block>
+  <block id="0c70f7f46bbb51bf80eaf24fefd85368" category="inline-image-macro">Instalação concluída,width=600</block>
+  <block id="c3d09e7de2c2a42269eba255b3251614" category="paragraph"><block ref="c3d09e7de2c2a42269eba255b3251614" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="5b9a289e84727b3c59a29d00fd303ff6" category="section-title">Etapa 8: verifique a instalação e crie um banco de dados</block>
+  <block id="2030c5f1be77a726bb3f12a9c3711836" category="paragraph">Crie um banco de dados de teste com o SQL Server Management Studio (SSMS) e verifique se seus arquivos de dados e de log estão nos compartilhamentos SMB. Opcionalmente, confirme no ONTAP se os arquivos abertos utilizam disponibilidade contínua.</block>
+  <block id="7a5a76ffb2247d51508633116d452a43" category="list-text">Instale o SQL Server Management Studio (SSMS) a partir do link *Instalar as Ferramentas de Gerenciamento do SQL Server* no Centro de Instalação, ou no site da Microsoft.</block>
+  <block id="9575b7bda07ea499cf17e803437361df" category="list-text">Inicie o SSMS e conecte-se à instância <block ref="2a97f64c219d863561a48b943aef22a3" prefix="(" category="inline-code"></block>) com autenticação do Windows.</block>
+  <block id="c0676c1715741c2e2187efb871dcb713" category="list-text">Clique com o botão direito do mouse em *Databases* e selecione *New Database...*. Insira um nome para o banco de dados <block ref="3c522a81589b9f1795ee642b7caa17a2" prefix="(" category="inline-code"></block> no laboratório), defina os tamanhos iniciais dos arquivos e clique em *OK*. Os caminhos dos arquivos de dados e de log são definidos por padrão para<block ref="149d64d77682ce5c0d9d11032ef638a1" prefix=" " category="inline-code"></block> e<block ref="f87bd90246cc2d4816d4ea7f54705a8b" prefix=" " category="inline-code"></block>.</block>
+  <block id="816b198388749d2d3300f54bb39b6267" category="inline-image-macro">Nova caixa de diálogo de banco de dados com caminhos UNC,width=800</block>
+  <block id="078c858c6afee52b9791e2bc8829c7cc" category="paragraph"><block ref="078c858c6afee52b9791e2bc8829c7cc" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="7a9ccbdae641dc8e345cf19498bd6a30" category="list-text">O novo banco de dados aparece no *Object Explorer*.</block>
+  <block id="048eae24455284ca7d95096460d91b51" category="inline-image-macro">SSMS Object Explorer com banco de dados SQ1,width=800</block>
+  <block id="0cb5541874d9a8d3912e492083a4df08" category="paragraph"><block ref="0cb5541874d9a8d3912e492083a4df08" category="inline-image-macro-rx" type="image"></block></block>
+  <block id="b67d0a88c153b402879e42bc3ecf7623" category="list-text">Verifique a localização dos arquivos com T-SQL:</block>
+  <block id="d81480a2e6560d327ee0f735121e28fe" category="list-text">Opcional: verifique a disponibilidade contínua dos arquivos abertos no ONTAP:</block>
+  <block id="7cd854ed184b09bc65bfec657f318833" category="paragraph">Todos os arquivos do SQL Server devem ser exibidos<block ref="402c43a875dbab5b40b9062b9fdb87bd" prefix=" " category="inline-code"></block>.</block>
+  <block id="454be895ab3d3f3b95047e17a6218080" category="section-title">Use um script da CLI do ONTAP para configurar o armazenamento de uma só vez</block>
+  <block id="64d7488705f6c5d8175f733ddedc6200" category="paragraph">O script a seguir contém a configuração de storage deste procedimento. Substitua os valores entre colchetes angulares antes de executá-lo.</block>
+  <block id="dfb28a0e171504d32021ef2943445d0c" category="admonition">Distribua os volumes entre os agregados de ambos os nós, por exemplo dados e backup no nó 1 e log e TempDB no nó 2. Isso utiliza os recursos de ambos os controladores.</block>
+  <block id="09cb668c48bd1e91e1b9d84e64c019dc" category="paragraph">Para obter mais informações sobre os tópicos abordados neste procedimento, consulte os seguintes recursos:</block>
+  <block id="f1c685b09b56fc2a4aaaeb8e94b509f4" category="inline-link">Microsoft SQL Server e SMB com o ONTAP</block>
+  <block id="f61b4ba8f5720d14329a36689528ce90" category="list-text">NetApp:<block ref="61b7d44ce1e0a6984b675e7dea7fac4c" category="inline-link-rx"></block></block>
+  <block id="ad991f8f32908bc151551b55169bcebb" category="inline-link">Configure o ONTAP para o Microsoft Hyper-V e o SQL Server em soluções SMB</block>
+  <block id="3c3168dd24f14b4504cde059a3c9df3b" category="list-text">NetApp:<block ref="a870649bb767ac1d16bad23728cb7b0f" category="inline-link-rx"></block></block>
+  <block id="472357733068c1fe3fca4e9fcfae6f4c" category="inline-link">Requisitos de servidor SMB e volume para o SQL Server em SMB</block>
+  <block id="42e2a3a40d50d469cb4eac53eb694689" category="list-text">NetApp:<block ref="ee84e79902bb1e84cb92f559e6d0aa81" category="inline-link-rx"></block></block>
+  <block id="b7e8c0212eded644c9467dcc9591a499" category="inline-link">Instale o SQL Server com armazenamento de compartilhamento de arquivos SMB</block>
+  <block id="553327fde4a25af56eb2728b98eaa7f5" category="list-text">Microsoft:<block ref="c9d1a7adc92602afe842d503656090ae" category="inline-link-rx"></block></block>
+  <block id="684a61c61cc522de778dd73d69a56db5" category="inline-link">SnapCenter Visão geral do plug-in para Microsoft SQL Server</block>
+  <block id="3f52115708b281e25b6da374ca2442d3" category="list-text">NetApp:<block ref="dc92474ceb32ba8120a2ad59530f0057" category="inline-link-rx"></block></block>
+  <block id="c9dd6bad4c7d561872f2e2d498a990bf" category="inline-link">Ferramenta de Matriz de Interoperabilidade (IMT)</block>
+  <block id="2e744d7458420edb1d67decd482527b8" category="list-text">NetApp:<block ref="e044cdc411e34564fc609d8f08e0201d" category="inline-link-rx"></block></block>
+  <block id="dff5ea1c0f4431208a1e86445b6115cf" category="section-title">9 de novembro de 2026</block>
+  <block id="2b3c56a48b86120d7fe5c64dfa29d907" category="inline-link-macro">Implantar o Microsoft SQL Server 2025 no Windows Server 2025 usando compartilhamentos continuamente disponíveis via SMB 3 no NetApp AFF</block>
+  <block id="88a76713cf7b76c7692d58c125f4b421" category="paragraph">Adicionado o documento do SQL Server SMB: <block ref="87713d86ecb117cf408e007449958e4a" category="inline-link-macro-rx"></block></block>
+  <block id="87841e293a5b7dec649c737a77757ef3" category="sidebar">SQL Server no NetApp AFF</block>
+  <block id="4885a19799c2ffd6767615a13415ab02" category="sidebar">Sobre o SQL Server 2025 no NetApp AFF</block>
+  <block id="daed062f8c9f45acfab189258d1f4694" category="sidebar">Implante o SQL Server 2025 no NetApp AFF</block>
 </blocks>

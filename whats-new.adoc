@@ -15,6 +15,13 @@ Aprenda o que há de novo em soluções de banco de dados.
 
 
 
+[[9-november-2026]]
+== 9 de novembro de 2026
+
+Adicionado o documento do SQL Server SMB: link:https://docs.netapp.com/us-en/mssql/sql-smb3-aff.html["Implantar o Microsoft SQL Server 2025 no Windows Server 2025 usando compartilhamentos continuamente disponíveis via SMB 3 no NetApp AFF"^]
+
+
+
 [[18-august-2025]]
 == 18 de agosto de 2025
 

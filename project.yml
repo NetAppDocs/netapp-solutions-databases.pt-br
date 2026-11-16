@@ -192,6 +192,13 @@ sidebar:
     - title: SQL Server Always On com Google Cloud NetApp Volumes
       pdf-filename: SQL Server Always On com Google Cloud NetApp Volumes
       url: "/mssql/gcnv-sql-aoag-setup.html"
+    - title: SQL Server no NetApp AFF
+      pdf-filename: SQL Server no NetApp AFF
+      entries:
+      - title: Sobre o SQL Server 2025 no NetApp AFF
+        url: "/mssql/sql-smb3-aff-overview.html"
+      - title: Implante o SQL Server 2025 no NetApp AFF
+        url: "/mssql/sql-smb3-aff.html"
     - title: SAP com Microsoft SQL Server no Windows usando Clustered Data ONTAP
       pdf-filename: SAP com Microsoft SQL Server no Windows usando Data ONTAP
       url: "/mssql/tr-4467.html"
