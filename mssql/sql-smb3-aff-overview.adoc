@@ -51,7 +51,7 @@ Para implantar esta configuração, consulte link:sql-smb3-aff.html["Implante o 
 | Eficiência de storage | A deduplicação inline, a compressão e a compactação, juntamente com thin provisioning, reduzem a capacidade física utilizada pelos bancos de dados e backups. 
 
 
-| Proteção de dados integrada | Os snapshots do ONTAP, o SnapRestore, o FlexClone e o SnapMirror, orquestrados pelo NetApp SnapCenter, fornecem backups em segundos, restaurações em minutos e clones instantâneos de banco de dados. 
+| Proteção de dados integrada | Os snapshots do ONTAP, o SnapRestore, o FlexClone e o SnapMirror, orquestrados pelo  https://docs.netapp.com/us-en/snapcenter/protect-scsql/concept_snapcenter_plug_in_for_microsoft_sql_server_overview.html["O NetApp SnapCenter"], fornecem backups em segundos, restaurações em minutos e clones instantâneos de banco de dados. 
 
 
 | Flexibilidade | Bancos de dados podem ser movidos entre hosts simplesmente conectando-os a outro servidor, sem a necessidade de remapear o armazenamento. A mesma SVM também pode servir diretórios pessoais, serviços de arquivos ou outros aplicativos. 

@@ -1,0 +1,1149 @@
+---
+sidebar: sidebar 
+permalink: mssql/sql-iscsi-aff.html 
+keywords: Microsoft SQL server, iSCSI, AFF, ONTAP, MPIO 
+summary: Implante o SQL Server 2025 no Windows Server 2025 com bancos de dados de usuário, logs de transações, TempDB e backups de log em LUNs iSCSI em um sistema AFF da NetApp. Este procedimento inclui configurar o iSCSI na SVM do ONTAP, o grupo de iniciadores e as LUNs, o iniciador iSCSI do Windows, o MPIO e os discos, além de instalar o SQL Server. 
+---
+= Implante o SQL Server 2025 no NetApp AFF usando LUNs iSCSI
+:allow-uri-read: 
+
+
+[role="lead"]
+Implante o SQL Server 2025 no Windows Server 2025 com bancos de dados de usuário, logs de transações, TempDB e backups de log em LUNs iSCSI em um sistema AFF da NetApp. Este procedimento inclui configurar o iSCSI na SVM do ONTAP, o grupo de iniciadores e as LUNs, o iniciador iSCSI do Windows, o MPIO e os discos, além de instalar o SQL Server.
+
+
+
+[[scope]]
+[[intro-scope]]
+== Escopo
+
+Este procedimento implementa uma instância independente do SQL Server 2025 em um único host Windows Server 2025, com bancos de dados de usuário, logs de transações, TempDB e backups de log em LUNs iSCSI. O mesmo design de storage se aplica a instâncias de cluster de failover (FCI) do SQL Server e a grupos de disponibilidade Always On, mas a configuração específica do cluster não é abordada. O ajuste de desempenho e o dimensionamento do SQL Server também estão fora do escopo. Para conhecer os benefícios, os componentes da solução, os princípios de design, uma explicação de como o multipath funciona e a proteção de dados com o NetApp Console Backup and Recovery, veja link:sql-iscsi-aff-overview.html["Saiba mais sobre o SQL Server 2025 no NetApp AFF com LUNs iSCSI"].
+
+
+
+[[audience]]
+[[intro-audience]]
+== Público
+
+Este procedimento destina-se a:
+
+* *Administradores de armazenamento*, que configuram o cluster do ONTAP, a SVM, as LIFs iSCSI, o grupo de iniciadores e as LUNs.
+* *Administradores do Windows*, que preparam o host do Windows Server 2025, o iniciador iSCSI, o MPIO e os discos.
+* *Administradores de banco de dados*, que instalam e configuram o SQL Server 2025 e configuram backup e recuperação.
+
+
+Pressupõe-se conhecimento básico de administração do ONTAP System Manager, do Windows Server e do SQL Server.
+
+
+
+[[lab-environment]]
+[[overview]]
+== Ambiente de laboratório
+
+As capturas de tela deste procedimento foram feitas no seguinte ambiente de laboratório. Substitua os valores pelos valores do seu ambiente.
+
+[cols="1,2"]
+|===
+| Componente | Valor utilizado no laboratório 
+
+
+| Sistema de storage | NetApp AFF A50 par de HA, cluster `{cluster}` (nós `{node1}`, `{node2}`), ONTAP 9.19.1 
+
+
+| SVM | `{svm}` 
+
+
+| nome do destino iSCSI | `{tgt-iqn}` (alias `{svm}`) 
+
+
+| LIFs iSCSI | 192.168.175.134 e 192.168.175.135 (nó `{node1}`), 192.168.175.136 e 192.168.175.137 (nó `{node2}`), sub-rede /24, domínio de broadcast `MT9000` 
+
+
+| Domínio do Active Directory | `{domain}` (`{fqdn-domain}`) 
+
+
+| Host do SQL Server | `{host}.{fqdn-domain}`, o Windows Server 2025 Datacenter (Desktop Experience) 
+
+
+| Iniciador iSCSI do host | `{init-iqn}`, endereço IP iSCSI 192.168.175.44 
+
+
+| Grupo de iniciadores | `{igroup}`, sistema operacional do host *Windows* 
+
+
+| Servidor SQL | O SQL Server 2025 Enterprise Edition, instância padrão `MSSQLSERVER` 
+|===
+[cols="2,2,1,1,2"]
+|===
+| LUN | Volume | Tamanho | Drive | Conteúdo 
+
+
+| `sql_iscsi_1_data_1` | `sql_iscsi_1_data` | 520 GiB | `E:` (dados) | Arquivos de dados do banco de dados do usuário (`.mdf`, `.ndf`) em `E:\data` 
+
+
+| `sql_iscsi_1_log_1` | `sql_iscsi_1_log` | 250 GiB | `F:` (registro) | Arquivos de log de transações do banco de dados do usuário (`.ldf`) em `F:\log` 
+
+
+| `sql_iscsi_1_tempdb_1` | `sql_iscsi_1_tempdb` | 150 GiB | `G:` (tempdb) | Arquivos de dados e logs do TempDB em `G:\tempdb\data` e `G:\tempdb\log` 
+
+
+| `sql_iscsi_1_logbackup_1` | `sql_iscsi_1_logbackup` | 300 GiB | `H:` (backup de log) | Arquivos de backup nativos do SQL Server (`.bak`, `.trn`) em `H:\backup` 
+|===
+
+TIP: Use uma LUN por volume e volumes separados para dados, logs, TempDB e backups. Isso permite aplicar diferentes configurações de QoS, snapshot, eficiência e replicação por volume. Isso também mantém o TempDB, que muda constantemente, fora dos snapshots dos seus bancos de dados de usuário.
+
+
+TIP: Use LUNs adicionais em controladores diferentes para arquivos de dados secundários (.ndf) a fim de distribuir a carga.
+
+
+
+[[prerequisites]]
+== Pré-requisitos
+
+Certifique-se de atender aos seguintes requisitos antes de começar:
+
+.NetApp ONTAP
+* O par de HA AFF está instalado, e o cluster está configurado e saudável.
+* A licença iSCSI está instalada. Ela está incluída no ONTAP One.
+* Existe pelo menos um agregado de dados (camada local) em cada nó.
+* A SVM existe. Neste procedimento, você usa a SVM existente `{svm}`; adiciona iSCSI a ela. Para criar uma SVM dedicada para SAN, use menu:Cluster[VMs de armazenamento > Adicionar] e selecione *iSCSI* como protocolo de acesso.
+* As portas de rede de dados, o domínio de broadcast e, opcionalmente, as VLANs para as LIFs iSCSI estão configurados. No laboratório, o domínio de broadcast `MT9000` usa jumbo frames.
+* O horário é sincronizado entre o cluster, o host e o Active Directory por meio do NTP.
+
+
+.Rede
+* O host do SQL Server tem pelo menos uma, de preferência duas, placas de rede dedicadas para iSCSI na sub-rede iSCSI ou VLAN.
+* O MTU é o mesmo de ponta a ponta (NIC do host, switches, portas do ONTAP). Verifique os jumbo frames com `ping -f -l 8972 <LIF-IP>` a partir do host.
+
+
+.Servidor Windows
+* Windows Server 2025 (Desktop Experience) está instalado, atualizado e integrado ao domínio.
+* O NetApp Windows Host Utilities em uma versão compatível com o Windows Server 2025 está disponível (consulte o  https://imt.netapp.com/matrix/["NetApp Ferramenta de Matriz de Interoperabilidade (IMT)"^]).
+* A mídia de instalação do SQL Server 2025 (ISO) e uma chave de produto válida (ou uma edição gratuita) estão disponíveis.
+
+
+
+NOTE: Ao contrário dos compartilhamentos de arquivos SMB, os LUNs não exigem uma conta de domínio para o serviço do SQL Server. As contas virtuais padrão (`NT Service\MSSQLSERVER`) podem ser usadas. Uma conta de domínio ou gMSA ainda é recomendada se a instância precisar de acesso à rede, por exemplo, para fazer backup em um compartilhamento de arquivos ou para autenticação Kerberos.
+
+
+
+[[step-1-enable-iscsi-on-the-storage-vm]]
+[[svm-iscsi]]
+== Etapa 1: habilite iSCSI na VM de armazenamento
+
+Adicione o protocolo iSCSI à SVM e crie duas LIFs iSCSI em cada nó do par de HA.
+
+.Passos
+. Habilite iSCSI na SVM e crie as LIFs iSCSI com System Manager ou a CLI:
++
+[role="tabbed-block"]
+====
+.System Manager
+--
+.. Abra um navegador da web e conecte-se ao ONTAP System Manager em `+https://<cluster-management-IP>+`. Faça login com a conta de administrador do cluster.
+.. Acesse o menu:Cluster[VMs de armazenamento], clique na SVM `{svm}` e abra a guia *Settings*. Em *Protocols*, o bloco *iSCSI* mostra *Not configured*. Clique no ícone de engrenagem no bloco *iSCSI*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_004.png["Configurações da VM de armazenamento a50-sql com iSCSI não configurado,largura=800"]
+
+=====
+.. Na caixa de diálogo *Configure iSCSI*, crie as interfaces de rede iSCSI. O System Manager recomenda duas interfaces de rede por nó. Insira os seguintes valores:
++
+*** Nó `{node1}`: endereço IP `192.168.175.134`, máscara de sub-rede `24`, *domínio de broadcast e porta* `MT9000`
+*** Selecione *Usar a mesma máscara de sub-rede, gateway e domínio de broadcast para todas as seguintes interfaces*.
+*** Segunda interface em `{node1}`: `192.168.175.135`
+*** Nó `{node2}`: `192.168.175.136` e `192.168.175.137`
++
+Clique em *Salvar*.
+
++
+
+TIP: Não é necessário um gateway quando o host e as LIFs estão na mesma sub-rede. Não encaminhe o tráfego iSCSI.
+
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_005.png["Caixa de diálogo Configurar iSCSI com duas LIFs por nó, largura=800"]
+
+=====
+
+
+.. O System Manager cria o serviço iSCSI e as quatro LIFs. O bloco *iSCSI* agora exibe *Ativado*, o *nome do nó de destino* (`{tgt-iqn}`) e o *alias de destino* `{svm}`. Anote o nome do nó de destino; você precisará dele para verificar a conexão do host.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_006.png["iSCSI habilitado com nome do nó de destino e alias,width=800"]
+
+=====
+
+
+--
+.ONTAP CLI
+--
+Os comandos a seguir criam a mesma configuração na CLI. Substitua os valores de marcador entre colchetes angulares. Observe o nome de destino na saída de `vserver iscsi show`; você precisará dele para verificar a conexão do host.
+
+[source, console]
+----
+cluster::> vserver add-protocols -vserver a50-sql -protocols iscsi
+cluster::> vserver iscsi create -vserver a50-sql -target-alias a50-sql
+
+cluster::> network interface create -vserver a50-sql -lif a50-sql_iscsi_n1_1 -service-policy default-data-iscsi -home-node SAPCC-A50-01 -home-port <port> -address 192.168.175.134 -netmask 255.255.255.0
+cluster::> network interface create -vserver a50-sql -lif a50-sql_iscsi_n1_2 -service-policy default-data-iscsi -home-node SAPCC-A50-01 -home-port <port> -address 192.168.175.135 -netmask 255.255.255.0
+cluster::> network interface create -vserver a50-sql -lif a50-sql_iscsi_n2_1 -service-policy default-data-iscsi -home-node SAPCC-A50-02 -home-port <port> -address 192.168.175.136 -netmask 255.255.255.0
+cluster::> network interface create -vserver a50-sql -lif a50-sql_iscsi_n2_2 -service-policy default-data-iscsi -home-node SAPCC-A50-02 -home-port <port> -address 192.168.175.137 -netmask 255.255.255.0
+
+cluster::> vserver iscsi show -vserver a50-sql
+cluster::> network interface show -vserver a50-sql -data-protocol iscsi
+----
+--
+====
+
+
+
+NOTE: As LIFs iSCSI não migram durante um takeover. A alta disponibilidade é fornecida pelos caminhos para as LIFs do nó parceiro, portanto, sempre crie LIFs iSCSI em ambos os nós do par de HA.
+
+
+
+[[step-2-prepare-the-windows-host]]
+[[host-prep]]
+== Etapa 2: preparar o host Windows
+
+Inicie o iniciador iSCSI da Microsoft e instale o MPIO e o NetApp Windows Host Utilities. Execute as seguintes etapas no host do SQL Server `{host}` como administrador local.
+
+
+IMPORTANT: Instale e configure o MPIO *antes* de se conectar aos LUNs. Sem o MPIO, o Windows mostra um disco para cada caminho até cada LUN (quatro discos por LUN nesta configuração).
+
+.Passos
+. [[host-initiator,Inicie o iniciador iSCSI]]Inicie o iniciador iSCSI e obtenha o nome do iniciador com o Server Manager ou o PowerShell:
++
+[role="tabbed-block"]
+====
+.Server Manager
+--
+.. No *Server Manager*, abra o menu:Ferramentas[Iniciador iSCSI].
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_007.png["Menu Ferramentas do Server Manager com iniciador iSCSI,width=800"]
+
+=====
+.. Ao iniciar o iniciador iSCSI pela primeira vez, uma mensagem informa que o serviço Microsoft iSCSI não está em execução. Clique em *Sim* para iniciar o serviço e configurá-lo para iniciar automaticamente.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_008.png["Caixa de diálogo \"O serviço iSCSI da Microsoft não está em execução\",width=800"]
+
+=====
+.. Em *Propriedades do Iniciador iSCSI*, abra a guia *Configuração*. Copie o *Nome do Iniciador* (`{init-iqn}`). Você precisará dele para criar o grupo de iniciadores no ONTAP.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_009.png["aba Configuration de iSCSI Initiator Properties com nome do iniciador,width=800"]
+
+=====
+
+
+--
+.PowerShell
+--
+O último comando retorna o nome do iniciador. Você precisa dele para criar o grupo de iniciadores no ONTAP.
+
+[source, powershell]
+----
+PS C:\> Set-Service -Name MSiSCSI -StartupType Automatic
+PS C:\> Start-Service -Name MSiSCSI
+PS C:\> (Get-InitiatorPort | Where-Object ConnectionType -eq 'iSCSI').NodeAddress
+----
+--
+====
+. Instale o Multipath I/O e habilite o suporte a MPIO para dispositivos iSCSI com Server Manager ou PowerShell:
++
+[role="tabbed-block"]
+====
+.Server Manager
+--
+.. No *Server Manager*, clique em menu:Manage[Add Roles and Features]. Na página *Features*, selecione *Multipath I/O* e clique em *Install*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_010.png["Assistente Adicionar Funções e Recursos, página Selecionar recursos, largura=800"]
+
+=====
+.. Abra o menu:Tools[MPIO], selecione a guia *Descobrir vários caminhos*, selecione *Adicionar suporte para dispositivos iSCSI* e clique em *Adicionar*. Reinicie o servidor quando solicitado.
++
+Após reiniciar, a caixa de seleção fica marcada e acinzentada, o que significa que o MPIO assume todos os dispositivos iSCSI. Depois que os LUNs são conectados (consulte <<connect>>),  `Get-Disk` lista cada LUN NetApp apenas uma vez, como mostrado na janela do PowerShell.
+
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_011.png["Propriedades do MPIO detectar vários caminhos com suporte a iSCSI e saída de Get-Disk,width=800"]
+
+=====
+
+
+--
+.PowerShell
+--
+[source, powershell]
+----
+PS C:\> Install-WindowsFeature -Name Multipath-IO
+PS C:\> Enable-MSDSMAutomaticClaim -BusType iSCSI
+PS C:\> Restart-Computer
+----
+--
+====
+. Instale o *NetApp Windows Host Utilities* (execute o `.msi` e selecione *Multipath I/O support*), e reinicie o servidor se for solicitado. Os Host Utilities definem os tempos limite de disco e iSCSI do Windows e os parâmetros de MPIO recomendados pela NetApp, para que o host passe pelo takeover e giveback do ONTAP.
+
+
+
+
+[[step-3-create-the-initiator-group]]
+[[igroup]]
+== Etapa 3: criar o grupo de iniciadores
+
+Um grupo de iniciadores (igroup) define quais hosts podem acessar um LUN. Crie um igroup por host (ou por cluster para um FCI).
+
+.Passos
+. Crie o grupo de iniciadores com o System Manager ou a CLI:
++
+[role="tabbed-block"]
+====
+.System Manager
+--
+.. No System Manager, acesse o menu:Hosts[grupos de iniciadores SAN] e clique em *+ Adicionar*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_012.png["Página de grupos de iniciadores SAN,largura=800"]
+
+=====
+.. Na caixa de diálogo *Adicionar grupo de iniciadores*, insira:
++
+*** *Nome*: `{igroup}`
+*** *Sistema operacional do host*: *Windows*
+*** *VM de storage*: `{svm}`
+*** *Membros do grupo iniciador*: *Iniciadores de host*
+*** *iniciadores iSCSI* > *Novos iniciadores*: cole o nome do iniciador iSCSI do host, `{init-iqn}`
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_013.png["\"Caixa de diálogo Adicionar grupo de iniciadores com nome, SO e IQN\",width=800"]
+
+=====
+
+
+.. O iniciador foi adicionado à lista. Clique em *Salvar*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_014.png["Iniciador IQN adicionado ao grupo de iniciadores,width=800"]
+
+=====
+.. O grupo de iniciadores `{igroup}` é criado. O status da conexão é *Nenhum LUN mapeado* até que o primeiro LUN seja mapeado.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_015.png["Grupo de iniciadores sql-iscsi-1 sem LUNs mapeados,width=800"]
+
+=====
++
+
+NOTE: O System Manager cria o igroup com o protocolo *Misto (iSCSI & FC)*. Isso funciona para iSCSI. Se seus padrões exigirem um igroup somente iSCSI, crie-o com a CLI (`-protocol iscsi`), conforme mostrado na guia *ONTAP CLI*.
+
+
+
+--
+.ONTAP CLI
+--
+[source, console]
+----
+cluster::> lun igroup create -vserver a50-sql -igroup sql-iscsi-1 -protocol iscsi -ostype windows -initiator iqn.1991-05.com.microsoft:sql-iscsi-1.sapcc.stl.netapp.com
+cluster::> lun igroup show -vserver a50-sql -igroup sql-iscsi-1
+----
+--
+====
+
+
+
+
+[[step-4-create-the-sql-server-luns]]
+[[luns]]
+== Etapa 4: criar os LUNs do SQL Server
+
+Crie uma LUN para cada tipo de arquivo. O System Manager cria um FlexVol volume com o nome do *Prefixo do nome* e uma LUN com o sufixo `_1` nela, e mapeia a LUN para o igroup selecionado.
+
+.Passos
+. Crie as LUNs de dados, log, TempDB e backup de log com o System Manager ou a CLI:
++
+[role="tabbed-block"]
+====
+.System Manager
+--
+.. No System Manager, expanda *Storage* e clique em *LUNs*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_016.png["Menu de armazenamento com LUNs selecionados,width=800"]
+
+=====
+.. Clique em *+ Add* e insira os seguintes valores para o LUN de dados:
++
+*** *Prefixo do nome*: `sql_iscsi_1_data`
+*** *VM de storage*: `{svm}`
+*** *Número de LUNs*: `1`, *Capacidade por LUN*: `520 GiB`
+*** *Nível de serviço de desempenho*: *Personalizado*, *Atribuir grupo de política de QoS*: *Existente* > `none`
+*** *Proteção*: deixe *Enable snapshots (local)* e *Enable SnapMirror (local ou remote)* desmarcados. Os backups consistentes com aplicativos são criados pelo NetApp Console Backup and Recovery (consulte link:sql-iscsi-aff-overview.html#console["Proteção de dados com a NetApp Console Backup and Recovery"]).
+*** *Informações do host*: *sistema operacional do host* *Windows*, *formato de LUN* *Windows 2008* (este formato está correto para todas as versões do Windows desde Windows Server 2008, incluindo Windows Server 2025)
+*** *Mapeamento de hosts*: *grupo de iniciadores existente*, selecione `{igroup}`
++
+Clique em *Salvar*.
+
++
+
+TIP: Para controlar em qual nó o volume será criado, selecione *Posicionamento manual* e escolha a camada local. Coloque os volumes de dados e backup no nó 1 e os volumes de log e TempDB no nó 2.
+
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_017.png["Caixa de diálogo Adicionar LUNs para a LUN de dados de 520 GiB,width=600"]
+
+=====
+
+
+.. A mensagem *Os LUNs foram adicionados* é exibida, e LUN `sql_iscsi_1_data_1` é listado no volume `sql_iscsi_1_data`.
+.. Repita estas etapas para as LUNs de log, TempDB e backup de log com os nomes e tamanhos listados em <<overview>>.
+.. As quatro LUNs agora foram criadas no SVM `{svm}` e mapeadas para o igroup `{igroup}`.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_024.png["Todas as quatro LUNs do SQL Server listadas,width=800"]
+
+=====
+
+
+--
+.ONTAP CLI
+--
+Os comandos a seguir criam o volume de dados e o LUN e mapeiam o LUN para o igroup. Repita `volume create`, `lun create` e `lun mapping create` para as LUNs de log, TempDB e backup de log (consulte <<cli-script>>).
+
+[source, console]
+----
+cluster::> volume create -vserver a50-sql -volume sql_iscsi_1_data -aggregate <aggr_node1> -size 560GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0
+cluster::> lun create -vserver a50-sql -path /vol/sql_iscsi_1_data/sql_iscsi_1_data_1 -size 520GB -ostype windows_2008 -space-reserve disabled -space-allocation enabled
+cluster::> lun mapping create -vserver a50-sql -path /vol/sql_iscsi_1_data/sql_iscsi_1_data_1 -igroup sql-iscsi-1
+
+cluster::> lun show -vserver a50-sql -fields path,size,ostype,mapped,state
+cluster::> lun mapping show -vserver a50-sql
+----
+--
+====
+
+
+
+
+[[step-5-review-the-volume-and-lun-settings]]
+[[volume-settings]]
+== Etapa 5: revise as configurações de volume e LUN
+
+Analise as configurações de espaço e snapshot dos quatro volumes. O System Manager utiliza valores padrão adequados; as seguintes configurações são recomendadas para LUNs do SQL Server:
+
+[cols="1,1,3"]
+|===
+| Contexto | Valor | Motivo 
+
+
+| Garantia de espaço (volume) | `none` (fino) | A capacidade é consumida apenas quando os dados são gravados. 
+
+
+| Reserva de espaço | `disabled` (fino) | LUN com provisionamento fino em um volume com provisionamento fino. 
+
+
+| Alocação de espaço LUN | `enabled` | Habilita o SCSI UNMAP, permitindo que o espaço liberado no NTFS seja devolvido ao ONTAP e possibilitando que o host reaja corretamente quando o volume ficar sem espaço. 
+
+
+| Política de instantâneo | `none` | Snapshots que não são consistentes com o aplicativo não servem para o SQL Server. Os backups são criados pelo NetApp Console Backup and Recovery. 
+
+
+| Reserva do Snapshot | `0` % | O espaço do Snapshot é monitorado com o dimensionamento automático do volume. 
+
+
+| Dimensionamento automático | `grow`, no máximo cerca de 130 % do tamanho do volume | Impede que o LUN fique offline quando os snapshots consomem espaço. 
+
+
+| Eficiência de storage | ativado (padrão no AFF) | A desduplicação inline, a compressão e a compactação não têm impacto mensurável no desempenho do SQL Server. 
+|===
+Utilize os seguintes comandos para aplicar e verificar as configurações (mostradas para `sql_iscsi_1_data`):
+
+[source, console]
+----
+cluster::> volume modify -vserver a50-sql -volume sql_iscsi_1_data -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 730GB
+cluster::> lun modify -vserver a50-sql -path /vol/sql_iscsi_1_data/sql_iscsi_1_data_1 -space-allocation enabled
+cluster::> volume show -vserver a50-sql -volume sql_iscsi_1_* -fields aggregate,size,space-guarantee,snapshot-policy,autosize-mode
+----
+
+NOTE: Alterar `space-allocation` em uma LUN existente exige que a LUN esteja offline. Configure isso no momento da criação ou antes que o host se conecte à LUN.
+
+
+
+[[step-6-connect-the-host-to-the-iscsi-target]]
+[[connect]]
+== Etapa 6: conecte o host ao destino iSCSI
+
+Conecte o host Windows à SVM, com uma sessão iSCSI para cada uma das quatro LIFs iSCSI, para que cada LUN tenha quatro caminhos.
+
+.Passos
+. Descubra o portal de destino e conecte as sessões iSCSI com o iSCSI Initiator ou o PowerShell:
++
+[role="tabbed-block"]
+====
+.Iniciador iSCSI
+--
+.. Abra o *iSCSI Initiator* (menu:Server Manager[Tools > iSCSI Initiator]), selecione a guia *Discovery* e clique em *Discover Portal...*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_025.png["Guia Descoberta das Propriedades do iniciador iSCSI, largura=500"]
+
+=====
+.. Insira o endereço IP de uma LIF iSCSI da SVM (no laboratório `192.168.175.135`) e a porta `3260`, e clique em *OK*. O ONTAP retorna todas as LIFs iSCSI da SVM ao iniciador (SendTargets descoberta), portanto, um portal é suficiente.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_026.png["Caixa de diálogo Descobrir portal de destino com IP 192.168.175.135 e porta 3260,width=500"]
+
+=====
+.. O portal está listado em *Portais de destino*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_027.png["Portal de destino 192.168.175.135 porta 3260 listado,width=500"]
+
+=====
+.. Selecione a guia *Targets*. O destino `{tgt-iqn}` é listado com o status *Inactive*. Selecione-o e clique em *Connect*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_028.png["Aba Targets com o destino NetApp inativo,width=500"]
+
+=====
+.. Na caixa de diálogo *Conectar ao destino*, selecione:
++
+*** *Adicione esta conexão à lista de Destinos Favoritos*, para que a sessão seja restaurada automaticamente após uma reinicialização
+*** *Habilitar múltiplos caminhos*
++
+Clique em *Advanced...*.
+
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_029.png["Diálogo Conectar ao destino com favorito e múltiplos caminhos selecionados,width=500"]
+
+=====
+
+
+.. Em *Configurações avançadas*, selecione:
++
+*** *Adaptador local*: *Microsoft iSCSI Initiator*
+*** *IP do iniciador*: o endereço IP iSCSI do host (`192.168.175.44`)
+*** *IP do portal de destino*: a primeira LIF iSCSI (no laboratório `192.168.175.137 / 3260`)
++
+Deixe o CHAP desmarcado, a menos que sua política de segurança exija isso. Se o CHAP for necessário, primeiro configure as credenciais correspondentes para o IQN do iniciador do host na SVM do ONTAP usando `vserver iscsi security`, e depois insira essas credenciais no iniciador iSCSI do Windows. Clique em *OK* duas vezes.
+
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_030.png["Configurações avançadas com IP do iniciador e IP do portal de destino,width=500"]
+
+=====
+
+
+.. O status do alvo muda para *Conectado*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_031.png["Aba Targets com o destino NetApp conectado,width=500"]
+
+=====
+.. Uma sessão utiliza apenas um caminho. Adicione uma sessão para cada uma das LIFs iSCSI restantes: na guia *Destinos*, selecione o destino e clique em *Propriedades...*. Na guia *Sessões*, clique em *Adicionar sessão*.
+.. Na caixa de diálogo *Conectar ao Destino*, selecione *Habilitar múltiplos caminhos* e *Adicionar esta conexão à lista de Destinos Favoritos*, clique em *Avançado...*, selecione o mesmo *IP do Iniciador* e o próximo *IP do portal de destino* e clique em *OK* duas vezes.
++
+
+IMPORTANT: Certifique-se de que a opção *Enable multi-path* esteja selecionada em todas as sessões. A captura de tela mostra a caixa de diálogo antes de a caixa de seleção ser marcada.
+
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_032.png["Guia Sessões das Propriedades de Destino com a caixa de diálogo Adicionar sessão,largura=500"]
+
+=====
+.. Repita o passo anterior até que a aba *Sessões* liste quatro sessões, uma para cada portal de destino: 192.168.175.134, .135, .136 e .137. Se o host tiver duas NICs iSCSI, crie as sessões a partir de ambos os endereços IP do iniciador.
+
+
+--
+.PowerShell
+--
+Os comandos a seguir descobrem o portal de destino e criam uma sessão persistente, habilitada para múltiplos caminhos, para cada LIF iSCSI.
+
+[source, powershell]
+----
+PS C:\> New-IscsiTargetPortal -TargetPortalAddress 192.168.175.135 -InitiatorPortalAddress 192.168.175.44
+P PS C:\> $target = Get-IscsiTarget -NodeAddress '<target-IQN-recorded-in-Step-1>'
+PS C:\> foreach ($lif in '192.168.175.134','192.168.175.135','192.168.175.136','192.168.175.137') {
+          Connect-IscsiTarget -NodeAddress $target.NodeAddress -TargetPortalAddress $lif `
+            -InitiatorPortalAddress 192.168.175.44 -IsMultipathEnabled $true -IsPersistent $true
+        }
+PS C:\> Get-IscsiSession | Format-Table TargetNodeAddress,InitiatorPortalAddress,IsConnected,IsPersistent
+----
+--
+====
+. [[connect-verify,Verifique os caminhos]]Verifique se cada LUN é controlada pelo MPIO e tem quatro caminhos, sendo dois deles *Ativos/Otimizados*:
++
+[source, powershell]
+----
+PS C:\> mpclaim -s -d
+PS C:\> mpclaim -s -d <MPIO-disk-number>
+----
++
+A política de balanceamento de carga é *RRWS* (Round Robin com Subconjunto).
+
+. No ONTAP, verifique as sessões e os caminhos da LUN:
++
+[source, console]
+----
+cluster::> vserver iscsi session show -vserver a50-sql
+cluster::> vserver iscsi connection show -vserver a50-sql
+cluster::> lun mapping show -vserver a50-sql -igroup sql-iscsi-1
+----
+
+
+
+
+[[step-7-initialize-and-format-the-disks]]
+[[disks]]
+== Etapa 7: inicialize e formate os discos
+
+Coloque os quatro NetApp LUNs online no Windows, inicialize-os e crie um volume NTFS com uma letra de unidade em cada um.
+
+.Passos
+. Inicialize e formate os discos com o Gerenciamento de Disco ou PowerShell:
++
+[role="tabbed-block"]
+====
+.Gerenciamento de disco
+--
+.. Abra menu:Server Manager[Tools > Computer Management] e selecione menu:Storage[Disk Management]. As quatro LUNs da NetApp estão listadas como *Disco 1* a *Disco 4* (520, 250, 150 e 300 GB). Elas estão *Offline* porque a política SAN padrão do Windows Server mantém novos discos compartilhados offline.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_033.png["Gerenciamento de disco com quatro discos NetApp offline,width=800"]
+
+=====
+.. Clique com o botão direito do mouse em cada novo disco e selecione *Online*. Em seguida, clique com o botão direito do mouse em um dos discos e selecione *Initialize Disk*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_034.png["Menu de contexto do Gerenciamento de Disco com Inicializar Disco,width=800"]
+
+=====
+.. Selecione os quatro discos, selecione *GPT (Tabela de Partição GUID)* e clique em *OK*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_035.png["Caixa de diálogo Inicializar disco com quatro discos e GPT,width=800"]
+
+=====
+.. Clique com o botão direito do mouse no espaço não alocado do *Disco 1* (520 GB) e selecione *Novo Volume Simples...*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_036.png["Menu de contexto New Simple Volume em Disk 1,width=800"]
+
+=====
+.. O *Assistente para Novo Volume Simples* é aberto. Clique em *Avançar* e aceite o tamanho máximo do volume.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_037.png["Nova página de boas-vindas do Assistente de Volume Simples,largura=800"]
+
+=====
+.. Selecione *Atribuir a seguinte letra de unidade* `E` e clique em *Avançar*.
++
+
+TIP: Para instâncias com muitos bancos de dados, você pode montar os LUNs em pastas NTFS vazias (pontos de montagem) em vez de usar letras de unidade.
+
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_038.png["Atribua letra de unidade ou caminho com a letra de unidade E,width=800"]
+
+=====
+.. Selecione *Formatar este volume com as seguintes configurações*:
++
+*** *Sistema de arquivos*: *NTFS*
+*** *Tamanho da unidade de alocação*: *64K* (recomendado para volumes de dados, log e TempDB do SQL Server; a captura de tela do laboratório mostra *Default*)
+*** *Rótulo de volume*: `data`
+*** *Executar formatação rápida*: selecionado
++
+Clique em *Avançar*.
+
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_039.png["Formatar partição com NTFS e rótulo de volume data,width=800"]
+
+=====
+
+
+.. Revise as configurações e clique em *Concluir*.
++
+.Mostrar exemplo
+[%collapsible]
+=====
+image:sql25_iscsi_bp_040.png["Concluindo o novo Assistente de Volume Simples,width=800"]
+
+=====
+.. Repita os cinco passos anteriores para os outros discos:
++
+[cols="1,1,1,1"]
+|===
+| Disco | Tamanho | Letra da unidade | Rótulo de volume 
+
+
+| Disco 1 | 520 GB | `E:` | `data` 
+
+
+| Disco 2 | 250 GB | `F:` | `log` 
+
+
+| Disco 3 | 150 GB | `G:` | `tempdb` 
+
+
+| Disco 4 | 300 GB | `H:` | `Log backup` 
+|===
+.. Crie as pastas para o SQL Server: `E:\data`, `F:\log`, `G:\tempdb\data`, `G:\tempdb\log` e `H:\backup`.
+
+
+--
+.PowerShell
+--
+Os comandos a seguir colocam os discos NetApp online, inicializam-nos com GPT, criam e formatam um volume NTFS com tamanho de unidade de alocação de 64 KB em cada um e criam as pastas para o SQL Server.
+
+[source, powershell]
+----
+PS C:\> $layout = @{ 520GB = 'E','data'; 250GB = 'F','log'; 150GB = 'G','tempdb'; 300GB = 'H','Log backup' }
+PS C:\> foreach ($d in Get-Disk | Where-Object FriendlyName -like 'NETAPP*') {
+          $l = $layout[[int64]$d.Size]
+          Set-Disk -Number $d.Number -IsOffline $false
+          Set-Disk -Number $d.Number -IsReadOnly $false
+          Initialize-Disk -Number $d.Number -PartitionStyle GPT
+          New-Partition -DiskNumber $d.Number -UseMaximumSize -DriveLetter $l[0] |
+            Format-Volume -FileSystem NTFS -AllocationUnitSize 65536 -NewFileSystemLabel $l[1] -Confirm:$false
+        }
+PS C:\> 'E:\data','F:\log','G:\tempdb\data','G:\tempdb\log','H:\backup' | ForEach-Object { New-Item -ItemType Directory -Path $_ }
+PS C:\> Get-Volume -DriveLetter E,F,G,H | Format-Table DriveLetter,FileSystemLabel,FileSystem,AllocationUnitSize,Size
+----
+
+CAUTION: Execute esses comandos somente se esses LUNs forem os únicos LUNs RAW conectados ao sistema. Se houver outros LUNs RAW conectados ao sistema, você precisará criar as pastas e formatar os volumes manualmente.
+
+--
+====
+
+
+
+TIP: Não coloque arquivos de banco de dados diretamente na raiz de uma unidade. Pastas facilitam o gerenciamento de permissões, pontos de montagem e migrações futuras.
+
+
+
+[[step-8-install-sql-server-2025]]
+[[sql-install]]
+== Etapa 8: instalar o SQL Server 2025
+
+Instale o SQL Server 2025 no host do Windows Server com o assistente de instalação. Instale os binários e os bancos de dados do sistema no disco local e aponte o banco de dados do usuário, o log de transações, o TempDB e os locais de backup para as pastas nas LUNs da NetApp.
+
+.Passos
+. Inicie a instalação autônoma a partir do SQL Server Installation Center.
++
+.. Monte a imagem ISO do SQL Server 2025. No Explorador de Arquivos, abra a unidade de DVD (`D:` no laboratório) e clique duas vezes em *setup*.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_041.png["Mídia de instalação do SQL Server 2025 no Explorador de Arquivos, largura=800"]
+
+====
+.. O *SQL Server Installation Center* é aberto. Selecione *Installation* no painel esquerdo e clique em *New SQL Server standalone installation or add features to an existing installation*.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_042.png["Centro de Instalação do SQL Server,largura=800"]
+
+====
+
+
+. Selecione a edição do SQL Server, aceite os termos da licença e deixe o programa de instalação verificar se há atualizações do produto.
++
+.. Na página *Edition*, selecione *Enter the product key* e insira sua chave do produto, ou selecione uma edição gratuita (Evaluation, Enterprise Developer, Standard Developer ou Express). Selecione o tipo de licença aplicável a você (*I have a SQL Server license with Software Assurance or SQL Software Subscription* no laboratório) e clique em *Next*.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_043.png["Página da edição (chave do produto ocultada),largura=800"]
+
+====
+.. Na página *Termos da Licença*, leia os termos, selecione *Aceito os termos da licença e a Declaração de Privacidade* e clique em *Avançar*.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_044.png["Página de termos de licença,width=800"]
+
+====
+.. Na página *Microsoft Update*, selecione *Usar o Microsoft Update para verificar se há atualizações (recomendado)* e clique em *Avançar*. A instalação então executa as verificações *Regras Globais*, *Atualizações de Produto*, *Instalar Arquivos de Instalação* e *Regras de Instalação*.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_045.png["Página do Microsoft Update,largura=800"]
+
+====
+
+
+. Selecione os recursos do SQL Server e a instância para instalar. Os binários permanecem no disco local; somente os arquivos do banco de dados são colocados nas LUNs NetApp.
++
+.. Na página *Seleção de Recursos*, selecione *Serviços do Mecanismo de Banco de Dados* e quaisquer recursos adicionais de que você precise. Deixe o *Diretório raiz da instância* e o *Diretório de recursos compartilhados* no disco local `C:`.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_046.png["Página de seleção de recursos com Database Engine Services,width=800"]
+
+====
+.. Na página *Configuração da Instância*, selecione *Instância padrão* (`MSSQLSERVER`), ou insira uma instância nomeada e clique em *Avançar*.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_047.png["Página de configuração da instância,largura=800"]
+
+====
+
+
+. Analise as contas de serviço do SQL Server Database Engine e do SQL Server Agent.
++
+.. Na página *Server Configuration*, na guia *Service Accounts*, revise as contas de serviço. O laboratório usa as contas virtuais padrão (`NT Service\MSSQLSERVER` para o Database Engine). Como os bancos de dados estão em volumes NTFS locais, nenhuma permissão adicional é necessária. Defina o *Startup Type* do *SQL Server Agent* como *Automatic* se você usar trabalhos do SQL Server Agent ou backups de log.
++
+
+TIP: Selecione *Conceder privilégio de Executar Tarefa de Manutenção de Volume ao Serviço do Mecanismo de Banco de Dados do SQL Server* (desmarcado na captura de tela). Isso permite a inicialização instantânea de arquivos, o que acelera consideravelmente a criação de bancos de dados, o crescimento de arquivos e as restaurações.
+
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_048.png["Configuração do servidor: contas de serviço,width=800"]
+
+====
+
+
+. Configure o modo de autenticação e os administradores do SQL Server e insira as pastas nas LUNs do NetApp para o banco de dados do usuário, o log de transações, o backup e os arquivos TempDB.
++
+.. Na página *Configuração do Mecanismo de Banco de Dados*, na guia *Configuração do Servidor*, selecione o modo de autenticação. O laboratório usa o *Modo Misto* com uma senha forte para a `sa` conta. Clique em *Adicionar Usuário Atual* e *Adicionar...* para adicionar os administradores do SQL Server (usuários ou, de preferência, um grupo do Active Directory).
++
+
+TIP: Use o *modo de autenticação do Windows* a menos que os aplicativos exijam logins do SQL Server.
+
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_049.png["Configuração do mecanismo de banco de dados: autenticação,width=800"]
+
+====
+.. Na guia *Diretórios de Dados*, insira as pastas nas LUNs do NetApp:
++
+[cols="1,2"]
+|===
+| Contexto | Valor 
+
+
+| Diretório raiz de dados | `C:\Program Files\Microsoft SQL Server\` (local; os bancos de dados do sistema permanecem em `C:`) 
+
+
+| Diretório do banco de dados de usuários | `E:\data` 
+
+
+| Diretório de logs do banco de dados de usuários | `F:\log` 
+
+
+| Diretório de backup | `H:\backup` 
+|===
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_050.png["\"Diretórios de dados com E:\data, F:\log e H:\backup\",width=800"]
+
+====
+.. Na guia *TempDB*, o diretório padrão de dados e logs é definido pelo Setup. Selecione a entrada em *Data directories* e clique em *Remove*, depois clique em *Add...*.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_051.png["Aba TempDB com diretórios padrão,width=800"]
+
+====
+.. Na caixa de diálogo *Procurar Pasta*, selecione a unidade *tempdb (G:)* e a pasta `G:\tempdb\data`. Se as pastas ainda não existirem, crie-as com *Criar Nova Pasta*. Clique em *OK*.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_052.png["Procurar a pasta com as pastas de dados e de log do tempdb em G:,width=800"]
+
+====
+.. Defina o *Diretório de logs* para `G:\tempdb\log` (clique em *...*). O laboratório usa 8 arquivos de dados TempDB.
++
+
+TIP: Use um arquivo de dados TempDB por núcleo lógico da CPU, até 8 arquivos. Defina os tamanhos iniciais para o conjunto de trabalho esperado do TempDB, para que o TempDB não precise crescer durante a operação. Todos os arquivos de dados devem ter o mesmo tamanho e crescimento automático.
+
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_053.png["TempDB configurado em G:\tempdb\data e G:\tempdb\log,width=800"]
+
+====
+.. Configure as guias *MaxDOP* e *Memory* de acordo com o seu dimensionamento (os valores padrão recomendados são um bom ponto de partida) e clique em *Avançar*.
+
+
+. Revise o resumo da instalação, execute a instalação e confirme que todos os recursos foram instalados com sucesso.
++
+.. Na página *Pronto para instalar*, revise o resumo e clique em *Instalar*.
++
+
+TIP: Copie o `ConfigurationFile.ini` mostrado em *Caminho do arquivo de configuração*. Você pode usá-lo para instalações sem supervisão de hosts adicionais do SQL Server (`setup.exe /ConfigurationFile=<path>`.
+
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_054.png["Resumo pronto para instalar,width=800"]
+
+====
+.. Quando a instalação estiver concluída, verifique se todos os recursos exibem *Concluído com sucesso* e clique em *Fechar*.
++
+.Mostrar exemplo
+[%collapsible]
+====
+image:sql25_iscsi_bp_055.png["Instalação concluída,width=800"]
+
+====
+
+
+
+
+
+
+[[step-9-verify-the-installation]]
+[[post-install]]
+== Etapa 9: verifique a instalação
+
+Crie um banco de dados de teste e verifique se seus arquivos de dados e de log estão nas NetApp LUNs e se os caminhos de armazenamento estão funcionando corretamente.
+
+.Passos
+. Abra a porta do SQL Server no firewall do Windows:
++
+[source, powershell]
+----
+PS C:\> New-NetFirewallRule -DisplayName "SQL Server (TCP 1433)" -Direction Inbound -Protocol TCP -LocalPort 1433 -Action Allow
+----
+. Instale o SQL Server Management Studio (SSMS) a partir do link *Instalar as Ferramentas de Gerenciamento do SQL Server* no Centro de Instalação, ou no site da Microsoft.
+. Inicie o SSMS e conecte-se à instância (`{host}` com autenticação do Windows. Crie um banco de dados de teste; seus arquivos de dados e de log padrão são  `E:\data` e  `F:\log`.
+. Verifique a localização dos arquivos com T-SQL:
++
+[source, sql]
+----
+SELECT DB_NAME(database_id) AS database_name,
+       type_desc,
+       name AS logical_name,
+       physical_name,
+       size * 8 / 1024 AS size_mb
+FROM   sys.master_files
+ORDER  BY database_id, type_desc;
+----
+. Verifique se a inicialização instantânea de arquivos está ativada:
++
+[source, sql]
+----
+SELECT servicename, service_account, instant_file_initialization_enabled
+FROM   sys.dm_server_services;
+----
+. Verifique o armazenamento a partir do host e do ONTAP:
++
+[source, powershell]
+----
+PS C:\> Get-Disk | Where-Object FriendlyName -like 'NETAPP*' | Format-Table Number,FriendlyName,Size,OperationalStatus,PartitionStyle
+PS C:\> mpclaim -s -d
+----
++
+[source, console]
+----
+cluster::> lun show -vserver a50-sql -fields path,size,mapped,state
+cluster::> vserver iscsi session show -vserver a50-sql
+cluster::> qos statistics volume latency show -vserver a50-sql
+----
+. Opcional: teste a alta disponibilidade. Execute uma carga de trabalho no banco de dados de teste e realize uma operação de takeover e giveback no ONTAP do nó que é proprietário do volume de dados (`storage failover takeover -ofnode <node>` / `storage failover giveback -ofnode <node>`). A carga de trabalho pausa por alguns segundos e continua; os bancos de dados permanecem online.
+
+
+.O que vem a seguir
+Proteja os bancos de dados com backups de snapshot consistentes com a aplicação. Para conhecer a arquitetura, o fluxo de trabalho de backup e os benefícios, consulte link:sql-iscsi-aff-overview.html#console["Proteção de dados com a NetApp Console Backup and Recovery"].
+
+
+
+[[use-an-ontap-cli-script-to-configure-the-storage-in-one-pass]]
+[[cli-script]]
+== Use um script da CLI do ONTAP para configurar o armazenamento de uma só vez
+
+O script a seguir contém a configuração de storage deste procedimento. Substitua os valores entre colchetes angulares antes de executá-lo.
+
+[source, console]
+----
+# --- iSCSI service and LIFs ----------------------------------------------
+vserver add-protocols -vserver a50-sql -protocols iscsi
+vserver iscsi create -vserver a50-sql -target-alias a50-sql
+
+network interface create -vserver a50-sql -lif a50-sql_iscsi_n1_1 -service-policy default-data-iscsi -home-node SAPCC-A50-01 -home-port <port> -address 192.168.175.134 -netmask 255.255.255.0
+network interface create -vserver a50-sql -lif a50-sql_iscsi_n1_2 -service-policy default-data-iscsi -home-node SAPCC-A50-01 -home-port <port> -address 192.168.175.135 -netmask 255.255.255.0
+network interface create -vserver a50-sql -lif a50-sql_iscsi_n2_1 -service-policy default-data-iscsi -home-node SAPCC-A50-02 -home-port <port> -address 192.168.175.136 -netmask 255.255.255.0
+network interface create -vserver a50-sql -lif a50-sql_iscsi_n2_2 -service-policy default-data-iscsi -home-node SAPCC-A50-02 -home-port <port> -address 192.168.175.137 -netmask 255.255.255.0
+
+# --- Initiator group -----------------------------------------------------
+lun igroup create -vserver a50-sql -igroup sql-iscsi-1 -protocol iscsi -ostype windows -initiator iqn.1991-05.com.microsoft:sql-iscsi-1.sapcc.stl.netapp.com
+
+# --- Volumes -------------------------------------------------------------
+volume create -vserver a50-sql -volume sql_iscsi_1_data      -aggregate <aggr_node1> -size 560GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 730GB
+volume create -vserver a50-sql -volume sql_iscsi_1_log       -aggregate <aggr_node2> -size 270GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 350GB
+volume create -vserver a50-sql -volume sql_iscsi_1_tempdb    -aggregate <aggr_node2> -size 165GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 210GB
+volume create -vserver a50-sql -volume sql_iscsi_1_logbackup -aggregate <aggr_node1> -size 325GB -space-guarantee none -snapshot-policy none -percent-snapshot-space 0 -autosize-mode grow -max-autosize 420GB
+
+# --- LUNs ----------------------------------------------------------------
+lun create -vserver a50-sql -path /vol/sql_iscsi_1_data/sql_iscsi_1_data_1           -size 520GB -ostype windows_2008 -space-reserve disabled -space-allocation enabled
+lun create -vserver a50-sql -path /vol/sql_iscsi_1_log/sql_iscsi_1_log_1             -size 250GB -ostype windows_2008 -space-reserve disabled -space-allocation enabled
+lun create -vserver a50-sql -path /vol/sql_iscsi_1_tempdb/sql_iscsi_1_tempdb_1       -size 150GB -ostype windows_2008 -space-reserve disabled -space-allocation enabled
+lun create -vserver a50-sql -path /vol/sql_iscsi_1_logbackup/sql_iscsi_1_logbackup_1 -size 300GB -ostype windows_2008 -space-reserve disabled -space-allocation enabled
+
+# --- LUN mapping ---------------------------------------------------------
+lun mapping create -vserver a50-sql -path /vol/sql_iscsi_1_data/sql_iscsi_1_data_1           -igroup sql-iscsi-1
+lun mapping create -vserver a50-sql -path /vol/sql_iscsi_1_log/sql_iscsi_1_log_1             -igroup sql-iscsi-1
+lun mapping create -vserver a50-sql -path /vol/sql_iscsi_1_tempdb/sql_iscsi_1_tempdb_1       -igroup sql-iscsi-1
+lun mapping create -vserver a50-sql -path /vol/sql_iscsi_1_logbackup/sql_iscsi_1_logbackup_1 -igroup sql-iscsi-1
+
+# --- Verification ----------------------------------------------------------
+vserver iscsi show -vserver a50-sql
+network interface show -vserver a50-sql -data-protocol iscsi
+lun show -vserver a50-sql -fields path,size,ostype,space-allocation,mapped,state
+lun mapping show -vserver a50-sql
+vserver iscsi session show -vserver a50-sql
+----
+
+TIP: Distribua os volumes entre os agregados de ambos os nós, por exemplo, dados e backup de logs no nó 1, e logs e TempDB no nó 2. Isso utiliza os recursos de ambos os controladores.
+
+
+
+[[use-a-powershell-script-to-configure-the-host-in-one-pass]]
+[[ps-script]]
+== Use um PowerShell script para configurar o host em uma única etapa
+
+O script a seguir contém a configuração completa do host deste procedimento. Execute-o em uma sessão do PowerShell com privilégios elevados; a parte de MPIO requer uma reinicialização.
+
+[source, powershell]
+----
+# --- Part 1: iSCSI service and MPIO (restart required) ------------------------
+Set-Service -Name MSiSCSI -StartupType Automatic
+Start-Service -Name MSiSCSI
+(Get-InitiatorPort | Where-Object ConnectionType -eq 'iSCSI').NodeAddress   # initiator IQN for the igroup
+Install-WindowsFeature -Name Multipath-IO
+Enable-MSDSMAutomaticClaim -BusType iSCSI
+# Install NetApp Windows Host Utilities (MPIO support) now, then:
+Restart-Computer
+
+# --- Part 2: connect the iSCSI sessions (after the LUNs are mapped in ONTAP) ---
+$initiatorIP = '192.168.175.44'
+$lifs        = '192.168.175.134','192.168.175.135','192.168.175.136','192.168.175.137'
+New-IscsiTargetPortal -TargetPortalAddress $lifs[0] -InitiatorPortalAddress $initiatorIP
+$target = Get-IscsiTarget | Where-Object NodeAddress -like 'iqn.1992-08.com.netapp:*'
+foreach ($lif in $lifs) {
+    Connect-IscsiTarget -NodeAddress $target.NodeAddress -TargetPortalAddress $lif `
+        -InitiatorPortalAddress $initiatorIP -IsMultipathEnabled $true -IsPersistent $true
+}
+Get-IscsiSession | Format-Table TargetNodeAddress,InitiatorPortalAddress,IsConnected,IsPersistent
+mpclaim -s -d
+
+# --- Part 3: disks, volumes and folders ---------------------------------------
+$layout = @{ 520GB = 'E','data'; 250GB = 'F','log'; 150GB = 'G','tempdb'; 300GB = 'H','Log backup' }
+foreach ($d in Get-Disk | Where-Object FriendlyName -like 'NETAPP*') {
+    $l = $layout[[int64]$d.Size]
+    Set-Disk -Number $d.Number -IsOffline $false
+    Set-Disk -Number $d.Number -IsReadOnly $false
+    Initialize-Disk -Number $d.Number -PartitionStyle GPT
+    New-Partition -DiskNumber $d.Number -UseMaximumSize -DriveLetter $l[0] |
+        Format-Volume -FileSystem NTFS -AllocationUnitSize 65536 -NewFileSystemLabel $l[1] -Confirm:$false
+}
+'E:\data','F:\log','G:\tempdb\data','G:\tempdb\log','H:\backup' | ForEach-Object { New-Item -ItemType Directory -Path $_ -Force }
+
+# --- Part 4: firewall for SQL Server -----------------------------------------
+New-NetFirewallRule -DisplayName "SQL Server (TCP 1433)" -Direction Inbound -Protocol TCP -LocalPort 1433 -Action Allow
+----
+
+NOTE: Execute cada parte separadamente. A parte 1 exige reinicializar o host, portanto as outras partes não continuarão após a reinicialização.
+
+
+CAUTION: Execute os comandos da parte 3 somente se esses LUNs forem os únicos LUNs RAW conectados ao sistema. Se houver outros LUNs RAW conectados ao sistema, você precisará criar as pastas e formatar os volumes manualmente.
+
+
+
+[[additional-information]]
+[[references]]
+== Informações adicionais
+
+Para obter mais informações sobre os tópicos abordados neste procedimento, consulte os seguintes recursos:
+
+* NetApp: https://docs.netapp.com/us-en/ontap-apps-dbs/mssql/mssql-overview.html["O Microsoft SQL Server com ONTAP"]
+* NetApp: https://docs.netapp.com/us-en/ontap/san-admin/index.html["Gerenciamento de storage SAN do ONTAP"]
+* NetApp: https://docs.netapp.com/us-en/ontap-sanhost/index.html["Configuração do host SAN do ONTAP"]
+* NetApp: https://docs.netapp.com/us-en/ontap-sanhost/hu-wuhu-80.html["O NetApp Windows Host Utilities"]
+* Microsoft: https://learn.microsoft.com/en-us/powershell/module/mpio/["Módulo MPIO do PowerShell"]
+* Microsoft: https://learn.microsoft.com/en-us/sql/database-engine/install-windows/install-sql-server["Instalar o SQL Server"]
+* NetApp: https://docs.netapp.com/us-en/data-services-backup-recovery/["NetApp Backup and Recovery documentação"]
+* NetApp: https://imt.netapp.com/matrix/["Ferramenta de Matriz de Interoperabilidade (IMT)"]
+
